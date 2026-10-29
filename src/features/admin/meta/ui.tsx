@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+// import { MetaPageGuide } from "../meta-ads/components/page-guide";
+import { CompactMetric } from "../meta-ads/components/compact-metric";
 import { usePathname } from "next/navigation";
 import { useState, type ComponentType, type ReactNode } from "react";
 import { FaFacebookF, FaInstagram, FaMeta } from "react-icons/fa6";
@@ -53,8 +55,10 @@ export function tabOfPath(pathname: string): MetaTab {
 export function MetaProductNav({ className }: { className?: string }) {
   const pathname = usePathname() ?? META_ROOT;
   const active = tabOfPath(pathname);
+  const colors = { overview: "text-blue-600 bg-blue-50 border-blue-200", ads: "text-violet-600 bg-violet-50 border-violet-200", facebook: "text-sky-600 bg-sky-50 border-sky-200", instagram: "text-pink-600 bg-pink-50 border-pink-200", settings: "text-slate-600 bg-slate-100 border-slate-200" };
+  const descriptions = { overview: "Accounts & Connections", ads: "Campaigns & Results", facebook: "Pages & Publishing", instagram: "Posts & Reels", settings: "Access & Asset Setup" };
   return (
-    <nav aria-label="Meta products" className={cn("flex gap-1.5 overflow-x-auto rounded-sm border border-slate-200 bg-white p-1.5 shadow-2xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className)}>
+    <nav aria-label="Meta products" className={cn("flex gap-2 overflow-x-auto [scrollbar-width:thin] sm:grid sm:grid-cols-3 xl:grid-cols-5", className)}>
       {TABS.map(({ id, label, href, icon: Icon }) => {
         const current = id === active;
         return (
@@ -63,12 +67,12 @@ export function MetaProductNav({ className }: { className?: string }) {
             href={href}
             aria-current={current ? "page" : undefined}
             className={cn(
-              "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm px-4 py-2 text-xs font-semibold transition-all duration-200",
-              current ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/25 ring-1 ring-blue-600" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+              "flex min-w-[115px] shrink-0 items-center gap-2 rounded-xl border px-2.5 py-2 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:min-w-0 sm:gap-2.5 sm:px-3 sm:py-2.5",
+              current ? cn(colors[id], "shadow-xs ring-1 ring-inset ring-current/10") : "border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50",
             )}
           >
-            <Icon className={cn("size-3.5", current ? "text-white" : "text-slate-500")} />
-            {label}
+            <span className={cn("grid size-8 shrink-0 place-items-center rounded-lg border", colors[id])}><Icon className="size-4" /></span>
+            <span className="min-w-0"><span className="block text-xs font-semibold">{label}</span><span className="mt-0.5 hidden truncate text-[10px] text-slate-500 sm:block">{descriptions[id]}</span></span>
           </Link>
         );
       })}
@@ -125,16 +129,15 @@ export function MetaShell({
 }) {
   const meta = useMeta();
   return (
-    <div className="relative min-h-screen w-full font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:32px_32px] opacity-40" />
+    <div className="meta-workspace relative min-h-screen w-full font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       <div className="relative z-0">
-        <header className="mb-3.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <header className="mb-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-xl border border-blue-100 bg-linear-to-r from-blue-50 via-white to-violet-50/70 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex items-center gap-1.5 rounded-sm border border-slate-200 bg-white p-1.5 shadow-2xs">
               {mark ?? <FaMeta className="size-7 shrink-0 text-[#0866ff]" aria-hidden="true" />}
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-[22px] font-normal leading-tight tracking-tight text-slate-900">{title}</h1>
+              <h1 className="truncate text-[20px] font-semibold leading-tight tracking-tight text-slate-900">{title}</h1>
               <p className="mt-0.5 text-xs font-semibold text-slate-600">{subtitle}</p>
             </div>
           </div>
@@ -149,7 +152,8 @@ export function MetaShell({
             {actions}
           </div>
         </header>
-        <MetaProductNav className="mb-5" />
+        <MetaProductNav className="mb-2.5" />
+        {/* <MetaPageGuide /> */}
         {children}
       </div>
     </div>
@@ -269,21 +273,7 @@ export function InlineNotice({ tone = "blue", title, children, action }: { tone?
 }
 
 export function Stat({ label, value, sub, icon: Icon, tone }: { label: string; value: ReactNode; sub?: ReactNode; icon?: ComponentType<{ className?: string }>; tone?: "green" | "amber" | "red" }) {
-  const valueTone = tone === "green" ? "text-emerald-700" : tone === "amber" ? "text-amber-700" : tone === "red" ? "text-rose-700" : "text-slate-900";
-  return (
-    <div className={cn(card, "p-4")}>
-      <div className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-600">
-        <span className="truncate">{label}</span>
-        {Icon && (
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-blue-50 text-blue-600 ring-1 ring-blue-500/15">
-            <Icon className="size-3.5" />
-          </span>
-        )}
-      </div>
-      <div className={cn("mt-2.5 text-[22px] font-semibold leading-none tracking-tight", valueTone)}>{value}</div>
-      {sub && <p className="mt-1.5 truncate text-[10.5px] font-medium text-slate-500">{sub}</p>}
-    </div>
-  );
+  return <CompactMetric label={label} value={value} sub={sub} icon={Icon} tone={tone} />;
 }
 
 export function Avatar({ src, name, size = 40 }: { src?: string | null; name: string; size?: number }) {

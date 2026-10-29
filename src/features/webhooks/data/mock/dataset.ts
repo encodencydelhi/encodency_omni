@@ -288,7 +288,7 @@ function buildSources(environment: WebhookEnvironment): IncomingSource[] {
   };
 
   return configurations
-    .filter((config) => config.enableWebhooks && wanted[environment].includes(config.providerId))
+    .filter((config) => wanted[environment].includes(config.providerId))
     .map((config): IncomingSource => {
       const profile = SOURCE_PROFILES[config.providerId] ?? SOURCE_PROFILES.meta!;
       const provider = providers.find((item) => item.id === config.providerId);

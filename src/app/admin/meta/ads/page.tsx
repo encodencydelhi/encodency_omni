@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CompactMetric } from "@/features/admin/meta-ads/components/compact-metric";
 import dynamic from "next/dynamic";
 import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
@@ -15,10 +16,7 @@ import {
   Percent,
   Plus,
   Radio,
-  Sparkles,
   Target,
-  TrendingDown,
-  TrendingUp,
   Trophy,
   UsersRound,
   WalletCards,
@@ -45,7 +43,6 @@ import {
   DeliveryCell,
   EmptyState,
   EntityLink,
-  InfoHint,
   Meter,
   Panel,
   PlatformIcons,
@@ -83,14 +80,7 @@ function MasterKpiCard({
   title,
   value,
   subtitle,
-  change,
-  changePositive = true,
   icon: Icon,
-  gradient,
-  borderGlow,
-  cornerGlow,
-  badgeText,
-  footerMetric,
   hint,
 }: {
   title: string;
@@ -106,96 +96,7 @@ function MasterKpiCard({
   footerMetric?: { label: string; value: string };
   hint?: string;
 }) {
-  return (
-    <div
-      className={cn(
-        "group relative overflow-hidden rounded-sm border border-slate-200/90 bg-white p-3.5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
-        borderGlow,
-      )}
-    >
-      {/* Corner radial aura */}
-      <div
-        className={cn(
-          "pointer-events-none absolute -right-6 -top-6 size-24 rounded-sm opacity-15 blur-xl transition-opacity duration-300 group-hover:opacity-35",
-          cornerGlow,
-        )}
-      />
-
-      {/* Top indicator bar */}
-      <div
-        className={cn(
-          "absolute left-0 top-0 h-0.5 w-full bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100",
-          gradient,
-        )}
-      />
-
-      <div className="relative z-10 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="truncate text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-            {title}
-          </span>
-          {hint && <InfoHint text={hint} />}
-        </div>
-        <div
-          className={cn(
-            "flex size-7 shrink-0 items-center justify-center rounded-sm shadow-2xs transition-transform duration-200 group-hover:scale-105",
-            gradient,
-          )}
-        >
-          <Icon className="size-3.5 text-white" />
-        </div>
-      </div>
-
-      <div className="relative z-10 mt-2 flex items-baseline justify-between gap-2">
-        <span className="text-xl font-normal tracking-tight text-slate-900 leading-none">
-          {value}
-        </span>
-        {change && (
-          <span
-            className={cn(
-              "inline-flex items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[9.5px] font-semibold shadow-2xs shrink-0",
-              changePositive
-                ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
-                : "border border-rose-200 bg-rose-50 text-rose-800",
-            )}
-          >
-            {changePositive ? (
-              <TrendingUp className="size-2.5 text-emerald-600" />
-            ) : (
-              <TrendingDown className="size-2.5 text-rose-600" />
-            )}
-            {change}
-          </span>
-        )}
-      </div>
-
-      {subtitle && (
-        <p className="relative z-10 mt-1 text-[11px] font-medium text-slate-500 truncate">
-          {subtitle}
-        </p>
-      )}
-
-      {/* Footer info pill */}
-      {(footerMetric || badgeText) && (
-        <div className="relative z-10 mt-2.5 flex items-center justify-between border-t border-slate-100/90 pt-2 text-[10.5px]">
-          {footerMetric && (
-            <span className="truncate font-medium text-slate-500">
-              {footerMetric.label}:{" "}
-              <strong className="font-semibold text-slate-800">
-                {footerMetric.value}
-              </strong>
-            </span>
-          )}
-          {badgeText && (
-            <span className="ml-auto inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 font-semibold text-slate-600 text-[9.5px] shrink-0">
-              <Sparkles className="size-2.5 text-amber-500" />
-              {badgeText}
-            </span>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  return <CompactMetric label={title} value={value} sub={subtitle} icon={Icon} hint={hint} />;
 }
 
 /**

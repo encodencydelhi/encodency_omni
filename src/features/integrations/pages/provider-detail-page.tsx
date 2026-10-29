@@ -104,13 +104,13 @@ export function ProviderDetailPage({ providerId }: ProviderDetailPageProps) {
 
   // Configuration Readiness Checklist
   const readinessChecklist = [
-    { label: "Provider Definition Complete", status: true },
-    { label: "OAuth 2.0 Redirect URI Configured", status: Boolean(config?.redirectUri) },
-    { label: "Required Scopes Declared", status: (config?.requiredScopes.length ?? 0) > 0 },
-    { label: "Backend Credentials in Secure Vault", status: config?.credentialConfigured ?? true },
-    { label: "External Developer App Approved", status: provider.externalApiAccess === "approved" },
-    { label: "Connector Implementation Available", status: true },
-    { label: "Operational Telemetry Active", status: provider.operationalHealth !== "unknown" },
+    { label: "A connector exists in this version", status: provider.platformAvailability !== "draft" },
+    { label: "The server has the OAuth credentials", status: config?.credentialConfigured ?? false },
+    { label: "Callback URL is known", status: Boolean(config?.redirectUri) },
+    { label: "Permissions to ask for are declared", status: (config?.requiredScopes.length ?? 0) > 0 },
+    { label: "Provider-side approval recorded as approved", status: provider.externalApiAccess === "approved" },
+    { label: "Open for companies", status: provider.platformAvailability === "live" },
+    { label: "Connections were checked in the last 24 hours", status: (provider.checksLast24h ?? 0) > 0 },
   ];
 
   const completedReadinessCount = readinessChecklist.filter((c) => c.status).length;
@@ -506,7 +506,7 @@ export function ProviderDetailPage({ providerId }: ProviderDetailPageProps) {
                     Provider Configuration Workspace
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Platform-wide authorization parameters, scopes, vault secret status, and operational controls.
+                    Authorization facts from the server, and the controls your team can change.
                   </p>
                 </div>
                 <Button
@@ -534,10 +534,6 @@ export function ProviderDetailPage({ providerId }: ProviderDetailPageProps) {
                       <span className="font-mono font-bold text-slate-800">{config.providerCode}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-slate-50">
-                      <span className="text-slate-500 font-medium">Environment</span>
-                      <span className="capitalize font-semibold text-slate-800">{config.environment}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-slate-50">
                       <span className="text-slate-500 font-medium">Platform Availability</span>
                       <AvailabilityBadge value={config.platformAvailability} />
                     </div>
@@ -562,8 +558,8 @@ export function ProviderDetailPage({ providerId }: ProviderDetailPageProps) {
                     </div>
                     <div className="py-1 border-b border-slate-50">
                       <span className="text-slate-500 block mb-1 font-medium">Redirect URI Reference:</span>
-                      <span className="font-mono text-xs text-slate-700 bg-slate-50 p-1.5 rounded block truncate border border-slate-100">
-                        {config.redirectUri}
+                      <span className="font-mono text-xs text-slate-700 bg-slate-50 p-1.5 rounded block break-all border border-slate-100">
+                        {config.redirectUri || "The server could not work out its callback URL. Check APP_BASE_URL."}
                       </span>
                     </div>
                     <div className="py-1">
@@ -584,32 +580,26 @@ export function ProviderDetailPage({ providerId }: ProviderDetailPageProps) {
                   </div>
                 </div>
 
-                {/* Secure Credential Status */}
+                {/* Server credentials */}
                 <div className="rounded-xl border border-slate-200/90 bg-white p-4 space-y-3 shadow-2xs">
                   <div className="border-b border-slate-100 pb-2">
                     <h3 className="font-bold text-xs uppercase tracking-wider text-slate-900">
-                      Secure Credential Vault Status
+                      Server Credentials
                     </h3>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between py-1 border-b border-slate-50">
-                      <span className="text-slate-500 font-medium">Secret Reference</span>
-                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                        {config.secretReferenceStatus.replace("_", " ").toUpperCase()}
+                      <span className="text-slate-500 font-medium">OAuth credentials on the server</span>
+                      <span className={cn("px-2 py-0.5 rounded font-bold", config.credentialConfigured ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50")}>
+                        {config.credentialConfigured ? "Configured" : "Missing"}
                       </span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-slate-50">
-                      <span className="text-slate-500 font-medium">Safe Public App ID</span>
-                      <span className="font-mono font-bold text-slate-800">{config.publicAppId}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-slate-500 font-medium">Last Rotated</span>
-                      <span className="text-slate-700 font-medium">
-                        {config.lastRotatedAt ? formatDate(config.lastRotatedAt) : "Never"}
-                      </span>
-                    </div>
+                    <p className="py-1 text-slate-500">
+                      The client id and secret live in the server&apos;s environment and are never shown. If they are missing, nobody can connect or reconnect this provider and its tokens cannot renew.
+                    </p>
                   </div>
                 </div>
+
 
                 {/* Operational Controls */}
                 <div className="rounded-xl border border-slate-200/90 bg-white p-4 space-y-3 shadow-2xs">
@@ -625,22 +615,10 @@ export function ProviderDetailPage({ providerId }: ProviderDetailPageProps) {
                         {config.allowNewConnections ? "Enabled" : "Disabled"}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between py-1 border-b border-slate-50">
-                      <span className="text-slate-600 font-medium">Allow Existing Publishing Operations</span>
-                      <span className={cn("px-2 py-0.5 rounded font-bold", config.allowExistingPublishing ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50")}>
-                        {config.allowExistingPublishing ? "Enabled" : "Paused"}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between py-1 border-b border-slate-50">
-                      <span className="text-slate-600 font-medium">Allow Existing Sync Operations</span>
-                      <span className={cn("px-2 py-0.5 rounded font-bold", config.allowExistingSync ? "text-emerald-700 bg-emerald-50" : "text-rose-700 bg-rose-50")}>
-                        {config.allowExistingSync ? "Enabled" : "Paused"}
-                      </span>
-                    </div>
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-slate-600 font-medium">Webhook Ingestion Engine</span>
-                      <span className={cn("px-2 py-0.5 rounded font-bold", config.enableWebhooks ? "text-emerald-700 bg-emerald-50" : "text-slate-600 bg-slate-100")}>
-                        {config.enableWebhooks ? "Active" : "Inactive"}
+                      <span className="text-slate-600 font-medium">Maintenance Mode</span>
+                      <span className={cn("px-2 py-0.5 rounded font-bold", config.maintenanceMode ? "text-amber-700 bg-amber-50" : "text-slate-600 bg-slate-100")}>
+                        {config.maintenanceMode ? "On" : "Off"}
                       </span>
                     </div>
                   </div>
@@ -682,37 +660,37 @@ export function ProviderDetailPage({ providerId }: ProviderDetailPageProps) {
               <div className="mt-1">
                 <OperationalHealthBadge value={provider.operationalHealth} />
               </div>
-              <span className="text-xs text-slate-400 truncate mt-1">Provider status</span>
+              <span className="text-xs text-slate-400 truncate mt-1">From checks in the last 24 hours</span>
             </div>
 
             <div className="p-3 rounded-xl border border-slate-200/90 bg-white h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
               <span className="text-xs font-bold uppercase text-slate-500 truncate">
-                Connection Failures (24H)
+                Failed Checks (24H)
               </span>
               <div className={cn("text-lg font-extrabold", provider.recentFailuresCount > 0 ? "text-rose-700" : "text-slate-800")}>
                 {provider.recentFailuresCount}
               </div>
-              <span className="text-xs text-slate-400 truncate">Sync exceptions</span>
+              <span className="text-xs text-slate-400 truncate">Connection checks that failed</span>
             </div>
 
             <div className="p-3 rounded-xl border border-slate-200/90 bg-white h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
               <span className="text-xs font-bold uppercase text-slate-500 truncate">
                 Rate Limit State
               </span>
-              <div className="text-xs font-bold text-emerald-700 mt-1">Normal</div>
-              <span className="text-xs text-slate-400 truncate">No active throttling</span>
+              <div className={cn("text-xs font-bold mt-1", provider.rateLimited ? "text-amber-700" : "text-emerald-700")}>{provider.rateLimited ? "Throttled" : "Normal"}</div>
+              <span className="text-xs text-slate-400 truncate">{provider.rateLimited ? "A check was throttled in the last hour" : "No check was throttled in the last hour"}</span>
             </div>
 
             <div className="p-3 rounded-xl border border-slate-200/90 bg-white h-full min-h-[86px] flex flex-col justify-between shadow-2xs">
               <span className="text-xs font-bold uppercase text-slate-500 truncate">
-                Last Successful Op
+                Last Successful Check
               </span>
               <div className="text-xs font-bold text-slate-800 truncate mt-1">
                 {provider.lastSuccessfulOperationAt
                   ? new Date(provider.lastSuccessfulOperationAt).toLocaleString()
                   : "None Recorded"}
               </div>
-              <span className="text-xs text-slate-400 truncate">Latest API response</span>
+              <span className="text-xs text-slate-400 truncate">Provider answered a connection check</span>
             </div>
           </div>
 

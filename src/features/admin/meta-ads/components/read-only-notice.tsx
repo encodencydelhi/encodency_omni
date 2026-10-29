@@ -14,8 +14,8 @@ export function ReadOnlyNotice({ what }: { what: string }) {
       <div className="mx-auto max-w-xl rounded-sm border border-slate-200 bg-white p-8 text-center shadow-2xs">
         <h1 className="text-base font-semibold text-slate-900">{what} is not available yet</h1>
         <p className="mt-1.5 text-xs font-medium text-slate-600">
-          This workspace reads your real campaigns, ad sets, ads, audiences, forms and leads from Meta. Creating or changing them is not
-          connected, so nothing here would reach Meta. Use Meta Ads Manager to make changes; they appear here after a refresh.
+          This Particular Workflow Is Managed In Meta Ads Manager. Supported Campaign, Ad Set And Ad Edits Are Available In Their
+          Respective Lists. For This Operation, Open Meta Below And Refresh The Workspace After Saving.
         </p>
         <div className="mt-4 flex justify-center gap-2">
           <Link href={`${ADS_ROOT}/campaigns`} className={btnPrimary}>

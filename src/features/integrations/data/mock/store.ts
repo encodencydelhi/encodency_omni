@@ -257,7 +257,7 @@ export function updateProviderAvailability(
 
 export function updateProviderOperationalControls(
   providerId: string,
-  controls: Partial<Pick<ProviderConfiguration, "allowNewConnections" | "allowExistingPublishing" | "allowExistingSync" | "enableWebhooks" | "maintenanceMode" | "visibilityInCompanyAdmin">>
+  controls: Partial<Pick<ProviderConfiguration, "allowNewConnections" | "maintenanceMode">>
 ): boolean {
   const store = getStore();
   const config = store.configurations.get(providerId);
@@ -276,7 +276,7 @@ export function updateProviderOperationalControls(
     },
     eventType: "provider_config_updated",
     providerId,
-    description: "Updated operational controls (publishing, sync, or webhook switches).",
+    description: "Updated operational controls (new connections, maintenance).",
     result: "info",
   });
 
@@ -316,32 +316,6 @@ export function updateProviderConfig(
     providerId,
     description: `Updated configuration parameters for ${provider.name}.`,
     result: "success",
-  });
-
-  commitStore();
-  return true;
-}
-
-export function toggleCapability(capabilityId: string, enabled: boolean): boolean {
-  const store = getStore();
-  const cap = store.capabilities.find((c) => c.id === capabilityId);
-  if (!cap) return false;
-
-  cap.platformEnabled = enabled;
-
-  recordActivity({
-    id: `act_${Date.now()}`,
-    timestamp: new Date().toISOString(),
-    actor: {
-      id: "usr_superadmin",
-      name: "Super Administrator",
-      email: "admin@encodency.com",
-      type: "super_admin",
-    },
-    eventType: "provider_capability_changed",
-    providerId: cap.providerId,
-    description: `${enabled ? "Enabled" : "Disabled"} platform capability '${cap.name}'.`,
-    result: "info",
   });
 
   commitStore();

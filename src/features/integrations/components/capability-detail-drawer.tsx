@@ -136,7 +136,7 @@ export function CapabilityDetailDrawer({
                     capability.platformEnabled ? "text-emerald-700" : "text-slate-500"
                   )}
                 >
-                  {capability.platformEnabled ? "Enabled by Admin" : "Disabled"}
+                  {capability.platformEnabled ? "Available" : "Disabled"}
                 </span>
               </div>
             </div>

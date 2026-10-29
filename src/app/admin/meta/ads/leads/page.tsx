@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useMetaLeadCrm } from "@/features/admin/meta-ads/live/meta-lead-crm";
+import { downloadRecords } from "@/features/admin/meta-ads/export";
 import { Suspense, useMemo, useState } from "react";
 import {
   CheckCircle2,
@@ -11,7 +13,6 @@ import {
   UserPlus,
   UsersRound,
 } from "lucide-react";
-import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
 import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
 import {
@@ -89,7 +90,8 @@ const TABS = [
 const CURRENT_USER = "Amit Sharma";
 
 function LeadsView() {
-  const { adSets, ads, campaigns, getAd, getAdSet, getCampaign, getForm, instantForms, leads } = useAdsData();
+  const crm = useMetaLeadCrm();
+  const { adSets, ads, campaigns, getAd, getAdSet, getCampaign, getForm, instantForms, leads, accounts, accountId, leadsState, leadsPartial, refresh } = useAdsData();
   const { values, setFilter, setFilters, reset, isFiltered } = useFilters(DEFAULTS, {
     // "View Leads" links from campaigns, ad sets, ads and forms carry ids.
     campaign: (v) => getCampaign(v)?.name ?? v,
@@ -153,7 +155,9 @@ function LeadsView() {
       ["Qualified", "Meeting Scheduled", "Converted"].includes(l.stage),
     ).length;
     const converted = leads.filter((l) => l.stage === "Converted").length;
-    const newToday = leads.filter((l) => l.submittedAt.startsWith("2026-09-14")).length;
+    const day = new Intl.DateTimeFormat("en-CA", { timeZone: accounts.find((account) => account.id === accountId)?.timezone || "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" });
+    const today = day.format(new Date());
+    const newToday = leads.filter((lead) => lead.submittedAt && Number.isFinite(Date.parse(lead.submittedAt)) && day.format(new Date(lead.submittedAt)) === today).length;
     const responded = leads.filter((l) => l.responseMinutes !== null);
     const avgResponse = responded.length
       ? responded.reduce((t, l) => t + (l.responseMinutes ?? 0), 0) / responded.length
@@ -168,7 +172,7 @@ function LeadsView() {
       avgCpl: totalLeads ? spend / totalLeads : 0,
       avgResponse,
     };
-  }, [campaigns, leads]);
+  }, [campaigns, leads, accounts, accountId]);
 
   const pipelineCounts = useMemo(
     () =>
@@ -210,7 +214,7 @@ function LeadsView() {
       actions={
         <button
           type="button"
-          onClick={() => toast.success("Lead export queued — we will email the CSV.")}
+          onClick={() => downloadRecords("meta-leads", rows)}
           className={cn(btnPrimary, "h-10")}
         >
           <Download className="size-3.5" />
@@ -218,9 +222,10 @@ function LeadsView() {
         </button>
       }
     >
+      {LIVE && (leadsState === "loading" || leadsState === "error" || leadsPartial) && <div role="status" className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">{leadsState === "loading" ? "Loading Lead Records? Counts Are Not Final." : leadsState === "error" ? "Lead Records Could Not Be Loaded. This Is Not A Confirmed Zero Result." : "Partial Lead Results: Some Forms Could Not Be Read."}{leadsState === "error" && <button className="ml-2 underline" onClick={refresh}>Retry</button>}</div>}
       <section className="mb-3 grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-6">
-        <KpiCard label="Total Leads" value={num(kpis.total)} icon={UsersRound} />
-        <KpiCard label="New Today" value={num(kpis.newToday)} icon={UserPlus} tone="blue" />
+        <KpiCard label="Total Leads" value={LIVE && leadsState !== "ready" ? "--" : num(kpis.total)} icon={UsersRound} />
+        <KpiCard label="New Today" value={LIVE && leadsState !== "ready" ? "--" : num(kpis.newToday)} icon={UserPlus} tone="blue" />
         <KpiCard label="Qualified Leads" value={LIVE ? "—" : num(kpis.qualified)} icon={CheckCircle2} tone="green" />
         <KpiCard
           label="Conversion Rate"
@@ -301,36 +306,36 @@ function LeadsView() {
               <button
                 type="button"
                 onClick={() => {
-                  toast.success(`Assigned ${selected.length} leads`);
+                  void crm.open(rows.filter(row => selected.includes(row.id)));
                   setSelected([]);
                 }}
                 className={btn}
               >
-                Assign
+                Assign In CRM
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  toast.success(`Stage updated for ${selected.length} leads`);
+                  void crm.open(rows.filter(row => selected.includes(row.id)));
                   setSelected([]);
                 }}
                 className={btn}
               >
-                Change Stage
+                Update In CRM
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  toast.success(`${selected.length} leads marked as spam`);
+                  void crm.open(rows.filter(row => selected.includes(row.id)));
                   setSelected([]);
                 }}
                 className={btn}
               >
-                Mark Spam
+                Manage In CRM
               </button>
               <button
                 type="button"
-                onClick={() => toast.success("Export queued.")}
+                onClick={() => downloadRecords("meta-selected-leads", rows.filter(row => selected.includes(row.id)))}
                 className={btn}
               >
                 Export
@@ -413,7 +418,7 @@ function LeadsView() {
           ) : (
             <EmptyState
               icon={UsersRound}
-              title="No leads yet"
+              title={LIVE && leadsState === "error" ? "Lead Data Unavailable" : LIVE && leadsState === "loading" ? "Loading Leads" : "No Leads Yet"}
               description="Leads will appear here once your instant forms receive submissions."
               action={{ label: "Create a lead campaign", href: `${ADS_ROOT}/create` }}
               secondary={{ label: "Lead guide", href: `${ADS_ROOT}/help?category=leads` }}
@@ -539,30 +544,30 @@ function LeadsView() {
                         [
                           { label: "View Lead", href: `${ADS_ROOT}/leads/${l.id}` },
                           {
-                            label: "Assign",
-                            onSelect: () => toast.success(`Assign “${l.name}” to a team member`),
+                            label: "Assign In CRM",
+                            onSelect: () => void crm.open([l]),
                           },
                           {
-                            label: "Call",
-                            onSelect: () => toast.success(`Calling ${l.phone}…`),
+                            label: "Follow Up In CRM",
+                            onSelect: () => void crm.open([l]),
                           },
                           {
-                            label: "WhatsApp",
-                            onSelect: () => toast.success(`Opening WhatsApp for ${l.name}`),
+                            label: "Contact In CRM",
+                            onSelect: () => void crm.open([l]),
                           },
                         ],
                         [
                           {
-                            label: "Change Stage",
-                            onSelect: () => toast.success(`Change stage for “${l.name}”`),
+                            label: "Update Stage In CRM",
+                            onSelect: () => void crm.open([l]),
                           },
                           {
-                            label: "Mark Spam",
-                            onSelect: () => toast.success(`“${l.name}” marked as spam`),
+                            label: "Manage In CRM",
+                            onSelect: () => void crm.open([l]),
                           },
                           {
                             label: "Export",
-                            onSelect: () => toast.success("Lead export queued."),
+                            onSelect: () => downloadRecords("meta-lead", [l]),
                           },
                         ],
                       ]}

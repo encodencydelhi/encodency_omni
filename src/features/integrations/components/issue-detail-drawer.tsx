@@ -30,6 +30,7 @@ import type { IntegrationIssue, IssueStatus } from "../data/types";
 import {
   useAddIssueNote,
   useAssignIssueOwner,
+  useIssueOwners,
   useUpdateIssueStatus,
 } from "../data/hooks";
 import { IssueSeverityBadge } from "./status-badges";
@@ -41,12 +42,6 @@ interface IssueDetailDrawerProps {
   onClose: () => void;
 }
 
-const OWNERS = [
-  { id: "usr_superadmin", name: "Platform Administrator", email: "admin@encodency.com" },
-  { id: "usr_dev_vikram", name: "Vikram Malhotra", email: "vikram@encodency.com" },
-  { id: "usr_lead_priya", name: "Priya Patel", email: "priya@encodency.com" },
-];
-
 export function IssueDetailDrawer({
   issue,
   isOpen,
@@ -56,6 +51,8 @@ export function IssueDetailDrawer({
   const updateStatus = useUpdateIssueStatus();
   const assignOwner = useAssignIssueOwner();
   const addNote = useAddIssueNote();
+  // The people an issue can be given to are the active platform staff, read from the server.
+  const { data: OWNERS = [] } = useIssueOwners();
 
   if (!issue) return null;
 

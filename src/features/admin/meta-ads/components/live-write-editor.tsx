@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { accountDisplayName } from "@/features/admin/meta-ads/account-name";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -9,6 +10,8 @@ import { useMetaConnection } from "@/features/admin/meta/live/meta-hooks";
 import { ApiError } from "@/types/api";
 import { useAdsData } from "../data-source";
 import { metaAdsApi } from "../live/meta-ads-api";
+import { budgetInput, budgetMinor } from "../live/budget";
+import { moneyPrecise } from "../format";
 import { ADS_ROOT, AdsWorkspace } from "./workspace";
 import { btn, btnPrimary } from "./ui";
 
@@ -38,9 +41,10 @@ function LiveMetaAdsWriteEditorReady() {
   const requested = params?.get("step");
   const mode: Mode = editingAd || requested === "ad" ? "ad" : editingAdSet || requested === "adset" ? "adset" : "campaign";
   const editing = editingCampaign && mode === "campaign" ? editingCampaign : editingAdSet && mode === "adset" ? editingAdSet : editingAd && mode === "ad" ? editingAd : null;
+  const budgetEditable = mode !== "ad" && (!editing || ("budgetType" in editing && editing.budgetType === "Daily" && (mode === "campaign" ? editingCampaign?.budgetSource !== "Ad set budgets" : editingAdSet?.budgetSource === "Ad set budget")));
   const editingBudget = editing && "budget" in editing ? editing.budget : null;
   const [name, setName] = useState(editing?.name ?? "");
-  const [budget, setBudget] = useState(editingBudget ? String(editingBudget) : "50");
+  const [budget, setBudget] = useState(editingBudget ? budgetInput(editingBudget) : "50.00");
   const [objective, setObjective] = useState("OUTCOME_LEADS");
   const [campaignId, setCampaignId] = useState(params?.get("campaign") ?? "");
   const [adSetId, setAdSetId] = useState(params?.get("adset") ?? "");
@@ -58,24 +62,25 @@ function LiveMetaAdsWriteEditorReady() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!data.accountId || !name.trim()) return;
-    const dailyBudgetMinor = Math.round(Number(budget) * 100);
-    if (mode !== "ad" && (!Number.isFinite(dailyBudgetMinor) || dailyBudgetMinor < 1)) {
+    const dailyBudgetMinor = budgetMinor(budget);
+    if (budgetEditable && dailyBudgetMinor === null) {
       toast.error("Enter a valid daily budget.");
       return;
     }
+    if (editing && budgetEditable && dailyBudgetMinor !== editingBudget && !window.confirm(`Change the daily budget for “${name.trim()}” from ${moneyPrecise(editingBudget ?? 0)} to ${moneyPrecise(dailyBudgetMinor!)}? This changes the budget in Meta.`)) return;
     setSaving(true);
     try {
       if (editingCampaign && mode === "campaign") {
-        await metaAdsApi.updateNamedBudget(connection.companyId, "campaign", editingCampaign.id, { adAccountId: data.accountId, name: name.trim(), dailyBudgetMinor });
+        await metaAdsApi.updateNamedBudget(connection.companyId, "campaign", editingCampaign.id, { adAccountId: data.accountId, name: name.trim(), ...(budgetEditable ? { dailyBudgetMinor: dailyBudgetMinor! } : {}) });
       } else if (editingAdSet && mode === "adset") {
-        await metaAdsApi.updateNamedBudget(connection.companyId, "adset", editingAdSet.id, { adAccountId: data.accountId, name: name.trim(), dailyBudgetMinor });
+        await metaAdsApi.updateNamedBudget(connection.companyId, "adset", editingAdSet.id, { adAccountId: data.accountId, name: name.trim(), ...(budgetEditable ? { dailyBudgetMinor: dailyBudgetMinor! } : {}) });
       } else if (editingAd && mode === "ad") {
         await metaAdsApi.updateAd(connection.companyId, editingAd.id, { adAccountId: data.accountId, name: name.trim() });
       } else if (mode === "campaign") {
-        await metaAdsApi.createCampaign(connection.companyId, idempotencyKey, { adAccountId: data.accountId, name: name.trim(), objective, dailyBudgetMinor, specialAdCategories: [] });
+        await metaAdsApi.createCampaign(connection.companyId, idempotencyKey, { adAccountId: data.accountId, name: name.trim(), objective, dailyBudgetMinor: dailyBudgetMinor!, specialAdCategories: [] });
       } else if (mode === "adset") {
         if (!campaignId) throw new Error("Select a campaign.");
-        await metaAdsApi.createAdSet(connection.companyId, idempotencyKey, { adAccountId: data.accountId, campaignId, name: name.trim(), dailyBudgetMinor, billingEvent: "IMPRESSIONS", optimizationGoal, targeting: { geo_locations: { countries: [country.toUpperCase()] } } });
+        await metaAdsApi.createAdSet(connection.companyId, idempotencyKey, { adAccountId: data.accountId, campaignId, name: name.trim(), dailyBudgetMinor: dailyBudgetMinor!, billingEvent: "IMPRESSIONS", optimizationGoal, targeting: { geo_locations: { countries: [country.toUpperCase()] } } });
       } else {
         if (!adSetId || !creativeId) throw new Error("Select an ad set and an existing Meta creative.");
         await metaAdsApi.createAd(connection.companyId, idempotencyKey, { adAccountId: data.accountId, adSetId, creativeId, name: name.trim() });
@@ -108,19 +113,20 @@ function LiveMetaAdsWriteEditorReady() {
           </div>
         )}
         {account && !accountUsable && (
-          <div className="flex gap-2 rounded-sm border border-red-300 bg-red-50 p-3 text-xs text-red-900"><AlertTriangle className="mt-0.5 size-4 shrink-0" /><p>Ad account {account.name} is not ACTIVE and cannot accept writes. Resolve its status in Meta Ads Manager.</p></div>
+          <div className="flex gap-2 rounded-sm border border-red-300 bg-red-50 p-3 text-xs text-red-900"><AlertTriangle className="mt-0.5 size-4 shrink-0" /><p>Ad account {accountDisplayName(account)} is not ACTIVE and cannot accept writes. Resolve its status in Meta Ads Manager.</p></div>
         )}
 
         <form onSubmit={submit} className="space-y-4 rounded-sm border border-slate-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3 text-xs text-slate-600"><ShieldCheck className="size-4 text-blue-600" />New items are always created PAUSED. Activation requires a separate budget confirmation.</div>
-          <Field label="Ad account"><input className={input} value={account ? `${account.name} (${account.id})` : "No usable ad account"} disabled /></Field>
+          <Field label="Ad account"><input className={input} value={account ? `${accountDisplayName(account)} (${account.id})` : "No usable ad account"} disabled /></Field>
           <Field label="Name"><input className={input} value={name} onChange={(event) => setName(event.target.value)} maxLength={255} required /></Field>
 
           {mode === "campaign" && !editing && <Field label="Objective"><select className={input} value={objective} onChange={(event) => setObjective(event.target.value)}><option value="OUTCOME_LEADS">Leads</option><option value="OUTCOME_TRAFFIC">Traffic</option><option value="OUTCOME_ENGAGEMENT">Engagement</option><option value="OUTCOME_AWARENESS">Awareness</option><option value="OUTCOME_SALES">Sales</option></select></Field>}
           {mode === "adset" && !editing && <><Field label="Campaign"><select className={input} value={campaignId} onChange={(event) => setCampaignId(event.target.value)} required><option value="">Select campaign</option>{parents.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><div className="grid gap-3 sm:grid-cols-2"><Field label="Optimization"><select className={input} value={optimizationGoal} onChange={(event) => setOptimizationGoal(event.target.value)}><option value="LEAD_GENERATION">Lead generation</option><option value="LINK_CLICKS">Link clicks</option><option value="LANDING_PAGE_VIEWS">Landing-page views</option><option value="REACH">Reach</option></select></Field><Field label="Country code"><input className={input} value={country} onChange={(event) => setCountry(event.target.value.slice(0, 2))} minLength={2} maxLength={2} required /></Field></div></>}
           {mode === "ad" && !editing && <><Field label="Ad set"><select className={input} value={adSetId} onChange={(event) => setAdSetId(event.target.value)} required><option value="">Select ad set</option>{parents.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Existing Meta creative"><select className={input} value={creativeId} onChange={(event) => setCreativeId(event.target.value)} required><option value="">Select creative</option>{data.creatives.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><span className="mt-1 block text-[10px] text-slate-500">Creative creation is not simulated here; select a real creative already returned by Meta.</span></Field></>}
-          {mode !== "ad" && <Field label="Daily budget (account currency)"><input className={input} type="number" min="0.01" step="0.01" value={budget} onChange={(event) => setBudget(event.target.value)} required /></Field>}
+          {budgetEditable && <Field label="Daily budget (account currency)"><input className={input} type="number" min="0.01" step="0.01" value={budget} onChange={(event) => setBudget(event.target.value)} required /></Field>}
 
+          {editing && mode !== "ad" && !budgetEditable && <p className="rounded-md bg-blue-50 p-2 text-[11px] text-blue-800">This Budget Is Inherited Or Uses A Lifetime Schedule. Rename Here; Manage Its Budget On The Owning Entity In Meta Ads Manager.</p>}
           <div className="flex justify-end gap-2 border-t border-slate-100 pt-3"><Link href={`${ADS_ROOT}/${mode === "campaign" ? "campaigns" : mode === "adset" ? "adsets" : "ads"}`} className={btn}>Cancel</Link><button className={btnPrimary} disabled={saving || !hasWritePermission || !accountUsable || !name.trim()}>{saving && <Loader2 className="size-3.5 animate-spin" />}{editing ? "Save changes" : "Create paused"}</button></div>
         </form>
       </div>

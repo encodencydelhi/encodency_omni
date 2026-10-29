@@ -159,7 +159,155 @@ export interface LinkedInDashboardResponse {
   };
 }
 
+/* ------------------------------------------------------------------ */
+/* Integrations hub (connections, checks, activity, settings)          */
+/* ------------------------------------------------------------------ */
+
+export type HubConnectionState = "connected" | "expiring" | "needs_reconnect" | "permission_missing" | "check_failed" | "rate_limited" | "disconnected";
+export type HubConnectionHealth = "healthy" | "expiring_soon" | "expired" | "revoked" | "error" | "not_connected";
+
+export interface HubCheck {
+  id: string;
+  trigger: "MANUAL" | "AUTOMATIC";
+  status: "SUCCESS" | "FAILED";
+  reason: string | null;
+  message: string | null;
+  startedAt: string;
+  durationMs: number;
+  resourcesFound: number | null;
+}
+
+export interface HubConnectionResource {
+  id: string;
+  type: BackendResourceType;
+  name: string | null;
+  externalId: string;
+  clientId: string;
+  clientName: string;
+  pendingPosts: number;
+  hasPostHistory: boolean;
+  mappedAt: string;
+}
+
+export interface HubConnection {
+  id: string;
+  provider: BackendOAuthProvider;
+  accountName: string | null;
+  accountEmail: string | null;
+  accountPictureUrl: string | null;
+  state: HubConnectionState;
+  health: HubConnectionHealth;
+  stateReason: string | null;
+  connectedAt: string;
+  connectedBy: { name: string | null; email: string } | null;
+  lastUpdatedAt: string;
+  tokenExpiresAt: string | null;
+  autoRenews: boolean;
+  grantedScopes: string[] | null;
+  requestedScopes: string[];
+  requiredScopes: string[];
+  missingScopes: string[];
+  lastCheck: HubCheck | null;
+  lastSuccessfulCheckAt: string | null;
+  checks: HubCheck[];
+  resources: HubConnectionResource[];
+  pendingPosts: number;
+}
+
+export interface HubConnectionsResponse {
+  viewer: { name: string | null; email: string; canManage: boolean };
+  items: HubConnection[];
+}
+
+export type HubProviderState = "available" | "unsupported" | "not_configured" | "platform_disabled" | "maintenance" | "new_connections_paused";
+
+export interface HubProvider {
+  provider: BackendOAuthProvider;
+  name: string;
+  description: string;
+  docsUrl: string;
+  state: HubProviderState;
+  connectable: boolean;
+  note: string | null;
+  requestedScopes: string[];
+  requiredScopes: string[];
+  autoRenews: boolean;
+  capabilities: { id: string; name: string; requiredScopes: string[]; affectedModules: string[] }[];
+}
+
+export interface HubActivityItem {
+  id: string;
+  at: string;
+  event: "connected" | "reconnected" | "disconnected" | "sync_completed" | "sync_failed" | "mapping_changed" | "resource_removed" | "settings_updated" | "reconnect_required";
+  result: "success" | "failed" | "warning" | "info";
+  actor: string;
+  summary: string;
+  connectionId: string | null;
+  providerId: BackendOAuthProvider | null;
+  clientId: string | null;
+}
+
+export interface HubSettings {
+  autoRefresh: boolean;
+  confirmBeforeDisconnect: boolean;
+  blockDisconnectWithScheduledPosts: boolean;
+}
+
+export interface HubDisconnectResult {
+  mode: "removed" | "kept_history" | "pages_moved";
+  pendingPosts: number;
+}
+
 export const integrationsApi = {
+  async getHubConnections(companyId: string, signal?: AbortSignal): Promise<HubConnectionsResponse> {
+    return apiClient.request<HubConnectionsResponse>({ method: "GET", path: "/integrations/connections", headers: companyScopeHeaders(companyId), signal });
+  },
+
+  async getHubProviders(companyId: string, signal?: AbortSignal): Promise<{ items: HubProvider[] }> {
+    return apiClient.request<{ items: HubProvider[] }>({ method: "GET", path: "/integrations/providers", headers: companyScopeHeaders(companyId), signal });
+  },
+
+  async getHubActivity(companyId: string, signal?: AbortSignal): Promise<{ items: HubActivityItem[] }> {
+    return apiClient.request<{ items: HubActivityItem[] }>({ method: "GET", path: "/integrations/activity", query: { limit: "100" }, headers: companyScopeHeaders(companyId), signal });
+  },
+
+  async getHubSettings(companyId: string, signal?: AbortSignal): Promise<HubSettings> {
+    return apiClient.request<HubSettings>({ method: "GET", path: "/integrations/settings", headers: companyScopeHeaders(companyId), signal });
+  },
+
+  async saveHubSettings(companyId: string, patch: Partial<HubSettings>, signal?: AbortSignal): Promise<HubSettings> {
+    return apiClient.request<HubSettings>({ method: "PUT", path: "/integrations/settings", headers: companyScopeHeaders(companyId), body: patch, signal });
+  },
+
+  /** A real check: asks the provider what the login can reach. Answers 200 even when the check itself failed. */
+  async checkConnection(companyId: string, integrationId: string, signal?: AbortSignal): Promise<HubCheck> {
+    return apiClient.request<HubCheck>({ method: "POST", path: `/integrations/connections/${encodeURIComponent(integrationId)}/check`, headers: companyScopeHeaders(companyId), signal });
+  },
+
+  async disconnectConnection(companyId: string, integrationId: string, signal?: AbortSignal): Promise<HubDisconnectResult> {
+    return apiClient.request<HubDisconnectResult>({ method: "DELETE", path: `/integrations/connections/${encodeURIComponent(integrationId)}`, headers: companyScopeHeaders(companyId), signal });
+  },
+
+  async moveMapping(companyId: string, mappingId: string, clientId: string, signal?: AbortSignal): Promise<{ moved: true }> {
+    return apiClient.request<{ moved: true }>({ method: "PATCH", path: `/integrations/mappings/${encodeURIComponent(mappingId)}`, headers: companyScopeHeaders(companyId), body: { clientId }, signal });
+  },
+
+  async unmapResource(companyId: string, mappingId: string, signal?: AbortSignal): Promise<{ removed: true }> {
+    return apiClient.request<{ removed: true }>({ method: "DELETE", path: `/integrations/mappings/${encodeURIComponent(mappingId)}`, headers: companyScopeHeaders(companyId), signal });
+  },
+
+  /** Starts a reconnect of one existing login: the provider's consent screen is pre-filled with that account. */
+  async initReconnect(companyId: string, provider: BackendOAuthProvider, integrationId: string, signal?: AbortSignal): Promise<OAuthInitResponse> {
+    return apiClient.request<OAuthInitResponse>({
+      method: "POST",
+      path: "/integrations/oauth/init",
+      headers: companyScopeHeaders(companyId),
+      body: { provider, integrationId },
+      signal,
+      skipSessionExpiry: false,
+    });
+  },
+
   async getLinkedInDashboard(
     companyId: string,
     clientId: string,

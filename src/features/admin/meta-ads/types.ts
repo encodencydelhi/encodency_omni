@@ -25,6 +25,7 @@ export type Metrics = {
 };
 
 export type Campaign = {
+  budgetSource?: "Campaign budget" | "Ad set budgets";
   id: string;
   name: string;
   status: EntityStatus;

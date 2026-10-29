@@ -1,6 +1,8 @@
 "use client";
+import { openMetaTool } from "@/features/admin/meta-ads/meta-tool";
 
 import Link from "next/link";
+import { downloadRecords } from "@/features/admin/meta-ads/export";
 import { Suspense, useMemo, useState } from "react";
 import {
   Archive,
@@ -184,7 +186,7 @@ function CampaignsView() {
               <>
                 <button
                   type="button"
-                  onClick={() => toast.success("Campaign export queued — we will email the CSV.")}
+                  onClick={() => downloadRecords("meta-campaigns", rows)}
                   className={btn}
                 >
                   <Download className="size-3.5" />
@@ -404,10 +406,10 @@ function CampaignsView() {
                         groups={[
                           [
                             { label: "View Campaign", href },
-                            { label: "Edit", href: `${ADS_ROOT}/create?campaign=${c.id}` },
+                            { label: "Edit In Meta", href: `${ADS_ROOT}/create?campaign=${c.id}` },
                             {
-                              label: "Duplicate",
-                              onSelect: () => toast.success(`Duplicating “${c.name}”…`),
+                              label: "Duplicate In Meta",
+                              onSelect: () => openMetaTool("campaigns", accountId),
                             },
                             {
                               label: busyId === c.id ? "Updating…" : PAUSABLE.includes(c.status) ? "Pause" : "Resume",
@@ -425,9 +427,9 @@ function CampaignsView() {
                           ],
                           [
                             {
-                              label: "Archive",
+                              label: "Archive In Meta",
                               danger: true,
-                              onSelect: () => toast.success(`Archived “${c.name}”`),
+                              onSelect: () => openMetaTool("campaigns", accountId),
                             },
                           ],
                         ]}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { MetaScopeBar } from "@/features/admin/meta-ads/components/scope-bar";
 import { useState, type ReactNode } from "react";
 import { FaFacebookF, FaInstagram, FaMeta } from "react-icons/fa6";
 import { CheckCircle2, CircleDashed, Loader2, LogOut, RefreshCw, XCircle } from "lucide-react";
@@ -29,6 +30,7 @@ const PRODUCT_ICON: Record<MetaProduct, typeof FaMeta> = { ads: FaMeta, facebook
 export function MetaSettingsPage() {
   return (
     <MetaShell title="Meta settings" subtitle="Connection, permissions and linked accounts." showRefresh>
+      <MetaScopeBar />
       <SettingsBody />
     </MetaShell>
   );

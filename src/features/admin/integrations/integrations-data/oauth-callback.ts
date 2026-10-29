@@ -23,6 +23,10 @@ export type OAuthCallbackReason =
   | "exchange_failed"
   | "invalid_token_response"
   | "identity_unverified"
+  | "youtube_auth_denied"
+  | "youtube_insufficient_scope"
+  | "youtube_additional_permission_denied"
+  | "youtube_upgrade_account_mismatch"
   | "storage_failed";
 
 const REASON_VALUES: ReadonlySet<string> = new Set<OAuthCallbackReason>([
@@ -37,6 +41,10 @@ const REASON_VALUES: ReadonlySet<string> = new Set<OAuthCallbackReason>([
   "exchange_failed",
   "invalid_token_response",
   "identity_unverified",
+  "youtube_auth_denied",
+  "youtube_insufficient_scope",
+  "youtube_additional_permission_denied",
+  "youtube_upgrade_account_mismatch",
   "storage_failed",
 ]);
 
@@ -98,6 +106,10 @@ const REASON_MESSAGE: Record<OAuthCallbackReason, string> = {
   exchange_failed: "The authorization could not be completed. Start the connection again.",
   invalid_token_response: "The provider returned an unexpected response. Start the connection again.",
   identity_unverified: "The provider account identity could not be verified.",
+  youtube_auth_denied: "You declined access on Google's consent screen.",
+  youtube_insufficient_scope: "Google did not grant permission to read the YouTube channel. Start again and keep the YouTube permission ticked.",
+  youtube_additional_permission_denied: "Google did not grant the extra YouTube permission that was asked for.",
+  youtube_upgrade_account_mismatch: "You signed in with a different Google account than the one already connected. Use the same account.",
   storage_failed: "The connection could not be saved. Start the connection again.",
 };
 
@@ -113,7 +125,7 @@ export function oauthCallbackFeedback(result: OAuthCallbackResult): OAuthCallbac
     return {
       tone: "success",
       title: `${label} authorization complete`,
-      description: "Access was granted. Finish setting up the connection from Available.",
+      description: "Access was granted and the connection is up to date.",
     };
   }
   return {

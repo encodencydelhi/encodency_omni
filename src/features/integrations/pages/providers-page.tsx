@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { exportProvidersToCsv } from "../data/export-utils";
-import { useProviders } from "../data/hooks";
+import { useProviderConfig, useProviders } from "../data/hooks";
 import { filterProviders, type ProviderFilters } from "../data/selectors";
 import type {
   ExternalApiAccess,
@@ -89,7 +89,7 @@ export function ProvidersPage() {
               Provider Catalogue
             </h1>
             <span className="px-2 py-0.5 text-xs font-semibold bg-slate-100 text-slate-700 rounded-full border border-slate-200">
-              {filteredProviders.length} Configured
+              {filteredProviders.length} {filteredProviders.length === 1 ? "Provider" : "Providers"}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -136,11 +136,7 @@ export function ProvidersPage() {
             <SelectItem value="all">All Categories</SelectItem>
             <SelectItem value="social">Social Media</SelectItem>
             <SelectItem value="local">Local SEO</SelectItem>
-            <SelectItem value="messaging">Messaging</SelectItem>
             <SelectItem value="video">Video</SelectItem>
-            <SelectItem value="analytics">Analytics</SelectItem>
-            <SelectItem value="seo">SEO</SelectItem>
-            <SelectItem value="media">Media & CDN</SelectItem>
           </SelectContent>
         </Select>
 
@@ -155,9 +151,9 @@ export function ProvidersPage() {
           <SelectContent className="text-xs">
             <SelectItem value="all">All Availability</SelectItem>
             <SelectItem value="live">Live</SelectItem>
-            <SelectItem value="restricted">Restricted</SelectItem>
-            <SelectItem value="testing">Testing</SelectItem>
+            <SelectItem value="restricted">Maintenance</SelectItem>
             <SelectItem value="disabled">Disabled</SelectItem>
+            <SelectItem value="draft">Not built</SelectItem>
           </SelectContent>
         </Select>
 
@@ -171,10 +167,11 @@ export function ProvidersPage() {
           </SelectTrigger>
           <SelectContent className="text-xs">
             <SelectItem value="all">All API Access</SelectItem>
+            <SelectItem value="not_recorded">Not recorded</SelectItem>
             <SelectItem value="approved">Approved</SelectItem>
             <SelectItem value="pending_approval">Pending Review</SelectItem>
             <SelectItem value="limited_access">Limited Access</SelectItem>
-            <SelectItem value="not_applicable">Not Applicable</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
           </SelectContent>
         </Select>
 
@@ -226,40 +223,13 @@ export function ProvidersPage() {
         }}
       />
 
-      {/* Configuration Modal */}
-      {configProvider && (
-        <ProviderConfigModal
-          config={{
-            providerId: configProvider.id,
-            providerCode: configProvider.id,
-            category: configProvider.category,
-            environment: "production",
-            platformAvailability: configProvider.platformAvailability,
-            description: configProvider.description,
-            supportedResourceTypes: configProvider.supportedResourceTypes,
-            internalNotes: `Platform connector notes for ${configProvider.name}`,
-            authMethod: configProvider.authMethod,
-            redirectUri: `https://app.encodency.com/api/v1/auth/callback/${configProvider.id}`,
-            requiredScopes: ["read_insights", "publish_posts"],
-            supportedAccountTypes: ["Standard Business Account"],
-            externalApiApprovalStatus: configProvider.externalApiAccess,
-            appReviewNotes: configProvider.appReviewNotes || "Verified.",
-            credentialConfigured: true,
-            credentialEnv: "production",
-            lastRotatedAt: "2026-07-01T00:00:00Z",
-            secretReferenceStatus: "active_in_vault",
-            publicAppId: `encodency-${configProvider.id}-prod`,
-            allowNewConnections: configProvider.platformAvailability === "live",
-            allowExistingPublishing: true,
-            allowExistingSync: true,
-            enableWebhooks: true,
-            maintenanceMode: false,
-            visibilityInCompanyAdmin: true,
-          }}
-          isOpen={Boolean(configProvider)}
-          onClose={() => setConfigProvider(null)}
-        />
-      )}
+      {/* Configuration Modal: always the server's own configuration, never a guess */}
+      {configProvider && <ConfigModalHost providerId={configProvider.id} onClose={() => setConfigProvider(null)} />}
     </div>
   );
+}
+
+function ConfigModalHost({ providerId, onClose }: { providerId: string; onClose: () => void }) {
+  const { data: config } = useProviderConfig(providerId);
+  return <ProviderConfigModal config={config ?? null} isOpen={Boolean(config)} onClose={onClose} />;
 }

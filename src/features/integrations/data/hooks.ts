@@ -152,6 +152,14 @@ export function useIntegrationSettings() {
   });
 }
 
+export function useIssueOwners() {
+  return useQuery({
+    queryKey: [...INTEGRATION_QUERY_KEYS.all, "issue-owners"] as const,
+    queryFn: () => integrationsRepository.getIssueOwners(),
+    staleTime: DEFAULT_STALE_TIME,
+  });
+}
+
 // -------------------------------------------------------------
 // Mutations
 // -------------------------------------------------------------
@@ -180,7 +188,7 @@ export function useUpdateProviderOperationalControls() {
   return useMutation({
     mutationFn: (variables: {
       providerId: string;
-      controls: Partial<Pick<ProviderConfiguration, "allowNewConnections" | "allowExistingPublishing" | "allowExistingSync" | "enableWebhooks" | "maintenanceMode" | "visibilityInCompanyAdmin">>;
+      controls: Partial<Pick<ProviderConfiguration, "allowNewConnections" | "maintenanceMode">>;
     }) =>
       integrationsRepository.updateProviderOperationalControls(
         variables.providerId,
@@ -210,17 +218,6 @@ export function useUpdateProviderConfig() {
       queryClient.invalidateQueries({ queryKey: INTEGRATION_QUERY_KEYS.provider(variables.providerId) });
       queryClient.invalidateQueries({ queryKey: INTEGRATION_QUERY_KEYS.providers() });
       queryClient.invalidateQueries({ queryKey: INTEGRATION_QUERY_KEYS.activities() });
-    },
-  });
-}
-
-export function useToggleCapability() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (variables: { capabilityId: string; enabled: boolean }) =>
-      integrationsRepository.toggleCapability(variables.capabilityId, variables.enabled),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: INTEGRATION_QUERY_KEYS.all });
     },
   });
 }

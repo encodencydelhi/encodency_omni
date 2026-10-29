@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useMetaScopeKey } from "@/features/admin/meta/live/meta-scope";
 import { env } from "@/config/env";
 import { getStoredCompanyId, TENANCY_CHANGE_EVENT } from "@/lib/api/tenancy-storage";
 import { ApiError } from "@/types/api";
@@ -39,7 +40,9 @@ export interface AdsDataContextValue extends AdsData {
   /** Set when an older copy is shown because Meta is limiting requests. */
   stale: { ageSeconds: number; blockedForSeconds: number | null } | null;
   /** Per-dataset state from the backend (live only); `null` in demo mode. */
-  datasets: Partial<Record<"campaigns" | "adSets" | "ads" | "creatives" | "audiences" | "forms" | "activity" | "trend", DatasetState>> | null;
+  datasets: Partial<Record<"campaigns" | "adSets" | "ads" | "creatives" | "audiences" | "forms" | "activity" | "trend" | "performance", DatasetState>> | null;
+  leadsPartial?: boolean;
+  completeness?: ApiSnapshot["completeness"];
   leadsState: "loading" | "ready" | "error" | "idle";
   getCampaign: (id: string) => Campaign | undefined;
   getAdSet: (id: string) => AdSet | undefined;
@@ -133,6 +136,7 @@ const DEMO_ACCOUNTS: ApiAdAccount[] = [];
 
 export function AdsDataProvider({ children }: { children: ReactNode }) {
   const params = useSearchParams();
+  const scopeKey = useMetaScopeKey();
   const queryClient = useQueryClient();
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [chosenAccount, setChosenAccount] = useState<string | null>(null);
@@ -157,7 +161,7 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
   const period: ApiPeriod = RANGE_TO_PERIOD[params?.get("range") ?? "Last 30 days"] ?? "30d";
 
   const accountsQuery = useQuery({
-    queryKey: ["meta-ads", companyId, "accounts"],
+    queryKey: ["meta-ads", companyId, scopeKey, "accounts"],
     enabled: LIVE && Boolean(companyId),
     queryFn: ({ signal }) => metaAdsApi.accounts(companyId!, signal, takeForce()),
     staleTime: 60_000,
@@ -175,7 +179,7 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
   }, [accounts, chosenAccount, stored]);
 
   const snapshotQuery = useQuery<ApiSnapshot>({
-    queryKey: ["meta-ads", companyId, "snapshot", accountId, period],
+    queryKey: ["meta-ads", companyId, scopeKey, "snapshot", accountId, period],
     enabled: LIVE && Boolean(companyId) && Boolean(accountId),
     queryFn: ({ signal }) => metaAdsApi.snapshot(companyId!, accountId!, period, signal, takeForce()),
     staleTime: 60_000,
@@ -185,9 +189,9 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
 
   const hasForms = (snapshotQuery.data?.forms.data.length ?? 0) > 0;
   const leadsQuery = useQuery({
-    queryKey: ["meta-ads", companyId, "leads", accountId],
+    queryKey: ["meta-ads", companyId, scopeKey, "leads", accountId],
     enabled: LIVE && Boolean(companyId) && hasForms,
-    queryFn: ({ signal }) => metaAdsApi.leads(companyId!, signal, takeForce()),
+    queryFn: ({ signal }) => metaAdsApi.leads(companyId!, signal, takeForce(), accountId ?? undefined),
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
     retry: false,
@@ -296,6 +300,7 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
       stale,
       datasets: snapshot
         ? {
+            performance: snapshot.performance?.state ?? "live",
             campaigns: snapshot.campaigns.state,
             adSets: snapshot.adSets.state,
             ads: snapshot.ads.state,
@@ -306,9 +311,11 @@ export function AdsDataProvider({ children }: { children: ReactNode }) {
             trend: snapshot.trend.state,
           }
         : null,
+      leadsPartial: leadsQuery.data?.partial ?? false,
+      completeness: snapshot?.completeness,
       leadsState: !hasForms ? "idle" : leadsQuery.isError ? "error" : leadsQuery.isSuccess ? "ready" : "loading",
     };
-  }, [companyId, accountsQuery.isError, accountsQuery.isSuccess, accountsQuery.error, accounts, snapshotQuery.isError, snapshotQuery.isFetching, snapshotQuery.error, snapshot, liveData, accountId, setAccountId, period, refresh, hasForms, leadsQuery.isError, leadsQuery.isSuccess]);
+  }, [companyId, accountsQuery.isError, accountsQuery.isSuccess, accountsQuery.error, accounts, snapshotQuery.isError, snapshotQuery.isFetching, snapshotQuery.error, snapshot, liveData, accountId, setAccountId, period, refresh, hasForms, leadsQuery.isError, leadsQuery.isSuccess, leadsQuery.data?.partial]);
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

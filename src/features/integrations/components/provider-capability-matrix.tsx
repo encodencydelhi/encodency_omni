@@ -9,7 +9,6 @@
 import { useState, useMemo } from "react";
 import { SearchIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils/cn";
 import { resolveCapabilityEffectiveAvailability } from "../data/capability-resolver";
 import type {
@@ -18,7 +17,6 @@ import type {
   ProviderCapability,
   ProviderConfiguration,
 } from "../data/types";
-import { useToggleCapability } from "../data/hooks";
 import { CapabilityDetailDrawer } from "./capability-detail-drawer";
 import { ApiAccessBadge } from "./status-badges";
 
@@ -35,7 +33,7 @@ const CATEGORIES: { id: CapabilityCategory | "all"; label: string }[] = [
   { id: "publishing", label: "Publishing" },
   { id: "engagement", label: "Engagement" },
   { id: "analytics", label: "Analytics" },
-  { id: "webhooks", label: "Webhooks" },
+  { id: "synchronization", label: "Sync" },
 ];
 
 export function ProviderCapabilityMatrix({
@@ -48,8 +46,6 @@ export function ProviderCapabilityMatrix({
   const [selectedCategory, setSelectedCategory] = useState<CapabilityCategory | "all">("all");
   const [selectedCapability, setSelectedCapability] = useState<ProviderCapability | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  const toggleCapability = useToggleCapability();
 
   const filteredCapabilities = useMemo(() => {
     return capabilities.filter((c) => {
@@ -122,7 +118,7 @@ export function ProviderCapabilityMatrix({
                 <th className="py-3 px-4">API Approval</th>
                 <th className="py-3 px-4">Connector</th>
                 <th className="py-3 px-4">Effective Status</th>
-                <th className="py-3 px-4 text-center">Platform Switch</th>
+                <th className="py-3 px-4 text-center">Platform</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -186,17 +182,10 @@ export function ProviderCapabilityMatrix({
                         </span>
                       </td>
 
-                      <td className="py-3 px-4 text-center" onClick={(e) => e.stopPropagation()}>
-                        <Switch
-                          checked={cap.platformEnabled}
-                          onCheckedChange={() =>
-                            toggleCapability.mutate({
-                              capabilityId: cap.id,
-                              enabled: !cap.platformEnabled,
-                            })
-                          }
-                          aria-label={`Toggle ${cap.name}`}
-                        />
+                      <td className="py-3 px-4 text-center">
+                        <span className={cn("text-xs font-semibold", cap.platformEnabled ? "text-emerald-700" : "text-slate-500")}>
+                          {cap.platformEnabled ? "Available" : "Paused"}
+                        </span>
                       </td>
                     </tr>
                   );
@@ -214,13 +203,6 @@ export function ProviderCapabilityMatrix({
         config={config}
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        onTogglePlatformEnablement={(cap) => {
-          toggleCapability.mutate({
-            capabilityId: cap.id,
-            enabled: !cap.platformEnabled,
-          });
-          setSelectedCapability({ ...cap, platformEnabled: !cap.platformEnabled });
-        }}
       />
     </div>
   );

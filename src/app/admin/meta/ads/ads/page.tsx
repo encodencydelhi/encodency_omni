@@ -1,10 +1,11 @@
 "use client";
+import { openMetaTool } from "@/features/admin/meta-ads/meta-tool";
 
 import { AdImage } from "@/features/admin/meta-ads/components/ad-image";
 import Link from "next/link";
+import { downloadRecords } from "@/features/admin/meta-ads/export";
 import { Suspense, useMemo } from "react";
 import { Download, FileImage, Plus } from "lucide-react";
-import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
 import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import { useMetaAdsWrites } from "@/features/admin/meta-ads/live/meta-ads-writes";
@@ -130,7 +131,7 @@ function AdsView() {
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => toast.success("Ad export queued.")} className={btn}>
+            <button type="button" onClick={() => downloadRecords("meta-ads", rows)} className={btn}>
               <Download className="size-3.5" />
               Export
             </button>
@@ -294,10 +295,10 @@ function AdsView() {
                         groups={[
                           [
                             { label: "Preview", href: `${ADS_ROOT}/ads/${a.id}` },
-                            { label: "Edit", href: `${ADS_ROOT}/create?ad=${a.id}&step=ad` },
+                            { label: "Edit In Meta", href: `${ADS_ROOT}/create?ad=${a.id}&step=ad` },
                             {
-                              label: "Duplicate",
-                              onSelect: () => toast.success(`Duplicating “${a.name}”…`),
+                              label: "Duplicate In Meta",
+                              onSelect: () => openMetaTool("ads", accountId),
                             },
                             {
                               label: busyId === a.id ? "Updating…" : a.status === "paused" ? "Resume" : "Pause",
@@ -320,9 +321,9 @@ function AdsView() {
                           ],
                           [
                             {
-                              label: "Archive",
+                              label: "Archive In Meta",
                               danger: true,
-                              onSelect: () => toast.success(`Archived “${a.name}”`),
+                              onSelect: () => openMetaTool("ads", accountId),
                             },
                           ],
                         ]}

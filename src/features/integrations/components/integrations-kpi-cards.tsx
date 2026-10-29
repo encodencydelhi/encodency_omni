@@ -82,7 +82,7 @@ export function IntegrationsKpiCards({
       label: "HEALTHY",
       tooltip: "Healthy Connections in Good Standing",
       value: kpis.healthyConnections,
-      sub: `${kpis.activeConnections > 0 ? Math.round((kpis.healthyConnections / kpis.activeConnections) * 100) : 100}% uptime`,
+      sub: kpis.activeConnections > 0 ? `${Math.round((kpis.healthyConnections / kpis.activeConnections) * 100)}% of active` : "No connections yet",
       icon: CheckCircle2Icon,
       valueColor: "text-emerald-700",
       iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100",

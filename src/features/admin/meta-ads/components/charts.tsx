@@ -2,7 +2,7 @@
 
 import {
   Area,
-  AreaChart,
+  ComposedChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -31,6 +31,7 @@ export const SERIES = {
   clicks: "#0ea5e9",
 } as const;
 
+const numValue = (value: unknown) => new Intl.NumberFormat("en-IN").format(Number(value));
 const axis = { fontSize: 10, fill: "#475569", fontWeight: 600 };
 
 const tooltipStyle = {
@@ -86,7 +87,7 @@ export function PerformanceTrend({
       />
       <div className="flex-1 min-h-0" style={height ? { height } : undefined}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={height ?? 0}>
-          <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+          <ComposedChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0" stopColor={SERIES.spend} stopOpacity={0.18} />
@@ -95,10 +96,12 @@ export function PerformanceTrend({
             </defs>
             <CartesianGrid stroke="#e5eaf1" vertical={false} />
             <XAxis dataKey="label" tick={axis} axisLine={false} tickLine={false} interval={5} />
-            <YAxis width={40} tick={axis} axisLine={false} tickLine={false} tickFormatter={(v) => compactNum(v / 100)} />
-            <Tooltip contentStyle={tooltipStyle} />
+            <YAxis yAxisId="money" width={48} tick={axis} axisLine={false} tickLine={false} tickFormatter={(v) => compactNum(v / 100)} />
+            <YAxis yAxisId="count" orientation="right" width={40} tick={axis} axisLine={false} tickLine={false} tickFormatter={compactNum} />
+            <Tooltip contentStyle={tooltipStyle} formatter={(value, name) => name === "Leads" ? numValue(value) : money(Number(value))} />
             <Area
               type="monotone"
+              yAxisId="money"
               dataKey="spend"
               name="Spend"
               stroke={SERIES.spend}
@@ -106,9 +109,9 @@ export function PerformanceTrend({
               fill="url(#spendFill)"
               dot={false}
             />
-            <Line type="monotone" dataKey="leads" name="Leads" stroke={SERIES.leads} strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="cpl" name="CPL" stroke={SERIES.cpl} strokeWidth={2} dot={false} />
-          </AreaChart>
+            <Line yAxisId="count" type="monotone" dataKey="leads" name="Leads" stroke={SERIES.leads} strokeWidth={2} dot={false} />
+            <Line yAxisId="money" type="monotone" dataKey="cpl" name="CPL" stroke={SERIES.cpl} strokeWidth={2} dot={false} />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>

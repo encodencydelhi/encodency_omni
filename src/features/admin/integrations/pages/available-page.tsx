@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { CheckCircle2, ExternalLink, Info, Lock, Plug, Search } from "lucide-react";
 import { Sheet, SheetBody, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils/cn";
-import { CATEGORY_LABEL, CATEGORY_ORDER, DATA_TYPE_LABEL, MODULE_META, intRoutes } from "../integrations-data/config";
+import { CATEGORY_LABEL, CATEGORY_ORDER, MODULE_META, intRoutes } from "../integrations-data/config";
 import { useClientScope, useQueryState } from "../integrations-data/hooks";
 import { connectionClientIds, isActive, providerState, type AvailabilityState } from "../integrations-data/selectors";
 import { useIntegrations } from "../store/integrations-store";
@@ -105,6 +105,21 @@ function Available() {
         ))
       )}
 
+      <Card className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
+        <p className="flex items-center gap-2 text-[12px] text-[#3C4A66]">
+          <Info className="size-3.5 shrink-0 text-[#6B7890]" />
+          <span>
+            Not listed here, because they are set up in their own modules:
+            <b className="font-semibold text-[#0F1B3D]"> WhatsApp</b> (WhatsApp page), <b className="font-semibold text-[#0F1B3D]">website tracking and Search Console</b> (Website), and <b className="font-semibold text-[#0F1B3D]">email sending</b> (Settings).
+          </span>
+        </p>
+        <span className="ml-auto flex items-center gap-1">
+          <Button size="xs" variant="secondary" href="/admin/whatsapp">WhatsApp</Button>
+          <Button size="xs" variant="secondary" href="/admin/website">Website</Button>
+          <Button size="xs" variant="secondary" href="/admin/settings">Settings</Button>
+        </span>
+      </Card>
+
       <AboutSheet provider={about} onOpenChange={(open) => !open && setAbout(null)} />
     </div>
   );
@@ -127,7 +142,7 @@ function ProviderCard({
   const { clientId, withScope } = useClientScope();
   const unavailable = state === "unavailable";
   const meta = STATE_META[state];
-  const connectHref = withScope(`${intRoutes.available}?connect=1&provider=${provider.id}${clientId !== "all" ? `&for=${clientId}` : ""}`);
+  const connectHref = withScope(`${intRoutes.available}?connect=1&provider=${provider.id}`);
 
   return (
     <article className={cn("flex min-w-0 flex-col rounded-[10px] border border-[#E4E9F0] bg-white shadow-[0_1px_2px_rgba(15,27,61,0.04)] transition", unavailable ? "bg-[#FBFCFD]" : "hover:border-[#C9D1DC]")}>
@@ -138,7 +153,7 @@ function ProviderCard({
             {provider.name}
             {unavailable && <Lock className="size-3 shrink-0 text-[#98A2B3]" aria-label="Unavailable" />}
           </p>
-          <p className="text-[11px] text-[#6B7890]">{provider.scope === "organization" ? "Organization-wide" : "Per client"}</p>
+          <p className="text-[11px] text-[#6B7890]">Per client</p>
         </div>
         <span className={cn("inline-flex h-[22px] shrink-0 items-center whitespace-nowrap rounded-sm px-1.5 text-[11px] font-semibold ring-1 ring-inset", meta.chip)}>
           {unavailable ? (provider.availability === "coming_soon" ? "Coming soon" : provider.availability === "plan_restricted" ? "Not on plan" : "Unavailable") : meta.label}
@@ -175,11 +190,9 @@ function ProviderCard({
             <Button size="xs" variant="secondary" href={withScope(`${intRoutes.connected}?provider=${provider.id}`)}>
               Manage
             </Button>
-            {provider.scope === "client" && (
-              <Button size="xs" variant="ghost" gate={can.canConnect} href={connectHref}>
-                Connect another
-              </Button>
-            )}
+            <Button size="xs" variant="ghost" gate={can.canConnect} href={connectHref}>
+              Connect another login
+            </Button>
           </>
         ) : (
           <Button size="xs" variant="primary" icon={Plug} gate={can.canConnect} href={connectHref}>
@@ -197,7 +210,7 @@ function ProviderCard({
 function AboutSheet({ provider, onOpenChange }: { provider: IntegrationProvider | null; onOpenChange: (open: boolean) => void }) {
   const router = useRouter();
   const { can } = useIntegrations();
-  const { clientId, withScope } = useClientScope();
+  const { withScope } = useClientScope();
   return (
     <Sheet open={provider !== null} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full max-w-[460px] border-[#E4E9F0] bg-white">
@@ -208,7 +221,7 @@ function AboutSheet({ provider, onOpenChange }: { provider: IntegrationProvider 
                 <ProviderLogo providerId={provider.id} className="size-10" />
                 <div>
                   <SheetTitle className="text-[15px] text-[#0F1B3D]">{provider.name}</SheetTitle>
-                  <SheetDescription className="text-[12px] text-[#6B7890]">{CATEGORY_LABEL[provider.category]} · {provider.scope === "organization" ? "Organization-wide" : "Per client"}</SheetDescription>
+                  <SheetDescription className="text-[12px] text-[#6B7890]">{CATEGORY_LABEL[provider.category]} · Per client</SheetDescription>
                 </div>
               </div>
             </SheetHeader>
@@ -241,12 +254,6 @@ function AboutSheet({ provider, onOpenChange }: { provider: IntegrationProvider 
                   </ul>
                 </div>
               )}
-              {provider.dataTypes.length > 0 && (
-                <div>
-                  <p className="mb-1 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Data synced</p>
-                  <p className="text-[12.5px] text-[#24324F]">{provider.dataTypes.map((type) => DATA_TYPE_LABEL[type]).join(", ")}</p>
-                </div>
-              )}
               {provider.requirements.length > 0 && (
                 <div>
                   <p className="mb-1 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Requirements</p>
@@ -272,7 +279,7 @@ function AboutSheet({ provider, onOpenChange }: { provider: IntegrationProvider 
                   gate={can.canConnect}
                   onClick={() => {
                     onOpenChange(false);
-                    router.replace(withScope(`${intRoutes.available}?connect=1&provider=${provider.id}${clientId !== "all" ? `&for=${clientId}` : ""}`), { scroll: false });
+                    router.replace(withScope(`${intRoutes.available}?connect=1&provider=${provider.id}`), { scroll: false });
                   }}
                 >
                   Connect

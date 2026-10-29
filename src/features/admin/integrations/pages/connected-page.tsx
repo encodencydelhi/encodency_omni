@@ -6,7 +6,7 @@ import { Download, Filter, KeyRound, Plug, Plus, RefreshCw, SlidersHorizontal, S
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils/cn";
-import { syncCapability, reconnectCapability } from "../integrations-data/capability-provider";
+import { checkCapability, reconnectCapability } from "../integrations-data/capability-provider";
 import { MODULE_META, STATUS_META, STATUS_ORDER, intRoutes } from "../integrations-data/config";
 import { useClientScope, useQueryState, useScopedData } from "../integrations-data/hooks";
 import {
@@ -23,7 +23,7 @@ import {
 import { useIntegrations } from "../store/integrations-store";
 import type { IntegrationConnection, IntegrationIssue, ModuleKey } from "../integrations-data/types";
 import { PageSkeleton } from "../components/blocks";
-import { SyncButton, useConnectionActions } from "../components/connection-actions";
+import { CheckButton, useConnectionActions } from "../components/connection-actions";
 import {
   ActionMenu,
   Button,
@@ -45,7 +45,7 @@ import {
   x,
 } from "../components/ui";
 
-const DEFAULTS = { q: "", provider: "all", status: "all", health: "all", module: "all", sync: "all", sort: "name" };
+const DEFAULTS = { q: "", provider: "all", status: "all", health: "all", module: "all", check: "all", sort: "name" };
 
 export function ConnectedPage() {
   const { ready } = useIntegrations();
@@ -54,8 +54,8 @@ export function ConnectedPage() {
 }
 
 function Connected() {
-  const { data, can, syncJobs, runSyncAll } = useIntegrations();
-  const { withScope, clientId, label } = useClientScope();
+  const { data, can, checkJobs, runCheckAll } = useIntegrations();
+  const { withScope, label } = useClientScope();
   const { connections, dependencies, issues } = useScopedData();
   const { values, set, reset } = useQueryState(useMemo(() => DEFAULTS, []));
   const { value: search, pending } = useDebounced(values.q, 200);
@@ -71,17 +71,17 @@ function Connected() {
       status: values.status,
       health: values.health as ConnectionFilters["health"],
       module: values.module,
-      lastSync: values.sync as ConnectionFilters["lastSync"],
+      lastCheck: values.check as ConnectionFilters["lastCheck"],
       sort: values.sort as ConnectionFilters["sort"],
     }),
     [search, values],
   );
   const rows = useMemo(() => filterConnections(connections, data.providers, dependencies, filters), [connections, data.providers, dependencies, filters]);
 
-  const activeFilters = ["provider", "status", "health", "module", "sync"].filter((key) => values[key as keyof typeof values] !== "all").length + (values.q ? 1 : 0);
+  const activeFilters = ["provider", "status", "health", "module", "check"].filter((key) => values[key as keyof typeof values] !== "all").length + (values.q ? 1 : 0);
   const issuesFor = (id: string) => issues.filter((issue) => issue.connectionId === id);
   const selectedRows = rows.filter((row) => selected.includes(row.id));
-  const syncableSelected = selectedRows.filter((row) => syncCapability(row, can.canSync, Boolean(syncJobs[row.id])).allowed);
+  const checkableSelected = selectedRows.filter((row) => checkCapability(row, can.canCheck, Boolean(checkJobs[row.id])).allowed);
 
   const providerOptions = [...new Set(connections.map((connection) => connection.providerId))];
   const moduleOptions = [...new Set(dependencies.map((dependency) => dependency.module))] as ModuleKey[];
@@ -95,8 +95,8 @@ function Connected() {
           account: connection.accountName,
           clients: connectionClientIds(connection).map((id) => clientName(data.clients, id)).join(" | "),
           status: STATUS_META[connection.status].label,
-          last_sync: connection.lastSyncAt ?? "",
-          next_sync: connection.nextSyncAt ?? "",
+          last_check: connection.lastCheckedAt ?? "",
+          access_ends: connection.autoRenews ? "" : (connection.tokenExpiresAt ?? ""),
           dependencies: dependenciesFor(dependencies, connection.id).filter((dependency) => dependency.activeCount > 0).length,
         })),
       ),
@@ -122,10 +122,10 @@ function Connected() {
       />
       <SelectMenu label="Used by module" prefix="Used by:" value={values.module} onChange={(value) => set({ module: value })} options={[{ value: "all", label: "Any module" }, ...moduleOptions.map((module) => ({ value: module, label: MODULE_META[module].label }))]} />
       <SelectMenu
-        label="Last sync"
-        prefix="Last sync:"
-        value={values.sync}
-        onChange={(value) => set({ sync: value })}
+        label="Last check"
+        prefix="Last check:"
+        value={values.check}
+        onChange={(value) => set({ check: value })}
         options={[
           { value: "all", label: "Any time" },
           { value: "1h", label: "Within an hour" },
@@ -145,7 +145,7 @@ function Connected() {
       onChange={(value) => set({ sort: value })}
       options={[
         { value: "name", label: "Name" },
-        { value: "last_sync", label: "Last sync" },
+        { value: "last_check", label: "Last check" },
         { value: "health", label: "Health" },
         { value: "most_used", label: "Most used" },
       ]}
@@ -169,7 +169,7 @@ function Connected() {
           )}
           <div className="ml-auto flex items-center gap-1.5">
             {sortControl}
-            <Button size="sm" variant="primary" icon={Plus} gate={can.canConnect} href={withScope(`${intRoutes.connected}?connect=1${clientId !== "all" ? `&for=${clientId}` : ""}`)}>
+            <Button size="sm" variant="primary" icon={Plus} gate={can.canConnect} href={withScope(`${intRoutes.connected}?connect=1`)}>
               Connect
             </Button>
           </div>
@@ -183,15 +183,15 @@ function Connected() {
               size="sm"
               variant="primary"
               icon={RefreshCw}
-              gate={can.canSync}
-              disabled={syncableSelected.length === 0}
-              disabledReason="None of the selected integrations can sync right now."
+              gate={can.canCheck}
+              disabled={checkableSelected.length === 0}
+              disabledReason="None of the selected integrations can be checked right now."
               onClick={() => {
-                void runSyncAll(syncableSelected.map((row) => row.id));
+                void runCheckAll(checkableSelected.map((row) => row.id));
                 setSelected([]);
               }}
             >
-              Sync selected{syncableSelected.length !== selected.length ? ` (${syncableSelected.length})` : ""}
+              Check selected{checkableSelected.length !== selected.length ? ` (${checkableSelected.length})` : ""}
             </Button>
             <Button size="sm" variant="secondary" icon={Download} onClick={() => exportRows(selectedRows)}>
               Export
@@ -210,7 +210,7 @@ function Connected() {
             <EmptyState
               icon={Plug}
               title="No integrations connected"
-              description={`Nothing is connected for ${label} yet. Connect a service to start syncing data.`}
+              description={`Nothing is connected for ${label} yet. Connect a service to publish and report through it.`}
               action={<Button variant="primary" icon={Plus} gate={can.canConnect} href={withScope(`${intRoutes.connected}?connect=1`)}>Connect integration</Button>}
               secondary={<Button variant="secondary" href={withScope(intRoutes.available)}>Browse available</Button>}
             />
@@ -273,7 +273,7 @@ function ConnectionsTable({
   onSelect: (ids: string[]) => void;
   actions: ReturnType<typeof useConnectionActions>;
 }) {
-  const { data, can, syncJobs } = useIntegrations();
+  const { data, can } = useIntegrations();
   const { withScope, clientId } = useClientScope();
   const all = rows.length > 0 && rows.every((row) => selected.includes(row.id));
 
@@ -288,8 +288,8 @@ function ConnectionsTable({
             <th scope="col" className={cn(thClass, "min-w-[220px]")}>Integration</th>
             <th scope="col" className={thClass}>Client</th>
             <th scope="col" className={thClass}>Health</th>
-            <th scope="col" className={thClass}>Last sync</th>
-            <th scope="col" className={cn(thClass, "max-xl:hidden")}>Next sync</th>
+            <th scope="col" className={thClass}>Last check</th>
+            <th scope="col" className={cn(thClass, "max-xl:hidden")}>Access</th>
             <th scope="col" className={cn(thClass, "max-xl:hidden")}>Used by</th>
             <th scope="col" className={thClass}>Status</th>
             <th scope="col" className={cn(thClass, "w-px")}><span className="sr-only">Actions</span></th>
@@ -345,10 +345,12 @@ function ConnectionsTable({
                     </span>
                   )}
                 </td>
-                <td className={cn(tdClass, "whitespace-nowrap")}><RelativeTime iso={connection.lastSyncAt} fallback="Never" /></td>
-                <td className={cn(tdClass, "whitespace-nowrap max-xl:hidden")}>{connection.nextSyncAt ? <RelativeTime iso={connection.nextSyncAt} future /> : <span className="text-[#98A2B3]">Paused</span>}</td>
+                <td className={cn(tdClass, "whitespace-nowrap")}><RelativeTime iso={connection.lastCheckedAt} fallback="Not yet" /></td>
+                <td className={cn(tdClass, "whitespace-nowrap max-xl:hidden")}>
+                  {!isActive(connection) ? <span className="text-[#98A2B3]">—</span> : connection.autoRenews ? <span className="text-[#6B7890]">Renews itself</span> : connection.tokenExpiresAt ? <>Ends <RelativeTime iso={connection.tokenExpiresAt} future /></> : <span className="text-[#98A2B3]">No end date</span>}
+                </td>
                 <td className={cn(tdClass, "max-xl:hidden")}><ModuleChips modules={modules} max={1} nowrap /></td>
-                <td className={tdClass}><StatusChip status={connection.status} progress={syncJobs[connection.id]?.progress} /></td>
+                <td className={tdClass}><StatusChip status={connection.status} /></td>
                 <td className={cn(tdClass, "text-right")}>
                   <span className="flex items-center justify-end gap-1">
                     {needsReconnect ? (
@@ -356,9 +358,9 @@ function ConnectionsTable({
                         Reconnect
                       </Button>
                     ) : isActive(connection) ? (
-                      <SyncButton connection={connection} size="xs" />
+                      <CheckButton connection={connection} size="xs" />
                     ) : (
-                      <Button size="xs" variant="secondary" gate={can.canConnect} href={withScope(`${intRoutes.connected}?connect=1&provider=${connection.providerId}${connection.clientId ? `&for=${connection.clientId}` : ""}`)}>
+                      <Button size="xs" variant="secondary" gate={can.canConnect} href={withScope(`${intRoutes.connected}?connect=1&provider=${connection.providerId}`)}>
                         Connect again
                       </Button>
                     )}
@@ -387,7 +389,7 @@ function ConnectionsTable({
 /* ------------------------------------------------------------------ */
 
 function ConnectionsList({ rows, issuesFor, actions }: { rows: IntegrationConnection[]; issuesFor: (id: string) => IntegrationIssue[]; actions: ReturnType<typeof useConnectionActions> }) {
-  const { data, can, syncJobs } = useIntegrations();
+  const { data, can } = useIntegrations();
   const { withScope, clientId } = useClientScope();
   return (
     <ul className="grid gap-1 p-1 sm:grid-cols-2 lg:hidden">
@@ -403,19 +405,19 @@ function ConnectionsList({ rows, issuesFor, actions }: { rows: IntegrationConnec
                 <span className="block truncate text-[13px] font-semibold text-[#0F1B3D]">{provider?.name}</span>
                 <span className="block truncate text-[11.5px] text-[#6B7890]">{scopedDisplay(connection, clientId).accountName}</span>
               </Link>
-              <StatusChip status={connection.status} progress={syncJobs[connection.id]?.progress} />
+              <StatusChip status={connection.status} />
             </div>
             {top && <p className="mt-2 rounded-sm bg-[#FFFAF0] px-2 py-1.5 text-[11.5px] leading-4 text-[#B54708]">{top.title}</p>}
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-[#6B7890]">
               <ClientTag clientId={scopedDisplay(connection, clientId).clientId} className="text-[11.5px]" />
-              <span>Synced <RelativeTime iso={connection.lastSyncAt} fallback="never" /></span>
+              <span>Checked <RelativeTime iso={connection.lastCheckedAt} fallback="never" /></span>
             </div>
             <div className="mt-2.5 flex items-center gap-1">
               <Button size="xs" variant="secondary" href={withScope(intRoutes.detail(connection.id))}>Details</Button>
               {needsReconnect ? (
                 <Button size="xs" variant="primary" icon={KeyRound} gate={reconnectCapability(connection, can.canReconnect)} onClick={() => actions.openReconnect(connection)}>Reconnect</Button>
               ) : isActive(connection) ? (
-                <SyncButton connection={connection} size="xs" />
+                <CheckButton connection={connection} size="xs" />
               ) : null}
               <span className="ml-auto" />
               <ActionMenu
@@ -460,7 +462,7 @@ function HealthDialog({ open, onOpenChange, rows, issuesFor }: { open: boolean; 
                   <Link href={withScope(intRoutes.detail(connection.id))} onClick={() => onOpenChange(false)} className="block truncate text-[12.5px] font-semibold text-[#0F1B3D] hover:text-[#2563EB]">
                     {provider?.name} · {connection.accountName}
                   </Link>
-                  <p className="text-[11.5px] leading-4 text-[#6B7890]">{top ? top.todo : "No issues. Syncing on schedule."}</p>
+                  <p className="text-[11.5px] leading-4 text-[#6B7890]">{top ? top.todo : "No issues found."}</p>
                 </div>
                 <StatusChip status={connection.status} />
               </li>

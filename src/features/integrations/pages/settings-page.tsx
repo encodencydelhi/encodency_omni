@@ -24,7 +24,7 @@ export function SettingsPage() {
           </span>
         </div>
         <p className="text-xs text-slate-500 mt-0.5">
-          Platform-wide default governance policies, token expiration review intervals, backoff retry strategies, and notification thresholds.
+          What the server does by itself to keep connections working, and when a problem becomes an issue.
         </p>
       </div>
 

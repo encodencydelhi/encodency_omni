@@ -11,14 +11,15 @@ import { differenceInDays, differenceInMinutes, parseISO } from "date-fns";
 import { MODULE_META, SEVERITY_META, STATUS_META } from "./config";
 import type {
   ConnectionStatus,
+  DependencyStatus,
   IntegrationActivity,
+  IntegrationCheckRun,
   IntegrationClient,
   IntegrationConnection,
   IntegrationDependency,
   IntegrationIssue,
   IntegrationProvider,
   IntegrationResource,
-  IntegrationSyncRun,
   ModuleKey,
   ProviderId,
   Severity,
@@ -58,7 +59,7 @@ export function scopedActivity(activity: IntegrationActivity[], clientId: string
   return activity.filter((item) => item.clientId === clientId || item.clientId === null);
 }
 
-export function scopedRuns(runs: IntegrationSyncRun[], clientId: string) {
+export function scopedChecks(runs: IntegrationCheckRun[], clientId: string) {
   if (clientId === ALL_CLIENTS) return runs;
   return runs.filter((run) => run.clientId === clientId || run.clientId === null);
 }
@@ -72,7 +73,7 @@ export function scopedDisplay(connection: IntegrationConnection, clientId: strin
     return { accountName: connection.accountName, clientId: connection.clientId, extra: connection.resources.length - 1 };
   }
   const { visible } = scopedResources(connection, clientId);
-  const own = visible.find((resource) => resource.primary) ?? visible[0];
+  const own = visible[0];
   return { accountName: own?.name ?? connection.accountName, clientId, extra: Math.max(visible.length - 1, 0) };
 }
 
@@ -101,8 +102,17 @@ export function needsAttention(connection: IntegrationConnection) {
   return !STATUS_META[connection.status].healthy && connection.status !== "disconnected";
 }
 
-export function primaryResource(connection: IntegrationConnection): IntegrationResource | null {
-  return connection.resources.find((resource) => resource.primary) ?? connection.resources[0] ?? null;
+/** The account a card or row leads with: the first one mapped. */
+export function leadResource(connection: IntegrationConnection): IntegrationResource | null {
+  return connection.resources[0] ?? null;
+}
+
+/** How a dependency fares given the condition of the connection it rests on. */
+export function dependencyStatusFor(status: ConnectionStatus, critical: boolean): DependencyStatus {
+  if (status === "disconnected") return "broken";
+  if (status === "needs_reconnect" || status === "sync_failed") return critical ? "broken" : "at_risk";
+  if (status === "expiring" || status === "permission_missing" || status === "rate_limited") return "at_risk";
+  return "active";
 }
 
 export function statusBreakdown(connections: IntegrationConnection[]): { status: ConnectionStatus; count: number }[] {
@@ -113,16 +123,17 @@ export function statusBreakdown(connections: IntegrationConnection[]): { status:
     .sort((a, b) => STATUS_META[a.status].order - STATUS_META[b.status].order);
 }
 
-export function kpis(connections: IntegrationConnection[], runs: IntegrationSyncRun[], dependencies: IntegrationDependency[], syncingIds: Set<string>) {
+export function kpis(connections: IntegrationConnection[], runs: IntegrationCheckRun[], dependencies: IntegrationDependency[], checkingIds: Set<string>) {
   const active = connections.filter(isActive);
   const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
   const liveIds = new Set(active.map((connection) => connection.id));
   return {
     connected: active.filter((connection) => STATUS_META[connection.status].healthy).length,
     needsAttention: active.filter(needsAttention).length,
-    syncing: active.filter((connection) => connection.status === "syncing" || syncingIds.has(connection.id)).length,
+    checking: active.filter((connection) => connection.status === "syncing" || checkingIds.has(connection.id)).length,
+    accounts: active.reduce((sum, connection) => sum + connection.resources.length, 0),
     disconnected: connections.length - active.length,
-    failedSyncs: runs.filter((run) => run.status === "failed" && parseISO(run.startedAt).getTime() > dayAgo).length,
+    failedChecks: runs.filter((run) => run.status === "failed" && parseISO(run.startedAt).getTime() > dayAgo).length,
     dependencies: dependencies.filter((dependency) => liveIds.has(dependency.connectionId) && dependency.activeCount > 0).length,
   };
 }
@@ -151,7 +162,7 @@ export function deriveIssues(
   connections: IntegrationConnection[],
   providers: IntegrationProvider[],
   dependencies: IntegrationDependency[],
-  runs: IntegrationSyncRun[],
+  runs: IntegrationCheckRun[],
 ): IntegrationIssue[] {
   const issues: IntegrationIssue[] = [];
 
@@ -160,7 +171,7 @@ export function deriveIssues(
     const provider = providers.find((item) => item.id === connection.providerId);
     if (!provider) continue;
     const base = { connectionId: connection.id, providerId: connection.providerId, clientId: connection.clientId };
-    const detectedAt = connection.lastSyncAt ?? connection.connectedAt;
+    const detectedAt = connection.lastCheckedAt ?? connection.connectedAt;
 
     switch (connection.status) {
       case "expiring": {
@@ -180,15 +191,20 @@ export function deriveIssues(
       }
       case "needs_reconnect": {
         const code = connection.statusReason?.code;
+        // A login nothing uses is housekeeping, not an emergency: it can be reconnected or simply removed.
+        const unused = !dependencies.some((dependency) => dependency.connectionId === connection.id);
         issues.push({
           ...base,
           id: `${connection.id}-reconnect`,
-          severity: "critical",
+          severity: unused ? "warning" : "critical",
           title: code === "access_revoked" ? `${provider.name} access was revoked` : `${provider.name} account needs reconnecting`,
           happened: connection.statusReason?.detail ?? "Access to this account has lapsed.",
           affects: affectedModules(dependencies, connection.id),
-          todo: "Reconnect and approve access again. Scheduled work resumes as soon as access is restored.",
+          todo: unused
+            ? "Reconnect it if you still want to use this login, or disconnect it to clear this alert."
+            : "Reconnect and approve access again. Scheduled work resumes as soon as access is restored.",
           action: "reconnect",
+          unused,
           detectedAt,
         });
         break;
@@ -215,27 +231,26 @@ export function deriveIssues(
         const lastRun = runs.filter((run) => run.connectionId === connection.id).sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
         issues.push({
           ...base,
-          id: `${connection.id}-sync`,
+          id: `${connection.id}-check`,
           severity: hasCriticalDependency(dependencies, connection.id) ? "critical" : "warning",
-          title: `${provider.name} sync failed`,
-          happened: lastRun?.error?.message ?? connection.statusReason?.detail ?? "The last sync didn't complete.",
+          title: `${provider.name} check failed`,
+          happened: lastRun?.error?.message ?? connection.statusReason?.detail ?? "The last check didn't complete.",
           affects: affectedModules(dependencies, connection.id),
-          todo: lastRun?.error?.hint ?? "Retry the sync. If it fails again, reconnect the integration.",
-          action: "retry_sync",
+          todo: lastRun?.error?.hint ?? "Check again. If it fails again, reconnect the integration.",
+          action: "retry_check",
           detectedAt: lastRun?.startedAt ?? detectedAt,
         });
         break;
       }
       case "rate_limited": {
-        const minutes = connection.rateLimitResetAt ? Math.max(1, differenceInMinutes(parseISO(connection.rateLimitResetAt), new Date())) : null;
         issues.push({
           ...base,
           id: `${connection.id}-rate`,
           severity: "info",
           title: `${provider.name} is rate limited`,
-          happened: `${connection.statusReason?.detail ?? "The provider is throttling requests."}${minutes ? ` Expected to clear in about ${minutes} minutes.` : ""}`,
+          happened: connection.statusReason?.detail ?? "The provider is throttling requests.",
           affects: affectedModules(dependencies, connection.id),
-          todo: "No action needed — sync resumes on its own. Avoid manual syncs until it clears.",
+          todo: "No action needed. Checks work again on their own once the limit clears.",
           action: "view_details",
           detectedAt,
         });
@@ -351,8 +366,8 @@ export interface ConnectionFilters {
   status: string;
   health: "all" | "healthy" | "attention" | "disconnected";
   module: string;
-  lastSync: "all" | "1h" | "24h" | "stale";
-  sort: "name" | "last_sync" | "health" | "most_used";
+  lastCheck: "all" | "1h" | "24h" | "stale";
+  sort: "name" | "last_check" | "health" | "most_used";
 }
 
 export function filterConnections(
@@ -372,11 +387,11 @@ export function filterConnections(
     if (filters.health === "attention" && !needsAttention(connection)) return false;
     if (filters.health === "disconnected" && connection.status !== "disconnected") return false;
     if (filters.module !== "all" && !dependenciesFor(dependencies, connection.id).some((dependency) => dependency.module === filters.module)) return false;
-    if (filters.lastSync !== "all") {
-      const minutes = connection.lastSyncAt ? differenceInMinutes(new Date(), parseISO(connection.lastSyncAt)) : Infinity;
-      if (filters.lastSync === "1h" && minutes > 60) return false;
-      if (filters.lastSync === "24h" && minutes > 1440) return false;
-      if (filters.lastSync === "stale" && minutes <= 1440) return false;
+    if (filters.lastCheck !== "all") {
+      const minutes = connection.lastCheckedAt ? differenceInMinutes(new Date(), parseISO(connection.lastCheckedAt)) : Infinity;
+      if (filters.lastCheck === "1h" && minutes > 60) return false;
+      if (filters.lastCheck === "24h" && minutes > 1440) return false;
+      if (filters.lastCheck === "stale" && minutes <= 1440) return false;
     }
     if (query) {
       const haystack = `${providerName(connection.providerId)} ${connection.accountName} ${connection.resources.map((resource) => `${resource.name} ${resource.handle}`).join(" ")}`.toLowerCase();
@@ -387,8 +402,8 @@ export function filterConnections(
 
   return filtered.sort((a, b) => {
     switch (filters.sort) {
-      case "last_sync":
-        return (b.lastSyncAt ?? "").localeCompare(a.lastSyncAt ?? "");
+      case "last_check":
+        return (b.lastCheckedAt ?? "").localeCompare(a.lastCheckedAt ?? "");
       case "health":
         return STATUS_META[a.status].order - STATUS_META[b.status].order;
       case "most_used":

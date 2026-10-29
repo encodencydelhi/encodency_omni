@@ -39,6 +39,7 @@ export function ProviderImpactDialog({
 }: ProviderImpactDialogProps) {
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const updateAvailability = useUpdateProviderAvailability();
 
   if (!provider || !action) return null;
@@ -57,6 +58,7 @@ export function ProviderImpactDialog({
   const handleConfirm = async () => {
     if (!reason.trim()) return;
     setIsSubmitting(true);
+    setError(null);
     try {
       await updateAvailability.mutateAsync({
         providerId: provider.id,
@@ -67,7 +69,7 @@ export function ProviderImpactDialog({
       onSuccess?.();
       onClose();
     } catch (err) {
-      console.error("Failed to update provider availability", err);
+      setError(err instanceof Error ? err.message : "The change was not saved.");
     } finally {
       setIsSubmitting(false);
     }
@@ -128,7 +130,7 @@ export function ProviderImpactDialog({
             {isDisabling ? (
               <>
                 <li>
-                  <strong>Company Admin UI:</strong> Connect button for {provider.name} will be marked unavailable.
+                  <strong>Company Admin UI:</strong> Connect and Reconnect for {provider.name} are refused, with the platform team named as the reason.
                 </li>
                 <li>
                   <strong>Existing Authorizations:</strong> Will remain active and continue background publishing/sync.
@@ -172,6 +174,8 @@ export function ProviderImpactDialog({
             className="text-xs bg-white resize-none"
           />
         </div>
+
+        {error && <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{error}</p>}
 
         <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-slate-100">
           <Button

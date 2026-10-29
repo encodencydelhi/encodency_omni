@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
 import { metaAdsApi, type MetaAdsEntityKind } from "./meta-ads-api";
+import { moneyPrecise } from "../format";
 
 function errorMessage(error: unknown): string {
   return ApiError.isApiError(error) ? error.message : "Meta did not confirm the change.";
@@ -27,7 +28,7 @@ export function useMetaAdsWrites() {
         toast.error("Set a daily budget before activating this item.");
         return false;
       }
-      const approved = window.confirm(`Activate “${name}”? Spend can begin immediately with a daily budget of ${dailyBudget.toFixed(2)}.`);
+      const approved = window.confirm(`Activate “${name}”? Spend can begin immediately with a daily budget of ${moneyPrecise(dailyBudget)}.`);
       if (!approved) return false;
     }
     setBusyId(id);
@@ -35,7 +36,7 @@ export function useMetaAdsWrites() {
       await metaAdsApi.updateStatus(companyId, kind, id, {
         adAccountId,
         status: activating ? "ACTIVE" : "PAUSED",
-        ...(activating ? { confirmedDailyBudgetMinor: Math.round(dailyBudget! * 100) } : {}),
+        ...(activating ? { confirmedDailyBudgetMinor: dailyBudget! } : {}),
       });
       toast.success(`${activating ? "Activated" : "Paused"} “${name}”.`);
       await refresh();

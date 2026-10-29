@@ -2,63 +2,42 @@
  * Who may do what, and — for every "no" — a sentence explaining why.
  *
  * Two layers:
- *   1. Role capabilities (org admin vs manager vs member), shaped by the
- *      company's own Security settings.
- *   2. Per-connection checks: a connection can be un-syncable for reasons that
- *      have nothing to do with the user (revoked access, a rate limit).
+ *   1. The person: the server decides whether they hold `integrations:write` (Owners and Admins) and tells us once, in
+ *      `currentUser.canManage`. The screen never re-derives a role.
+ *   2. Per-connection checks: a connection can be un-checkable for reasons that have nothing to do with the person
+ *      (it is disconnected, its access has lapsed).
  */
 
-import { formatDistanceToNowStrict, parseISO } from "date-fns";
-import type { Capability, CapabilityMap, IntegrationConnection, IntegrationSettings, OrgRole } from "./types";
+import type { Capability, CapabilityMap, IntegrationConnection } from "./types";
 
 const ALLOW: Capability = { allowed: true };
+const NOT_ALLOWED = "Only Owners and Admins can change integrations. Ask one of them.";
 
-export function evaluateCapabilities(role: OrgRole, settings: IntegrationSettings, available: boolean): CapabilityMap {
+export function evaluateCapabilities(canManage: boolean, available: boolean): CapabilityMap {
   if (!available) {
     const reason = "The integration service is unavailable, so changes can't be made right now.";
     return {
       canConnect: { allowed: false, reason },
       canDisconnect: { allowed: false, reason },
       canReconnect: { allowed: false, reason },
-      canSync: { allowed: false, reason },
+      canCheck: { allowed: false, reason },
       canChangeMapping: { allowed: false, reason },
       canManageSettings: { allowed: false, reason },
     };
   }
-
-  const adminOnly = settings.security.orgAdminOnly;
-  const isAdmin = role === "org_admin";
-  const adminReason = (action: string) =>
-    `Only Organization Admins can ${action}. Your company restricts this in Integrations → Settings → Security.`;
-  const roleGate = (action: string): Capability => (isAdmin || (!adminOnly && role === "manager") ? ALLOW : { allowed: false, reason: adminReason(action) });
-
-  return {
-    canConnect: roleGate("connect integrations"),
-    canDisconnect: roleGate("disconnect integrations"),
-    canReconnect: roleGate("reconnect integrations"),
-    canChangeMapping: roleGate("change client mapping"),
-    // Syncing is non-destructive, so managers can always do it.
-    canSync: role === "member" ? { allowed: false, reason: "Members can view integrations but not start syncs. Ask a manager or admin." } : ALLOW,
-    canManageSettings: isAdmin ? ALLOW : { allowed: false, reason: "Only Organization Admins can change integration settings." },
-  };
+  const manage: Capability = canManage ? ALLOW : { allowed: false, reason: NOT_ALLOWED };
+  return { canConnect: manage, canDisconnect: manage, canReconnect: manage, canCheck: manage, canChangeMapping: manage, canManageSettings: manage };
 }
 
-/** Can this particular connection be synced right now? */
-export function syncCapability(connection: IntegrationConnection, base: Capability, syncing: boolean): Capability {
+/** Can this particular connection be checked right now? A throttled or failing connection can: a good check is how it recovers. */
+export function checkCapability(connection: IntegrationConnection, base: Capability, checking: boolean): Capability {
   if (!base.allowed) return base;
-  if (syncing || connection.status === "syncing") return { allowed: false, reason: "A sync is already running for this integration." };
+  if (checking || connection.status === "syncing") return { allowed: false, reason: "A check is already running for this integration." };
   switch (connection.status) {
     case "disconnected":
-      return { allowed: false, reason: "This integration is disconnected. Connect it again before syncing." };
+      return { allowed: false, reason: "This integration is disconnected. Connect it again before checking it." };
     case "needs_reconnect":
-      return { allowed: false, reason: "Access has lapsed. Reconnect first — a sync would fail without it." };
-    case "rate_limited":
-      return {
-        allowed: false,
-        reason: connection.rateLimitResetAt
-          ? `The provider is throttling requests. Sync resumes automatically in ${formatDistanceToNowStrict(parseISO(connection.rateLimitResetAt))}.`
-          : "The provider is throttling requests. Sync resumes automatically once the limit resets.",
-      };
+      return { allowed: false, reason: "Access has lapsed. Reconnect first — a check would fail without it." };
     default:
       return ALLOW;
   }

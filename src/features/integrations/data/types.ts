@@ -12,6 +12,7 @@ export type PlatformAvailability =
   | "retired";
 
 export type ExternalApiAccess =
+  | "not_recorded"
   | "not_requested"
   | "requested"
   | "pending_approval"
@@ -116,40 +117,47 @@ export interface IntegrationProvider {
   reconnectRequiredCount: number;
   recentFailuresCount: number;
   lastSuccessfulOperationAt: string | null;
+  /** Live data only: whether a check was throttled by the provider in the last hour. */
+  rateLimited?: boolean;
+  /** Live data only: whether the server has the provider's OAuth credentials. */
+  credentialsConfigured?: boolean;
+  /** Live data only: connection checks that ran in the last 24 hours. */
+  checksLast24h?: number;
 }
 
+/**
+ * What the platform team decides about a provider, plus the facts the server knows about it. Every field is either read from
+ * the server or saved to it, and every switch is enforced: new and reconnect logins are refused when the provider is disabled
+ * or in maintenance, and new logins when "allow new connections" is off.
+ */
 export interface ProviderConfiguration {
   providerId: string;
   providerCode: string; // internal read-only key e.g. "meta"
   category: ProviderCategory;
-  environment: "production" | "sandbox";
   platformAvailability: PlatformAvailability;
   description: string;
   supportedResourceTypes: ResourceType[];
+  /** Staff only: never shown to companies. */
   internalNotes: string;
-  
+
   // Authorization setup
   authMethod: AuthorizationMethod;
+  /** The callback URL to register with the provider; empty when the server cannot work it out. */
   redirectUri: string;
+  /** Every scope the authorization asks for. */
   requiredScopes: string[];
-  supportedAccountTypes: string[];
+  /** The provider-side approval status, as recorded by the platform team. */
   externalApiApprovalStatus: ExternalApiAccess;
   appReviewNotes: string;
-  
-  // Secure Credential Safe Status (NO RAW SECRETS)
+
+  /** Whether the server has the OAuth credentials (set in its environment; they are never shown). */
   credentialConfigured: boolean;
-  credentialEnv: "production" | "sandbox";
-  lastRotatedAt: string | null;
-  secretReferenceStatus: "active_in_vault" | "missing" | "expired";
-  publicAppId: string; // Safe public client ID only
-  
+
   // Operational controls
   allowNewConnections: boolean;
-  allowExistingPublishing: boolean;
-  allowExistingSync: boolean;
-  enableWebhooks: boolean;
   maintenanceMode: boolean;
-  visibilityInCompanyAdmin: boolean;
+  /** Shown to companies while the provider is in maintenance. */
+  maintenanceNote: string;
 }
 
 export interface ProviderCapability {
@@ -338,35 +346,14 @@ export interface ReauthorizationRequest {
   status: "pending" | "acknowledged" | "completed" | "cancelled";
 }
 
+/** Platform policy. Each field is applied by the server: the background renewal job and the issue detection read them. */
 export interface IntegrationSettings {
-  newConnectionApprovalPolicy: "automatic" | "admin_review" | "restricted_tier";
-  inactiveConnectionReviewDays: number;
-  reauthorizationRequestDefaults: {
-    reminderDays: number;
-    escalateToOwner: boolean;
-    autoPauseAfterDays: number;
-  };
-  connectionOwnershipPolicy: "strict_company_silo" | "agency_delegated";
-  tokenExpiryWarningDays: number;
-  connectionHealthCheckIntervalMinutes: number;
-  providerIncidentAlertThreshold: "any_degradation" | "major_outage_only";
+  /** Renew expiring tokens in the background (Google and LinkedIn logins that hold a refresh token). */
+  autoRefreshEnabled: boolean;
+  /** Tell a company's owners and admins in-app when one of its connections needs attention. */
+  notifyCompanyAdmins: boolean;
+  /** Failed checks in a row before a connection is raised as an issue. */
   repeatedFailureThreshold: number;
-  defaultSyncIntervalMinutes: number;
-  retryPolicy: "exponential_backoff" | "fixed_interval";
-  backoffMaxRetries: number;
-  failureEscalationPolicy: "alert_admin" | "flag_connection" | "auto_pause";
-  notificationPolicies: {
-    providerOutageAlerts: boolean;
-    connectionExpiryAlerts: boolean;
-    permissionRevocationAlerts: boolean;
-    integrationFailureEscalation: boolean;
-  };
-  accessAndSecurity: {
-    whoCanEditConfig: "super_admin_only" | "tech_lead";
-    whoCanChangeAvailability: "super_admin_only";
-    whoCanPauseOperations: "super_admin_only" | "tech_lead";
-    requireTwoFactorForSensitiveActions: boolean;
-  };
 }
 
 export interface IntegrationsKpis {

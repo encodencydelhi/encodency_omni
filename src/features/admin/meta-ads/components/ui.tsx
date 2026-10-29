@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CompactMetric } from "./compact-metric";
 import type { ComponentType, ReactNode } from "react";
 import { FaFacebookF, FaInstagram } from "react-icons/fa6";
 import {
@@ -42,13 +43,13 @@ import type { EntityStatus, Platform } from "../types";
 export const BORDER = "border-slate-200";
 
 export const btn =
-  "inline-flex items-center justify-center gap-1.5 rounded-sm border border-slate-300/90 bg-white px-3.5 py-1.5 text-[11.5px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-400 hover:shadow disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300/90 bg-white px-3.5 py-1.5 text-[11.5px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-400 hover:shadow disabled:opacity-50";
 
 export const btnPrimary =
-  "inline-flex h-9 items-center justify-center gap-2 rounded-sm bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 px-5 text-[11.5px] font-semibold text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
+  "inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 px-5 text-[11.5px] font-semibold text-white shadow-[0_4px_14px_rgba(37,99,235,0.35)] ring-1 ring-white/20 transition-all duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40";
 
 export const card =
-  "rounded-sm border border-slate-200/90 bg-white shadow-[0_4px_20px_rgba(15,23,42,0.05),0_1px_3px_rgba(15,23,42,0.03)] transition-all duration-300 hover:border-slate-300 hover:shadow-[0_8px_30px_rgba(15,23,42,0.08)]";
+  "rounded-lg border border-slate-200/90 bg-white shadow-xs transition-shadow duration-200 hover:shadow-sm";
 
 /* ------------------------------------------------------------------ */
 /* Status                                                              */
@@ -67,7 +68,7 @@ export function StatusChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-0.5 text-[9.5px] font-semibold tracking-wide uppercase transition-colors shadow-2xs",
+        "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-0.5 text-[9.5px] font-semibold tracking-wide uppercase transition-colors shadow-2xs",
         t.chip,
         className,
       )}
@@ -76,14 +77,14 @@ export function StatusChip({
         {isPulse && (
           <span
             className={cn(
-              "absolute inline-flex size-full animate-ping rounded-sm opacity-75",
+              "absolute inline-flex size-full animate-ping rounded-lg opacity-75",
               t.dot,
             )}
           />
         )}
         <span
           className={cn(
-            "relative inline-flex size-2 rounded-sm",
+            "relative inline-flex size-2 rounded-lg",
             t.dot,
           )}
         />
@@ -109,7 +110,7 @@ export function ToneChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm border px-2.5 py-0.5 text-[10.5px] font-semibold shadow-2xs",
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 py-0.5 text-[10.5px] font-semibold shadow-2xs",
         t.chip,
         className,
       )}
@@ -118,12 +119,12 @@ export function ToneChip({
         {isPulse && (
           <span
             className={cn(
-              "absolute inline-flex size-full animate-ping rounded-sm opacity-75",
+              "absolute inline-flex size-full animate-ping rounded-lg opacity-75",
               t.dot,
             )}
           />
         )}
-        <span className={cn("relative inline-flex size-2 rounded-sm", t.dot)} />
+        <span className={cn("relative inline-flex size-2 rounded-lg", t.dot)} />
       </span>
       {children}
     </span>
@@ -144,12 +145,12 @@ export function DeliveryCell({ status }: { status: EntityStatus }) {
         {isPulse && (
           <span
             className={cn(
-              "absolute inline-flex size-full animate-ping rounded-sm opacity-75",
+              "absolute inline-flex size-full animate-ping rounded-lg opacity-75",
               tone.dot,
             )}
           />
         )}
-        <span className={cn("relative inline-flex size-2 rounded-sm", tone.dot)} />
+        <span className={cn("relative inline-flex size-2 rounded-lg", tone.dot)} />
       </span>
       {DELIVERY_LABEL[status]}
     </span>
@@ -286,17 +287,17 @@ export function Panel({
   bodyClassName?: string;
 }) {
   return (
-    <section className={cn(card, "overflow-hidden flex flex-col group hover:shadow-[0_12px_40px_rgba(15,23,42,0.1)]", className)}>
-      <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 bg-gradient-to-r from-slate-50/90 via-slate-50/40 to-white px-4 py-3">
+    <section className={cn(card, "overflow-hidden flex flex-col group hover:shadow-sm", className)}>
+      <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 bg-linear-to-r from-blue-50/70 via-white to-violet-50/40 px-4 py-3">
         <h2 className="flex min-w-0 items-center gap-2 text-xs font-semibold text-slate-900">
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-blue-50/80 text-blue-600 shadow-xs ring-1 ring-blue-500/20">
+          {icon && <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-blue-50/80 text-blue-600 shadow-xs ring-1 ring-blue-500/20">
             {icon}
-          </span>
+          </span>}
           <span className="truncate">{title}</span>
         </h2>
         {action && <div className="shrink-0 whitespace-nowrap">{action}</div>}
       </div>
-      <div className={cn("p-4", bodyClassName)}>{children}</div>
+      <div className={cn("p-3", bodyClassName)}>{children}</div>
     </section>
   );
 }
@@ -316,31 +317,7 @@ export function KpiCard({
   tone?: StatusTone;
   hint?: string;
 }) {
-  const valueClass = tone ? TONE_CLASS[tone].text : "text-slate-900";
-  return (
-    <div className={cn(card, "group relative overflow-hidden p-4 transition-all duration-300 hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5")}>
-      <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-600 to-indigo-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-      {/* Animated Shine Effect */}
-      <div className="pointer-events-none absolute -inset-full top-0 z-10 block h-[150%] w-1/2 -rotate-45 bg-gradient-to-r from-transparent via-blue-100/20 to-transparent opacity-0 transition-all duration-700 ease-in-out group-hover:left-[150%] group-hover:opacity-100" />
-
-      <div className="relative flex items-center justify-between gap-2 text-xs font-semibold text-slate-600">
-        <span className="min-w-0 truncate">{label}</span>
-        <div className="flex shrink-0 items-center gap-1.5">
-          {hint && <InfoHint text={hint} />}
-          {Icon && (
-            <div className="flex size-6 items-center justify-center rounded-sm bg-blue-50 text-blue-600 ring-1 ring-blue-500/15 transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white">
-              <Icon className="size-3.5" />
-            </div>
-          )}
-        </div>
-      </div>
-      <div className={cn("relative mt-2.5 text-[22px] font-semibold tracking-tight leading-none", valueClass)}>
-        {value}
-      </div>
-      {sub && <p className="relative mt-1.5 text-[10.5px] font-medium text-slate-500 truncate">{sub}</p>}
-    </div>
-  );
+  return <CompactMetric label={label} value={value} sub={sub} icon={Icon} tone={tone} hint={hint} />;
 }
 
 export function InfoHint({ text }: { text: string }) {
@@ -351,7 +328,7 @@ export function InfoHint({ text }: { text: string }) {
           <button
             type="button"
             aria-label={text}
-            className="flex size-4 shrink-0 items-center justify-center rounded-sm border border-slate-300 bg-white text-[9px] font-medium text-slate-600 transition-colors hover:border-blue-400 hover:text-blue-600 shadow-2xs"
+            className="flex size-4 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-[9px] font-medium text-slate-600 transition-colors hover:border-blue-400 hover:text-blue-600 shadow-2xs"
           >
             i
           </button>
@@ -390,7 +367,7 @@ export function Field({
 
 export function Tag({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-sm border border-slate-300/80 bg-slate-100/90 px-2.5 py-0.5 text-[10.5px] font-medium text-slate-800 shadow-2xs">
+    <span className="inline-flex items-center rounded-lg border border-slate-300/80 bg-slate-100/90 px-2.5 py-0.5 text-[10.5px] font-medium text-slate-800 shadow-2xs">
       {children}
     </span>
   );
@@ -434,7 +411,7 @@ export function LinkTabs({
             {tab.count !== undefined && (
               <span
                 className={cn(
-                  "rounded-sm px-2 py-0.5 text-[9.5px] font-semibold",
+                  "rounded-lg px-2 py-0.5 text-[9.5px] font-semibold",
                   active ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700 border border-slate-200",
                 )}
               >
@@ -519,7 +496,7 @@ export function SearchInput({
         onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="h-9 w-full rounded-sm border border-slate-300 bg-white pl-10 pr-3 text-xs font-medium text-slate-900 placeholder:text-slate-400 outline-none shadow-2xs transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20"
+        className="h-9 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-xs font-medium text-slate-900 placeholder:text-slate-400 outline-none shadow-2xs transition focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20"
       />
     </div>
   );
@@ -569,7 +546,7 @@ export function Th({
   return (
     <th
       className={cn(
-        "whitespace-nowrap bg-slate-100/90 border-b border-slate-200 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-700",
+        "whitespace-nowrap bg-blue-50/70 border-b border-blue-100 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500",
         numeric ? "text-right" : "text-left",
         className,
       )}
@@ -603,7 +580,7 @@ export function Td({
   return (
     <td
       className={cn(
-        "whitespace-nowrap px-4 py-3.5 align-middle text-[11.5px] font-medium text-slate-700 group-hover:text-slate-900",
+        "whitespace-nowrap px-3 py-2.5 align-middle text-[11.5px] font-medium text-slate-700 group-hover:text-slate-900",
         numeric ? "text-right tabular-nums font-semibold text-slate-800" : "text-left",
         className,
       )}
@@ -651,7 +628,7 @@ export function RowMenu({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={label}
-        className="flex size-7.5 items-center justify-center rounded-sm border border-slate-300 bg-white text-slate-600 shadow-2xs transition hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+        className="flex size-7.5 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 shadow-2xs transition hover:border-blue-600 hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
       >
         <MoreHorizontal className="size-4" />
       </DropdownMenuTrigger>
@@ -736,7 +713,7 @@ export function EmptyState({
         compact ? "min-h-[160px]" : "min-h-[280px]",
       )}
     >
-      <span className="mb-4 flex size-14 items-center justify-center rounded-sm bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-500/20">
+      <span className="mb-4 flex size-14 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-500/20">
         <Icon className="size-6" aria-hidden="true" />
       </span>
       <h3 className="text-base font-semibold tracking-tight text-slate-900">{title}</h3>
@@ -894,7 +871,7 @@ export function StateNotice({
   }[tone];
 
   return (
-    <div className={cn("flex flex-wrap items-start gap-3.5 rounded-sm border p-3.5 shadow-2xs", palette)}>
+    <div className={cn("flex flex-wrap items-start gap-3.5 rounded-lg border p-3.5 shadow-2xs", palette)}>
       {Icon && <Icon className="mt-0.5 size-4.5 shrink-0" />}
       <div className="min-w-[220px] flex-1">
         <p className="text-xs font-medium">{title}</p>
@@ -957,7 +934,7 @@ export function NotFoundState({
 export function SkeletonBar({ className }: { className?: string }) {
   return (
     <span
-      className={cn("block animate-pulse rounded-sm bg-slate-200", className)}
+      className={cn("block animate-pulse rounded-lg bg-slate-200", className)}
       aria-hidden="true"
     />
   );
@@ -1017,10 +994,10 @@ export function Meter({
 }) {
   return (
     <span
-      className={cn("block h-2 overflow-hidden rounded-sm bg-slate-100 ring-1 ring-slate-200", className)}
+      className={cn("block h-2 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200", className)}
     >
       <span
-        className={cn("block h-full rounded-sm transition-all duration-500", TONE_CLASS[tone].dot)}
+        className={cn("block h-full rounded-lg transition-all duration-500", TONE_CLASS[tone].dot)}
         style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
       />
     </span>
@@ -1030,7 +1007,7 @@ export function Meter({
 export function Avatar({ name }: { name: string }) {
   const initial = name === "Unassigned" ? "?" : name.charAt(0).toUpperCase();
   return (
-    <span className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-slate-200 text-[10px] font-semibold text-slate-800 ring-1 ring-slate-300">
+    <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-[10px] font-semibold text-slate-800 ring-1 ring-slate-300">
       {initial}
     </span>
   );

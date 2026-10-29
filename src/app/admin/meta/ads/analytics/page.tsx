@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LiveAnalytics } from "@/features/admin/meta-ads/components/live-analytics";
 import { Suspense, useMemo } from "react";
 import {
   Activity,
@@ -604,7 +605,7 @@ function AnalyticsView() {
 export default function AnalyticsPage() {
   return (
     <Suspense fallback={<SkeletonKpis />}>
-      <AnalyticsView />
+      {LIVE ? <LiveAnalytics /> : <AnalyticsView />}
     </Suspense>
   );
 }

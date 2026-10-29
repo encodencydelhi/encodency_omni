@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Activity, AlertTriangle, CheckCircle2, Layers, Plug, Plus, RefreshCw, Unplug, XCircle } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, Layers, Plug, Plus, Unplug, Waypoints, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { STATUS_COLOR, intRoutes } from "../integrations-data/config";
 import { useClientScope, useScopedData } from "../integrations-data/hooks";
 import { dependencyLeaders, isActive, providerState, severityCounts } from "../integrations-data/selectors";
 import { useIntegrations } from "../store/integrations-store";
 import type { ConnectionStatus } from "../integrations-data/types";
-import { ActivityTable, ConnectionCard, IssueRow, PageSkeleton, RunDialog } from "../components/blocks";
+import { ActivityTable, ConnectionCard, IssueRow, PageSkeleton } from "../components/blocks";
 import { useConnectionActions } from "../components/connection-actions";
 import { Button, Card, CardHeader, EmptyState, KpiTile, ModuleChips, ProviderLogo, RelativeTime, SeverityChip, ViewLink, x } from "../components/ui";
 
@@ -25,7 +25,6 @@ function Overview() {
   const { withScope } = useClientScope();
   const { connections, issues, summary } = useScopedData();
   const actions = useConnectionActions();
-  const [runId, setRunId] = useState<string | null>(null);
   const active = connections.filter(isActive);
 
   const go = (query: string) => router.push(withScope(`${intRoutes.connected}${query}`));
@@ -34,12 +33,12 @@ function Overview() {
     <div className="space-y-1">
       {/* A. KPIs */}
       <div className="grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-6">
-        <KpiTile label="Connected" value={summary.connected} detail="Healthy and syncing" icon={CheckCircle2} tone="green" onClick={() => go("?health=healthy")} />
+        <KpiTile label="Connected" value={summary.connected} detail="Working as expected" icon={CheckCircle2} tone="green" onClick={() => go("?health=healthy")} />
         <KpiTile label="Needs attention" value={summary.needsAttention} detail={issues.length ? `${severityCounts(issues).critical} critical` : "All clear"} icon={AlertTriangle} tone={summary.needsAttention ? "amber" : "neutral"} onClick={() => go("?health=attention")} />
-        <KpiTile label="Syncing" value={summary.syncing} detail="Running now" icon={RefreshCw} tone="blue" onClick={() => go("?status=syncing")} />
+        <KpiTile label="Accounts" value={summary.accounts} detail="Mapped to clients" icon={Waypoints} tone="blue" onClick={() => go("")} />
         <KpiTile label="Disconnected" value={summary.disconnected} detail="Previously connected" icon={Unplug} tone="neutral" onClick={() => go("?health=disconnected")} />
-        <KpiTile label="Failed syncs" value={summary.failedSyncs} detail="Last 24 hours" icon={XCircle} tone={summary.failedSyncs ? "red" : "neutral"} onClick={() => router.push(withScope(`${intRoutes.activity}?result=failed`))} />
-        <KpiTile label="Dependencies" value={summary.dependencies} detail="Features using integrations" icon={Layers} tone="violet" onClick={() => go("?sort=most_used")} />
+        <KpiTile label="Failed checks" value={summary.failedChecks} detail="Last 24 hours" icon={XCircle} tone={summary.failedChecks ? "red" : "neutral"} onClick={() => router.push(withScope(`${intRoutes.activity}?result=failed`))} />
+        <KpiTile label="In use" value={summary.dependencies} detail="Things relying on integrations" icon={Layers} tone="violet" onClick={() => go("?sort=most_used")} />
       </div>
 
       {/* C + B */}
@@ -80,7 +79,7 @@ function Overview() {
 
       {/* E + F */}
       <div className="grid gap-1 xl:grid-cols-12">
-        <RecentSyncCard className="xl:col-span-8" onOpenRun={setRunId} />
+        <RecentActivityCard className="xl:col-span-8" />
         <DependencySummary className="xl:col-span-4" />
       </div>
 
@@ -88,7 +87,6 @@ function Overview() {
       <AvailablePreview />
 
       {actions.dialogs}
-      <RunDialog runId={runId} onOpenChange={(open) => !open && setRunId(null)} />
     </div>
   );
 }
@@ -128,8 +126,8 @@ function NeedsAttentionCard({ className, actions }: { className?: string; action
           icon={CheckCircle2}
           compact
           className="flex-1"
-          title="No sync issues"
-          description="Every integration in this view is connected, permitted and syncing on schedule."
+          title="No issues found"
+          description="Every integration in this view is connected, permitted and answering when checked."
           secondary={<Button variant="secondary" href={withScope(intRoutes.activity)}>View activity</Button>}
         />
       ) : (
@@ -161,7 +159,7 @@ const HEALTH_ROWS: { key: string; label: string; statuses: ConnectionStatus[]; q
   { key: "needs_reconnect", label: "Needs reconnect", statuses: ["needs_reconnect"], query: "?status=needs_reconnect" },
   { key: "expiring", label: "Expiring", statuses: ["expiring"], query: "?status=expiring" },
   { key: "permission_missing", label: "Permission missing", statuses: ["permission_missing"], query: "?status=permission_missing" },
-  { key: "sync_failed", label: "Sync failed", statuses: ["sync_failed"], query: "?status=sync_failed" },
+  { key: "sync_failed", label: "Check failed", statuses: ["sync_failed"], query: "?status=sync_failed" },
   { key: "rate_limited", label: "Rate limited", statuses: ["rate_limited"], query: "?status=rate_limited" },
   { key: "disconnected", label: "Disconnected", statuses: ["disconnected"], query: "?health=disconnected" },
 ];
@@ -225,7 +223,7 @@ function HealthCard({ className }: { className?: string }) {
   );
 }
 
-/** Below the donut: health per client across the org, or the next syncs inside one client. */
+/** Below the donut: health per client across the org, or the latest checks inside one client. */
 function HealthBreakdown() {
   const { data } = useIntegrations();
   const { clientId, withScope } = useClientScope();
@@ -264,23 +262,23 @@ function HealthBreakdown() {
     );
   }
 
-  const upcoming = connections
-    .filter((connection) => connection.nextSyncAt)
-    .sort((a, b) => (a.nextSyncAt ?? "").localeCompare(b.nextSyncAt ?? ""))
+  const checked = connections
+    .filter((connection) => isActive(connection) && connection.lastCheckedAt)
+    .sort((a, b) => (b.lastCheckedAt ?? "").localeCompare(a.lastCheckedAt ?? ""))
     .slice(0, 4);
   return (
     <div className="mt-auto border-t border-[#EEF1F5] px-4 py-3">
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Next scheduled syncs</p>
-      {upcoming.length === 0 ? (
-        <p className="text-[12px] text-[#98A2B3]">Nothing scheduled.</p>
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Latest successful checks</p>
+      {checked.length === 0 ? (
+        <p className="text-[12px] text-[#98A2B3]">No check has run yet. Use “Check now” on an integration.</p>
       ) : (
         <ul className="space-y-1.5">
-          {upcoming.map((connection) => (
+          {checked.map((connection) => (
             <li key={connection.id}>
-              <Link href={withScope(intRoutes.detail(connection.id, "sync"))} className={cn("flex items-center gap-2 rounded-sm text-[12px] hover:text-[#2563EB]", x.focus)}>
+              <Link href={withScope(intRoutes.detail(connection.id, "checks"))} className={cn("flex items-center gap-2 rounded-sm text-[12px] hover:text-[#2563EB]", x.focus)}>
                 <ProviderLogo providerId={connection.providerId} className="size-5 rounded-[5px] p-0.5" />
                 <span className="min-w-0 flex-1 truncate text-[#24324F]">{data.providers.find((provider) => provider.id === connection.providerId)?.name}</span>
-                <span className="shrink-0 text-[#6B7890]"><RelativeTime iso={connection.nextSyncAt} future /></span>
+                <span className="shrink-0 text-[#6B7890]"><RelativeTime iso={connection.lastCheckedAt} /></span>
               </Link>
             </li>
           ))}
@@ -291,25 +289,22 @@ function HealthBreakdown() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Recent sync activity                                                */
+/* Recent activity                                                     */
 /* ------------------------------------------------------------------ */
 
-function RecentSyncCard({ className, onOpenRun }: { className?: string; onOpenRun: (id: string) => void }) {
+function RecentActivityCard({ className }: { className?: string }) {
   const { activity } = useScopedData();
   const { withScope } = useClientScope();
-  const recent = useMemo(
-    () => activity.filter((item) => item.event.startsWith("sync") || item.event === "reconnected" || item.event === "connected").sort((a, b) => b.at.localeCompare(a.at)).slice(0, 6),
-    [activity],
-  );
+  const recent = useMemo(() => [...activity].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 6), [activity]);
 
   return (
     <Card className={cn("overflow-hidden", className)}>
-      <CardHeader title="Recent sync activity" icon={Activity} actions={<ViewLink href={withScope(intRoutes.activity)}>All activity</ViewLink>} />
+      <CardHeader title="Recent activity" icon={Activity} actions={<ViewLink href={withScope(intRoutes.activity)}>All activity</ViewLink>} />
       {recent.length === 0 ? (
-        <EmptyState icon={Activity} compact title="No activity yet" description="Syncs, reconnects and connection changes will appear here." />
+        <EmptyState icon={Activity} compact title="No activity yet" description="Connections, checks, reconnects and mapping changes will appear here." />
       ) : (
         <div className="border-t border-[#EEF1F5]">
-          <ActivityTable items={recent} onOpenRun={onOpenRun} showUser={false} compact />
+          <ActivityTable items={recent} showUser={false} compact />
         </div>
       )}
     </Card>

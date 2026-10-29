@@ -50,6 +50,7 @@ export function ReauthorizationRequestModal({
       : "Access token has expired or is nearing expiration. Please re-authenticate via company settings."
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const createRequest = useCreateReauthorizationRequest();
 
@@ -58,6 +59,7 @@ export function ReauthorizationRequestModal({
   const handleSubmit = async () => {
     if (!reason.trim()) return;
     setIsSubmitting(true);
+    setError(null);
     try {
       await createRequest.mutateAsync({
         providerId: authorization.providerId,
@@ -73,7 +75,7 @@ export function ReauthorizationRequestModal({
       onSuccess?.();
       onClose();
     } catch (err) {
-      console.error("Failed to dispatch reauthorization request", err);
+      setError(err instanceof Error ? err.message : "The request was not sent.");
     } finally {
       setIsSubmitting(false);
     }
@@ -165,19 +167,22 @@ export function ReauthorizationRequestModal({
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
+              maxLength={200}
               className="text-xs bg-white resize-none"
               placeholder="Explain why re-authorization is needed..."
             />
           </div>
         </div>
 
-        {/* Demo Mode Notice */}
+        {/* What really happens */}
         <div className="p-2.5 rounded-lg bg-blue-50/70 border border-blue-100 text-blue-900 text-xs flex items-start gap-2">
           <CheckCircle2Icon className="size-4 text-blue-600 shrink-0 mt-0.5" />
           <span>
-            In frontend mock mode, a persistent request record is created in the Reauthorization Queue and tracked in platform activity.
+            The company’s {targetRole === "owner" ? "owner" : "admins"} get an in-app notice straight away (and e-mail or WhatsApp where their notification settings allow it). The request is written to the audit log and stays pending here until the connection is reconnected.
           </span>
         </div>
+
+        {error && <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{error}</p>}
 
         <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-slate-100">
           <Button

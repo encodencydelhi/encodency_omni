@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { accountDisplayName } from "@/features/admin/meta-ads/account-name";
+// import { MetaPageGuide } from "./page-guide";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDeferredValue, useMemo, useState, type ReactNode } from "react";
 import { FaFacebookF, FaInstagram, FaMeta } from "react-icons/fa6";
@@ -88,7 +90,7 @@ const STATE_COPY: Record<Exclude<AdsStatus, "ready" | "loading">, { title: strin
   reconnect: { title: "Reconnect Meta", body: "The Meta login for this company expired or was revoked. Reconnect it to read ad data again.", action: { label: "Open Meta settings", href: "/admin/meta/settings" } },
   permission: { title: "Meta needs more permissions", body: "Meta refused access to ad data. Reconnect Meta and approve the ads permissions (ads_read, leads_retrieval).", action: { label: "Open Meta settings", href: "/admin/meta/settings" } },
   rate_limited: { title: "Meta is limiting requests for this ad account", body: "Meta gives every ad account a small request budget and this one is used up for now. Your other ad accounts are not affected: pick another one above, or wait and this page retries by itself." },
-  no_accounts: { title: "No ad accounts found", body: "The connected Meta login does not have access to any ad account. Add it to an ad account in Meta Business Settings, then refresh." },
+  no_accounts: { title: "No Ad Accounts In This View", body: "This client has no linked ad account, or the Meta login cannot access it. A company owner can use Manage Company Assets above, select an account and link it to the current client." },
   error: { title: "Meta Ads could not be loaded", body: "Something went wrong while talking to Meta. Try again in a moment." },
 };
 
@@ -170,13 +172,13 @@ function AssetChips({ onlyAccount = false }: { onlyAccount?: boolean }) {
         <DropdownMenu>
           <DropdownMenuTrigger className={cn(btn, "h-8.5 gap-2 px-3 text-xs font-semibold text-slate-800")} aria-label="Change ad account">
             <FaMeta className="size-3 text-[#0866ff]" />
-            <span className="max-w-[170px] truncate">{current?.name ?? "Ad account"}</span>
+            <span className="max-w-[170px] truncate">{current ? accountDisplayName(current) : "Ad Account"}</span>
             <ChevronDown className="size-3.5 text-slate-500" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[220px]">
             {ads.accounts.map((account) => (
               <DropdownMenuItem key={account.id} onSelect={() => ads.setAccountId(account.id)} className={cn("text-xs font-medium", account.id === ads.accountId ? "bg-blue-50/60 font-semibold text-blue-600" : "text-slate-700")}>
-                {account.name}
+                {accountDisplayName(account)}
                 <span className="ml-2 text-[10px] text-slate-500">{account.currency}</span>
               </DropdownMenuItem>
             ))}
@@ -385,29 +387,30 @@ export function AdsWorkspace({
   showDateRange?: boolean;
 }) {
   const pathname = usePathname() ?? ADS_ROOT;
+  const router = useRouter();
   const ads = useAdsData();
   const openIssues = ads.issues.filter((i) => !i.resolved).length;
+  const currentSection = NAV.find(item => isCurrent(pathname, item.href, item.exact)) ?? NAV[0]!;
+  const SectionIcon = currentSection.icon;
 
   return (
-    <div className="relative min-h-screen w-full font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+    <div className="meta-workspace relative min-h-screen w-full font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       {/* Exquisite Subtle Background */}
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:32px_32px] opacity-40" />
 
       <div className="relative z-0">
-        <MetaProductNav className="mb-3.5" />
+        <MetaProductNav className="mb-2.5" />
         {/* Row 1 — identity, search and the primary actions. */}
-        <header className="mb-3.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <header className="mb-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-xl border border-blue-100 bg-linear-to-r from-blue-50 via-white to-violet-50/70 px-4 py-3">
           <Link href={ADS_ROOT} className="flex shrink-0 items-center gap-3 group">
-            <div className="flex items-center gap-1.5 p-1.5 rounded-sm bg-white border border-slate-200 shadow-2xs group-hover:border-blue-300 transition-colors">
-              <FaMeta className="size-7 shrink-0 text-[#0866ff]" aria-hidden="true" />
-              <FaInstagram className="size-5.5 shrink-0 text-[#d946ef]" aria-hidden="true" />
+            <div className="grid size-11 place-items-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-600/20">
+              <SectionIcon className="size-5" aria-hidden="true" />
             </div>
             <span className="min-w-0">
-              <span className="block text-[22px] font-normal leading-tight tracking-tight text-slate-900">
-                Meta Ads Manager
+              <span className="block text-[20px] font-semibold leading-tight tracking-tight text-slate-900">
+                {currentSection.label}
               </span>
               <span className="mt-0.5 block text-xs font-semibold text-slate-600">
-                Manage paid campaigns across Facebook and Instagram.
+                Meta Ads Workspace · Facebook &amp; Instagram
               </span>
             </span>
           </Link>
@@ -417,15 +420,9 @@ export function AdsWorkspace({
             {showDateRange && <DateRangeControl />}
             {actions ??
               (LIVE ? (
-                <button
-                  type="button"
-                  onClick={() => toast.info("Creating campaigns from here is not available yet. Create them in Meta Ads Manager; they appear here after the next refresh.")}
-                  className={cn(btnPrimary, "h-10 font-semibold opacity-60")}
-                  aria-disabled="true"
-                >
-                  <Plus className="size-4" />
-                  Create Campaign
-                </button>
+                <Link href={`${ADS_ROOT}/create`} className={cn(btnPrimary, "h-9 font-semibold")}>
+                  <Plus className="size-3.5" />Create Campaign
+                </Link>
               ) : (
                 <Link href={`${ADS_ROOT}/create`} className={cn(btnPrimary, "h-10 font-semibold")}>
                   <Plus className="size-4" />
@@ -436,7 +433,7 @@ export function AdsWorkspace({
         </header>
 
         {/* Row 2 — which Meta assets this workspace is acting on. */}
-        <div className="mb-3.5 flex flex-wrap items-center gap-2">
+        <div className="mb-2.5 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200/80 bg-white px-2.5 py-2">
           {!LIVE || ads.status === "ready" ? (
             <span className="flex h-8.5 shrink-0 items-center gap-1.5 rounded-sm border border-emerald-300 bg-emerald-50 px-2.5 shadow-2xs">
               <CheckCircle2 className="size-4 fill-emerald-600 text-white" aria-hidden="true" />
@@ -461,10 +458,11 @@ export function AdsWorkspace({
         </div>
 
         {/* The fade on the right edge signals that the section list scrolls when it does not fit */}
-        <div className="relative mb-5">
+        <div className="relative mb-2.5">
+          <label className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-medium text-slate-500 sm:hidden">Workspace Section<select aria-label="Ads workspace section" value={currentSection.href} onChange={event => router.push(event.target.value)} className="max-w-[210px] rounded-md border border-blue-100 bg-blue-50 px-2 py-1.5 text-xs font-semibold text-blue-800">{NAV.map(item => <option key={item.href} value={item.href}>{item.label}</option>)}</select></label>
           <nav
             aria-label="Ads Manager sections"
-            className="flex gap-1.5 overflow-x-auto rounded-sm border border-slate-200 bg-white p-1.5 shadow-2xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:w-12 after:shrink-0"
+            className="hidden gap-1.5 rounded-xl border border-slate-200/80 bg-white p-2 shadow-xs sm:grid sm:grid-cols-4 xl:grid-cols-7"
           >
             {NAV.map(({ label, href, icon: Icon, exact }) => {
               const current = isCurrent(pathname, href, exact);
@@ -475,14 +473,14 @@ export function AdsWorkspace({
                   href={href}
                   aria-current={current ? "page" : undefined}
                   className={cn(
-                    "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm px-3.5 py-2 text-xs font-semibold transition-all duration-200",
+                    "flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-[11px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-400",
                     current
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/25 ring-1 ring-blue-600"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                      ? "border-blue-200 bg-blue-50 text-blue-800 shadow-xs"
+                      : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900",
                   )}
                 >
-                  <Icon className={cn("size-3.5", current ? "text-white" : "text-slate-500")} aria-hidden="true" />
-                  {label}
+                  <span className={cn("grid size-6 shrink-0 place-items-center rounded-md", href.includes("leads") || href.includes("forms") ? "bg-emerald-50 text-emerald-600" : href.includes("creative") || href.includes("audiences") ? "bg-violet-50 text-violet-600" : href.includes("issues") ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600")}><Icon className="size-3.5" aria-hidden="true" /></span>
+                  <span className="truncate">{label}</span>
                   {badge !== null && (
                     <span className={cn("rounded-sm px-1.5 py-px text-[9.5px] font-black", current ? "bg-white text-rose-600" : "bg-rose-100 text-rose-700")}>
                       {badge}
@@ -494,10 +492,12 @@ export function AdsWorkspace({
           </nav>
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-px right-px w-12 rounded-r-2xl bg-gradient-to-l from-white to-transparent"
+            className="hidden"
           />
         </div>
 
+        {/* <MetaPageGuide context={ads.status === "ready" ? JSON.stringify({ account: ads.accounts.find((a) => a.id === ads.accountId)?.name, period: ads.period, currency: ads.accounts.find((a) => a.id === ads.accountId)?.currency, totalsMinorUnits: ads.totals, availability: ads.datasets, syncedAt: ads.syncedAt }).slice(0, 2500) : undefined} /> */}
+        {ads.completeness && Object.values(ads.completeness).includes("limited") && <p className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">Partial Library: A Provider Fetch Limit Was Reached. Loaded Rows Are Shown; These Are Not Guaranteed Complete Totals.</p>}
         {LIVE && ads.status === "ready" && ads.stale && (
           <div className="mb-3 flex flex-wrap items-center gap-2 rounded-sm border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-xs font-medium text-amber-900" role="status">
             <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
@@ -507,7 +507,7 @@ export function AdsWorkspace({
             </span>
           </div>
         )}
-        {LIVE && ads.status !== "ready" ? <StatePanel status={ads.status} message={ads.errorMessage} onRetry={ads.refresh} retryAfterSeconds={ads.retryAfterSeconds} /> : children}
+        {LIVE && ads.status !== "ready" ? <StatePanel status={ads.status} message={ads.errorMessage} onRetry={ads.refresh} retryAfterSeconds={ads.retryAfterSeconds} /> : LIVE && ads.datasets?.performance && !["live", "empty"].includes(ads.datasets.performance) && !["forms", "leads", "audiences", "assets", "help", "activity", "issues"].some((section) => pathname.startsWith(`${ADS_ROOT}/${section}`)) ? <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900"><p className="font-semibold">Performance Data Unavailable</p><p className="mt-1">Meta Could Not Return Complete Insights. These Results Are Unknown, Not Zero Delivery. Retry Or Review Permissions In Settings.</p><button type="button" className={cn(btn, "mt-2")} onClick={ads.refresh}>Retry Insights</button></div> : children}
       </div>
     </div>
   );

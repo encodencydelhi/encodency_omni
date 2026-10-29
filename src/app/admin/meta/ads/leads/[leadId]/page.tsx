@@ -1,4 +1,5 @@
 "use client";
+import { useMetaLeadCrm } from "@/features/admin/meta-ads/live/meta-lead-crm";
 
 import Link from "next/link";
 import { use, useState } from "react";
@@ -81,6 +82,7 @@ const TIMELINE_ICON: Record<string, typeof Phone> = {
 };
 
 export default function Page({ params }: { params: Promise<{ leadId: string }> }) {
+  const crm = useMetaLeadCrm();
   const { getAd, getAdSet, getCampaign, getForm, getLead } = useAdsData();
   const { leadId } = use(params);
   const lead = getLead(leadId);
@@ -173,7 +175,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
             </button>
             <button
               type="button"
-              onClick={() => toast.success(`“${lead.name}” marked as converted`)}
+              onClick={() => void crm.open([lead])}
               className={btn}
             >
               <CheckCircle2 className="size-3.5 text-emerald-600" />
@@ -327,7 +329,7 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
 
               {tab === "notes" && (
                 <>
-                  <form
+                  {LIVE ? <div className="mb-3 rounded-lg border border-violet-200 bg-violet-50 p-3 text-xs text-violet-900"><p>Save Notes, Assign Owners And Update Follow-Up Stages In The Linked CRM Record.</p><button type="button" className={btnPrimary} disabled={crm.busy} onClick={() => void crm.open([lead])}>Open In CRM</button></div> : (                  <form
                     onSubmit={(e) => {
                       e.preventDefault();
                       if (!draftNote.trim()) return;
@@ -352,7 +354,8 @@ export default function Page({ params }: { params: Promise<{ leadId: string }> }
                         Add Note
                       </button>
                     </div>
-                  </form>
+                  </form>)}
+
                   {lead.notes.length === 0 ? (
                     <EmptyState
                       icon={StickyNote}

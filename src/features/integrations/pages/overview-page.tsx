@@ -51,26 +51,12 @@ import {
   IntegrationsOverviewSkeleton,
 } from "../components";
 
-const ECOSYSTEM_CHANNELS = [
-  { id: "meta", name: "Meta", sub: "Graph API", providerId: "meta" },
-  { id: "instagram", name: "Instagram", sub: "Reels & Feed", providerId: "meta" },
-  { id: "facebook", name: "Facebook", sub: "Pages & Groups", providerId: "meta" },
-  { id: "linkedin", name: "LinkedIn", sub: "Company Pages", providerId: "linkedin" },
-  { id: "whatsapp", name: "WhatsApp", sub: "AiSensy Cloud", providerId: "whatsapp" },
-  { id: "google_business", name: "Google Business", sub: "Locations", providerId: "google_business" },
-  { id: "youtube", name: "YouTube", sub: "Video & Shorts", providerId: "youtube" },
-  { id: "x", name: "X (Twitter)", sub: "v2 Endpoints", providerId: "x_twitter" },
-  { id: "ga4", name: "Analytics 4", sub: "Data API", providerId: "ga4" },
-  { id: "gsc", name: "Search Console", sub: "Sitemaps", providerId: "gsc" },
-  { id: "cloudinary", name: "Cloudinary", sub: "Media Pipeline", providerId: "cloudinary" },
-];
-
 export function IntegrationsOverviewPage() {
   const router = useRouter();
   const { data: kpis, isLoading: kpisLoading } = useIntegrationsKpis();
   const { data: providers } = useProviders();
-  const { data: issues } = useIntegrationIssues();
-  const { data: activities } = useIntegrationActivities();
+  const { data: issues, isError: issuesFailed } = useIntegrationIssues();
+  const { data: activities, isError: activitiesFailed } = useIntegrationActivities();
   const resetDemo = useResetIntegrationsDemo();
 
   // Dialog states
@@ -203,35 +189,33 @@ export function IntegrationsOverviewPage() {
         <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
       )}
 
-      {/* Connected Ecosystem Platforms Showcase */}
+      {/* The providers in this version: the list comes from the server, so it can never claim a connector that does not exist */}
       <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs space-y-2.5">
         <div className="flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
-              Supported Platforms & Channels
+              Providers
             </span>
-            <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
-              11 Official Connectors
+            <span className="px-2 py-0.5 text-xs font-semibold bg-slate-100 text-slate-700 rounded-full border border-slate-200">
+              {providers?.filter((provider) => provider.platformAvailability !== "draft").length ?? 0} with a connector
             </span>
           </div>
           <span className="text-xs text-slate-500">
-            Native integrations with direct Graph, REST & webhook protocols
+            Each tile shows its state right now: live, in maintenance, disabled, or not built yet
           </span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-1.5">
-          {ECOSYSTEM_CHANNELS.map((ch) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5">
+          {(providers ?? []).map((provider) => (
             <Link
-              key={ch.id}
-              href={`/super-admin/integrations/providers/${ch.providerId}`}
+              key={provider.id}
+              href={`/super-admin/integrations/providers/${provider.id}`}
               className="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200/80 hover:border-blue-300 bg-slate-50/50 hover:bg-blue-50/40 transition-all group text-center"
             >
-              <ProviderLogo providerId={ch.id} size="md" className="group-hover:scale-105 transition-transform" />
+              <ProviderLogo providerId={provider.id} size="md" className="group-hover:scale-105 transition-transform" />
               <span className="font-bold text-xs text-slate-800 mt-1.5 truncate max-w-full group-hover:text-blue-600">
-                {ch.name}
+                {provider.name}
               </span>
-              <span className="text-xs text-slate-500 truncate max-w-full">
-                {ch.sub}
-              </span>
+              <AvailabilityBadge value={provider.platformAvailability} />
             </Link>
           ))}
         </div>
@@ -411,10 +395,15 @@ export function IntegrationsOverviewPage() {
             </div>
 
             <div className="space-y-2">
-              {openIssues.length === 0 ? (
+              {issuesFailed ? (
+                <div className="p-4 text-center text-rose-700 text-xs bg-rose-50 rounded-lg border border-rose-100">
+                  <AlertTriangleIcon className="size-5 mx-auto mb-1" />
+                  <span>The issue list could not be loaded, so nothing can be said about open issues right now.</span>
+                </div>
+              ) : openIssues.length === 0 ? (
                 <div className="p-4 text-center text-slate-400 text-xs bg-slate-50 rounded-lg border border-slate-100">
                   <CheckCircle2Icon className="size-5 text-emerald-500 mx-auto mb-1" />
-                  <span>No urgent integration issues or outages detected.</span>
+                  <span>No open integration issues: every saved connection is working.</span>
                 </div>
               ) : (
                 openIssues.slice(0, 4).map((iss) => (
@@ -481,7 +470,7 @@ export function IntegrationsOverviewPage() {
               Recent Integration Telemetry & Events
             </h2>
             <p className="text-xs text-slate-500">
-              Audit trails for tenant connections, credential verifications, and background sync jobs.
+              The audit trail of connections made, checked, changed and removed by companies and the platform team.
             </p>
           </div>
           <Button
@@ -499,6 +488,8 @@ export function IntegrationsOverviewPage() {
         </div>
 
         <div className="divide-y divide-slate-100 text-xs">
+          {activitiesFailed && <p className="py-3 text-center text-rose-700">The activity feed could not be loaded.</p>}
+          {!activitiesFailed && recentActivities.length === 0 && <p className="py-3 text-center text-slate-400">No integration events have been recorded yet.</p>}
           {recentActivities.map((act) => {
             const channelId = act.description.toLowerCase().includes("instagram")
               ? "instagram"

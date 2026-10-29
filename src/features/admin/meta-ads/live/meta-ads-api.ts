@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api/client";
-import { companyScopeHeaders } from "@/lib/api/company-scope";
+import { metaScopeHeaders } from "@/features/admin/meta/live/meta-scope";
 
 /**
  * The only caller of the backend's read-only Meta Ads routes
@@ -27,6 +27,7 @@ export interface ApiMetrics {
 }
 
 export interface ApiAdAccount {
+  displayName?: string;
   id: string;
   accountId: string | null;
   name: string;
@@ -199,6 +200,8 @@ export interface ApiSnapshot {
   syncedAt: string;
   account: ApiAdAccount;
   totals: ApiMetrics;
+  performance?: Dataset<ApiMetrics>;
+  completeness?: Partial<Record<"creatives" | "ads" | "adSets", "limited" | "complete">>;
   campaigns: Dataset<ApiCampaign[]>;
   adSets: Dataset<ApiAdSet[]>;
   ads: Dataset<ApiAd[]>;
@@ -252,34 +255,34 @@ const BASE = "/integrations/meta-ads";
 
 export const metaAdsApi = {
   overview(companyId: string, signal?: AbortSignal, refresh = false): Promise<ApiAdsOverview> {
-    return apiClient.request<ApiAdsOverview>({ method: "GET", path: `${BASE}/overview`, query: refresh ? { refresh: "true" } : undefined, headers: companyScopeHeaders(companyId), signal });
+    return apiClient.request<ApiAdsOverview>({ method: "GET", path: `${BASE}/overview`, query: refresh ? { refresh: "true" } : undefined, headers: metaScopeHeaders(companyId), signal });
   },
   accounts(companyId: string, signal?: AbortSignal, refresh = false): Promise<ApiAccountsResponse> {
-    return apiClient.request<ApiAccountsResponse>({ method: "GET", path: `${BASE}/accounts`, query: refresh ? { refresh: "true" } : undefined, headers: companyScopeHeaders(companyId), signal });
+    return apiClient.request<ApiAccountsResponse>({ method: "GET", path: `${BASE}/accounts`, query: refresh ? { refresh: "true" } : undefined, headers: metaScopeHeaders(companyId), signal });
   },
   snapshot(companyId: string, adAccountId: string, period: ApiPeriod, signal?: AbortSignal, refresh = false): Promise<ApiSnapshot> {
-    return apiClient.request<ApiSnapshot>({ method: "GET", path: `${BASE}/snapshot`, query: { adAccountId, period, ...(refresh ? { refresh: "true" } : {}) }, headers: companyScopeHeaders(companyId), signal });
+    return apiClient.request<ApiSnapshot>({ method: "GET", path: `${BASE}/snapshot`, query: { adAccountId, period, ...(refresh ? { refresh: "true" } : {}) }, headers: metaScopeHeaders(companyId), signal });
   },
-  leads(companyId: string, signal?: AbortSignal, refresh = false): Promise<{ items: ApiLead[]; partial: boolean }> {
-    return apiClient.request<{ items: ApiLead[]; partial: boolean }>({ method: "GET", path: `${BASE}/leads`, query: { limit: 100, ...(refresh ? { refresh: "true" } : {}) }, headers: companyScopeHeaders(companyId), signal });
+  leads(companyId: string, signal?: AbortSignal, refresh = false, adAccountId?: string): Promise<{ items: ApiLead[]; partial: boolean }> {
+    return apiClient.request<{ items: ApiLead[]; partial: boolean }>({ method: "GET", path: `${BASE}/leads`, query: { limit: 100, ...(adAccountId ? { adAccountId } : {}), ...(refresh ? { refresh: "true" } : {}) }, headers: metaScopeHeaders(companyId), signal });
   },
   createCampaign(companyId: string, idempotencyKey: string, body: { adAccountId: string; name: string; objective: string; dailyBudgetMinor: number; specialAdCategories: string[] }): Promise<MetaAdsWriteResult> {
-    return apiClient.request({ method: "POST", path: `${BASE}/campaigns`, headers: { ...companyScopeHeaders(companyId), "Idempotency-Key": idempotencyKey }, body });
+    return apiClient.request({ method: "POST", path: `${BASE}/campaigns`, headers: { ...metaScopeHeaders(companyId), "Idempotency-Key": idempotencyKey }, body });
   },
   createAdSet(companyId: string, idempotencyKey: string, body: { adAccountId: string; campaignId: string; name: string; dailyBudgetMinor: number; billingEvent: string; optimizationGoal: string; targeting: Record<string, unknown> }): Promise<MetaAdsWriteResult> {
-    return apiClient.request({ method: "POST", path: `${BASE}/adsets`, headers: { ...companyScopeHeaders(companyId), "Idempotency-Key": idempotencyKey }, body });
+    return apiClient.request({ method: "POST", path: `${BASE}/adsets`, headers: { ...metaScopeHeaders(companyId), "Idempotency-Key": idempotencyKey }, body });
   },
   createAd(companyId: string, idempotencyKey: string, body: { adAccountId: string; adSetId: string; creativeId: string; name: string }): Promise<MetaAdsWriteResult> {
-    return apiClient.request({ method: "POST", path: `${BASE}/ads`, headers: { ...companyScopeHeaders(companyId), "Idempotency-Key": idempotencyKey }, body });
+    return apiClient.request({ method: "POST", path: `${BASE}/ads`, headers: { ...metaScopeHeaders(companyId), "Idempotency-Key": idempotencyKey }, body });
   },
   updateNamedBudget(companyId: string, kind: "campaign" | "adset", id: string, body: { adAccountId: string; name?: string; dailyBudgetMinor?: number }): Promise<MetaAdsWriteResult> {
-    return apiClient.request({ method: "PATCH", path: `${BASE}/${kind === "campaign" ? "campaigns" : "adsets"}/${encodeURIComponent(id)}`, headers: companyScopeHeaders(companyId), body });
+    return apiClient.request({ method: "PATCH", path: `${BASE}/${kind === "campaign" ? "campaigns" : "adsets"}/${encodeURIComponent(id)}`, headers: metaScopeHeaders(companyId), body });
   },
   updateAd(companyId: string, id: string, body: { adAccountId: string; name: string }): Promise<MetaAdsWriteResult> {
-    return apiClient.request({ method: "PATCH", path: `${BASE}/ads/${encodeURIComponent(id)}`, headers: companyScopeHeaders(companyId), body });
+    return apiClient.request({ method: "PATCH", path: `${BASE}/ads/${encodeURIComponent(id)}`, headers: metaScopeHeaders(companyId), body });
   },
   updateStatus(companyId: string, kind: MetaAdsEntityKind, id: string, body: { adAccountId: string; status: "ACTIVE" | "PAUSED"; confirmedDailyBudgetMinor?: number }): Promise<MetaAdsWriteResult> {
     const plural = kind === "campaign" ? "campaigns" : kind === "adset" ? "adsets" : "ads";
-    return apiClient.request({ method: "PATCH", path: `${BASE}/${plural}/${encodeURIComponent(id)}/status`, headers: companyScopeHeaders(companyId), body });
+    return apiClient.request({ method: "PATCH", path: `${BASE}/${plural}/${encodeURIComponent(id)}/status`, headers: metaScopeHeaders(companyId), body });
   },
 };

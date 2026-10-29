@@ -1,442 +1,121 @@
 /**
  * EnCodency OmniPlatform - Super Admin Integrations Module
- * Integration Settings Form Component
- * Platform-wide governance, health monitoring intervals, sync retry defaults, and access policies
+ * Platform integration policy.
+ *
+ * Only settings the server really applies are here: the background job reads the first two, and issue detection reads the
+ * third. Anything that nothing reads (approval policies, sync intervals, retry policies, escalation) is not offered.
  */
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { CheckCircle2Icon, SaveIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useIntegrationSettings, useUpdateIntegrationSettings } from "../data/hooks";
 import type { IntegrationSettings } from "../data/types";
 
 export function IntegrationSettingsForm() {
-  const { data: settings } = useIntegrationSettings();
+  const { data: settings, isError } = useIntegrationSettings();
   const updateSettings = useUpdateIntegrationSettings();
-
   const [formState, setFormState] = useState<IntegrationSettings | null>(null);
-  const [isDirty, setIsDirty] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (settings) {
-      setFormState({ ...settings });
-      setIsDirty(false);
-    }
-  }, [settings]);
-
-  if (!formState) {
-    return (
-      <div className="space-y-4 max-w-full animate-pulse">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="h-64 bg-slate-100 rounded-xl border border-slate-200/60 p-5" />
-          <div className="h-64 bg-slate-100 rounded-xl border border-slate-200/60 p-5" />
-          <div className="h-64 bg-slate-100 rounded-xl border border-slate-200/60 p-5" />
-          <div className="h-64 bg-slate-100 rounded-xl border border-slate-200/60 p-5" />
-        </div>
-      </div>
-    );
+  // The form follows the server's copy when its content changes (a save), not on every background refetch.
+  const settingsKey = settings ? JSON.stringify(settings) : null;
+  const [syncedKey, setSyncedKey] = useState<string | null>(null);
+  if (settings && settingsKey !== syncedKey) {
+    setSyncedKey(settingsKey);
+    setFormState({ ...settings });
   }
 
-  const handleChange = (updater: (prev: IntegrationSettings) => IntegrationSettings) => {
-    setFormState((prev) => {
-      if (!prev) return prev;
-      const next = updater(prev);
-      setIsDirty(true);
-      setSaveSuccess(false);
-      return next;
-    });
+  if (isError) {
+    return <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700">The platform settings could not be loaded.</p>;
+  }
+  if (!formState || !settings) {
+    return <div className="h-48 rounded-xl border border-slate-200/60 bg-slate-100 animate-pulse" />;
+  }
+
+  const dirty = JSON.stringify(formState) !== JSON.stringify(settings);
+  const change = (patch: Partial<IntegrationSettings>) => {
+    setFormState((current) => (current ? { ...current, ...patch } : current));
+    setSaveSuccess(false);
   };
 
-  const handleDiscard = () => {
-    if (settings) {
-      setFormState({ ...settings });
-      setIsDirty(false);
-      setSaveSuccess(false);
+  const save = async () => {
+    setError(null);
+    try {
+      await updateSettings.mutateAsync(formState);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The settings were not saved.");
     }
   };
 
-  const handleSave = async () => {
-    if (!formState) return;
-    await updateSettings.mutateAsync(formState);
-    setIsDirty(false);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
-  };
+  const row = (title: string, description: string, control: React.ReactNode) => (
+    <div className="flex items-center justify-between gap-4 py-3 border-b border-slate-100 last:border-0">
+      <div className="min-w-0">
+        <p className="font-semibold text-slate-800 text-xs">{title}</p>
+        <p className="text-slate-500 text-xs mt-0.5">{description}</p>
+      </div>
+      {control}
+    </div>
+  );
 
   return (
     <div className="space-y-4 w-full max-w-full text-xs relative pb-16">
-      {/* Section 1: Connection Governance */}
-      <div className="rounded-xl border border-slate-200/90 bg-white p-4 space-y-3 shadow-2xs">
+      <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs">
         <div className="border-b border-slate-100 pb-2">
-          <div className="font-bold text-slate-900 text-xs uppercase tracking-wider">
-            Connection Governance & Ownership
-          </div>
-          <div className="text-slate-500 text-xs">
-            Global policies governing tenant account authorizations and re-authentications.
-          </div>
+          <div className="font-bold text-slate-900 text-xs uppercase tracking-wider">Background connection upkeep</div>
+          <div className="text-slate-500 text-xs">What the server does by itself, for every company.</div>
         </div>
+        {row(
+          "Renew tokens automatically",
+          "About once a day (and within a week of a LinkedIn token's end) the server renews logins that hold a refresh token, so a revoked one is found early. A company can still switch this off for itself. When this is off, nothing is renewed in the background for anyone.",
+          <Switch checked={formState.autoRefreshEnabled} onCheckedChange={(autoRefreshEnabled) => change({ autoRefreshEnabled })} aria-label="Renew tokens automatically" />,
+        )}
+        {row(
+          "Notify company admins",
+          "Owners and Admins get an in-app notice (and e-mail or WhatsApp where they chose it) when a connection needs reconnecting or its access is about to end. A reminder is not repeated more than once a week.",
+          <Switch checked={formState.notifyCompanyAdmins} onCheckedChange={(notifyCompanyAdmins) => change({ notifyCompanyAdmins })} aria-label="Notify company admins" />,
+        )}
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-slate-700">
-              New Connection Approval Policy
-            </Label>
-            <Select
-              value={formState.newConnectionApprovalPolicy}
-              onValueChange={(val: any) =>
-                handleChange((prev) => ({ ...prev, newConnectionApprovalPolicy: val }))
-              }
-            >
-              <SelectTrigger className="text-xs bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="text-xs">
-                <SelectItem value="automatic">Automatic (Direct OAuth)</SelectItem>
-                <SelectItem value="admin_review">Platform Admin Review Required</SelectItem>
-                <SelectItem value="restricted_tier">Growth / Agency Tiers Only</SelectItem>
-              </SelectContent>
-            </Select>
-            <span className="text-slate-400 text-xs">
-              Whether company connections connect immediately or queue for platform review.
-            </span>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-slate-700">
-              Inactive Connection Review Window (Days)
-            </Label>
-            <Input
-              type="number"
-              value={formState.inactiveConnectionReviewDays}
-              onChange={(e) =>
-                handleChange((prev) => ({
-                  ...prev,
-                  inactiveConnectionReviewDays: parseInt(e.target.value) || 30,
-                }))
-              }
-              className="text-xs bg-white"
-            />
-            <span className="text-slate-400 text-xs">
-              Connections without publish or sync operations are flagged for review.
-            </span>
-          </div>
+      <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs">
+        <div className="border-b border-slate-100 pb-2">
+          <div className="font-bold text-slate-900 text-xs uppercase tracking-wider">Issue detection</div>
+          <div className="text-slate-500 text-xs">When a problem becomes an issue in the queue.</div>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-slate-700">
-              Connection Ownership Model
-            </Label>
-            <Select
-              value={formState.connectionOwnershipPolicy}
-              onValueChange={(val: any) =>
-                handleChange((prev) => ({ ...prev, connectionOwnershipPolicy: val }))
-              }
-            >
-              <SelectTrigger className="text-xs bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="text-xs">
-                <SelectItem value="strict_company_silo">Strict Company Silo (Isolated)</SelectItem>
-                <SelectItem value="agency_delegated">Agency Delegated (Cross-Client Mapping)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-slate-700">
-              Reauthorization Reminder Schedule (Days)
-            </Label>
-            <Input
-              type="number"
-              value={formState.reauthorizationRequestDefaults.reminderDays}
-              onChange={(e) =>
-                handleChange((prev) => ({
-                  ...prev,
-                  reauthorizationRequestDefaults: {
-                    ...prev.reauthorizationRequestDefaults,
-                    reminderDays: parseInt(e.target.value) || 7,
-                  },
-                }))
-              }
-              className="text-xs bg-white"
-            />
-          </div>
+        <div className="space-y-1 pt-3 max-w-sm">
+          <Label className="text-xs font-semibold text-slate-700">Failed checks in a row before it is raised</Label>
+          <Select value={String(formState.repeatedFailureThreshold)} onValueChange={(value) => change({ repeatedFailureThreshold: Number(value) })}>
+            <SelectTrigger className="text-xs bg-white"><SelectValue /></SelectTrigger>
+            <SelectContent className="text-xs">
+              {[1, 2, 3, 5, 10].map((count) => <SelectItem key={count} value={String(count)}>{count === 1 ? "After the first failure" : `After ${count} failures in a row`}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <span className="text-slate-400 block">A connection whose access is gone is raised at once, whatever this is set to. This only applies to checks that keep failing for another reason.</span>
         </div>
       </div>
 
-      {/* Section 2: Health Monitoring & Telemetry */}
-      <div className="rounded-xl border border-slate-200/90 bg-white p-4 space-y-3 shadow-2xs">
-        <div className="border-b border-slate-100 pb-2">
-          <div className="font-bold text-slate-900 text-xs uppercase tracking-wider">
-            Health Monitoring & Diagnostic Intervals
-          </div>
-          <div className="text-slate-500 text-xs">
-            Frequency of automated health probes and token expiration warnings.
-          </div>
-        </div>
+      {error && <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 font-medium text-rose-700">{error}</p>}
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-slate-700">
-              Token Expiry Warning (Days)
-            </Label>
-            <Input
-              type="number"
-              value={formState.tokenExpiryWarningDays}
-              onChange={(e) =>
-                handleChange((prev) => ({
-                  ...prev,
-                  tokenExpiryWarningDays: parseInt(e.target.value) || 14,
-                }))
-              }
-              className="text-xs bg-white"
-            />
-            <span className="text-slate-400 text-xs">Warn before token expires.</span>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-slate-700">
-              Health Check Probe Interval (Min)
-            </Label>
-            <Input
-              type="number"
-              value={formState.connectionHealthCheckIntervalMinutes}
-              onChange={(e) =>
-                handleChange((prev) => ({
-                  ...prev,
-                  connectionHealthCheckIntervalMinutes: parseInt(e.target.value) || 15,
-                }))
-              }
-              className="text-xs bg-white"
-            />
-            <span className="text-slate-400 text-xs">Scheduled background worker.</span>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-slate-700">
-              Repeated Failure Escalation
-            </Label>
-            <Input
-              type="number"
-              value={formState.repeatedFailureThreshold}
-              onChange={(e) =>
-                handleChange((prev) => ({
-                  ...prev,
-                  repeatedFailureThreshold: parseInt(e.target.value) || 5,
-                }))
-              }
-              className="text-xs bg-white"
-            />
-            <span className="text-slate-400 text-xs">Consecutive errors to open incident.</span>
-          </div>
-        </div>
+      <div className="sticky bottom-3 flex items-center justify-end gap-2">
+        {saveSuccess && (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700"><CheckCircle2Icon className="size-3.5" /> Saved</span>
+        )}
+        <Button type="button" variant="outline" size="sm" className="text-xs bg-white" onClick={() => setFormState({ ...settings })} disabled={!dirty || updateSettings.isPending}>
+          Discard
+        </Button>
+        <Button type="button" size="sm" className="text-xs bg-[#EB0711] hover:bg-[#EB0711]/90 text-white" onClick={() => void save()} disabled={!dirty || updateSettings.isPending}>
+          <SaveIcon className="size-3.5 mr-1.5" />
+          {updateSettings.isPending ? "Saving…" : "Save changes"}
+        </Button>
       </div>
-
-      {/* Section 3: Sync & Retry Defaults */}
-      <div className="rounded-xl border border-slate-200/90 bg-white p-4 space-y-3 shadow-2xs">
-        <div className="border-b border-slate-100 pb-2">
-          <div className="font-bold text-slate-900 text-xs uppercase tracking-wider">
-            Synchronization & Worker Retry Backoff
-          </div>
-          <div className="text-slate-500 text-xs">
-            Queue policies for automated content publishing and analytics pulling.
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-slate-700">
-              Default Sync Interval (Minutes)
-            </Label>
-            <Input
-              type="number"
-              value={formState.defaultSyncIntervalMinutes}
-              onChange={(e) =>
-                handleChange((prev) => ({
-                  ...prev,
-                  defaultSyncIntervalMinutes: parseInt(e.target.value) || 30,
-                }))
-              }
-              className="text-xs bg-white"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-slate-700">
-              Retry Backoff Strategy
-            </Label>
-            <Select
-              value={formState.retryPolicy}
-              onValueChange={(val: any) =>
-                handleChange((prev) => ({ ...prev, retryPolicy: val }))
-              }
-            >
-              <SelectTrigger className="text-xs bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="text-xs">
-                <SelectItem value="exponential_backoff">Exponential Backoff (Recommended)</SelectItem>
-                <SelectItem value="fixed_interval">Fixed Interval (5 min)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-slate-700">
-              Max Retry Attempts
-            </Label>
-            <Input
-              type="number"
-              value={formState.backoffMaxRetries}
-              onChange={(e) =>
-                handleChange((prev) => ({
-                  ...prev,
-                  backoffMaxRetries: parseInt(e.target.value) || 4,
-                }))
-              }
-              className="text-xs bg-white"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Section 4: Notification Alerts */}
-      <div className="rounded-xl border border-slate-200/90 bg-white p-4 space-y-3 shadow-2xs">
-        <div className="border-b border-slate-100 pb-2">
-          <div className="font-bold text-slate-900 text-xs uppercase tracking-wider">
-            Operational Notification Policies
-          </div>
-          <div className="text-slate-500 text-xs">
-            Automated alerts dispatched to administrators during service anomalies.
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-semibold text-slate-800">
-                Provider Outage Alerts
-              </div>
-              <div className="text-slate-500 text-xs">
-                Send high-priority notification when an upstream provider experiences API degradation.
-              </div>
-            </div>
-            <Switch
-              checked={formState.notificationPolicies.providerOutageAlerts}
-              onCheckedChange={(checked) =>
-                handleChange((prev) => ({
-                  ...prev,
-                  notificationPolicies: {
-                    ...prev.notificationPolicies,
-                    providerOutageAlerts: checked,
-                  },
-                }))
-              }
-            />
-          </div>
-
-          <div className="border-t border-slate-100 pt-2 flex items-center justify-between">
-            <div>
-              <div className="font-semibold text-slate-800">
-                Connection Token Expiry Alerts
-              </div>
-              <div className="text-slate-500 text-xs">
-                Alert company admins 14 days before OAuth tokens expire.
-              </div>
-            </div>
-            <Switch
-              checked={formState.notificationPolicies.connectionExpiryAlerts}
-              onCheckedChange={(checked) =>
-                handleChange((prev) => ({
-                  ...prev,
-                  notificationPolicies: {
-                    ...prev.notificationPolicies,
-                    connectionExpiryAlerts: checked,
-                  },
-                }))
-              }
-            />
-          </div>
-
-          <div className="border-t border-slate-100 pt-2 flex items-center justify-between">
-            <div>
-              <div className="font-semibold text-slate-800">
-                Permission Revocation Alerts
-              </div>
-              <div className="text-slate-500 text-xs">
-                Alert when social networks report revoked publishing permissions.
-              </div>
-            </div>
-            <Switch
-              checked={formState.notificationPolicies.permissionRevocationAlerts}
-              onCheckedChange={(checked) =>
-                handleChange((prev) => ({
-                  ...prev,
-                  notificationPolicies: {
-                    ...prev.notificationPolicies,
-                    permissionRevocationAlerts: checked,
-                  },
-                }))
-              }
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Floating Action Bar when unsaved */}
-      {isDirty && (
-        <div className="fixed bottom-16 inset-x-0 mx-auto max-w-lg z-[60] animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <div className="rounded-xl border border-slate-800 bg-slate-900 text-white p-3 shadow-xl flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-xs font-medium">
-                You have unsaved policy changes.
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleDiscard}
-                className="text-xs text-slate-300 hover:text-white hover:bg-slate-800 h-8"
-              >
-                Discard
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleSave}
-                className="text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold h-8"
-              >
-                <SaveIcon className="size-3.5 mr-1" />
-                <span>Save Changes</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {saveSuccess && (
-        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold text-xs flex items-center gap-2">
-          <CheckCircle2Icon className="size-4 text-emerald-600" />
-          <span>Integration governance settings successfully saved to shared platform state.</span>
-        </div>
-      )}
     </div>
   );
 }

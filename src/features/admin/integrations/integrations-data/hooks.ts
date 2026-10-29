@@ -9,18 +9,18 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useIntegrations } from "../store/integrations-store";
 import {
+  checkCapability,
   disconnectCapability,
   reconnectCapability,
-  syncCapability,
 } from "./capability-provider";
 import {
   ALL_CLIENTS,
   deriveIssues,
   kpis,
   scopedActivity,
+  scopedChecks,
   scopedConnections,
   scopedDependencies,
-  scopedRuns,
 } from "./selectors";
 import type { IntegrationConnection } from "./types";
 
@@ -102,19 +102,19 @@ export function useClientScope() {
 /* ------------------------------------------------------------------ */
 
 export function useScopedData() {
-  const { data, syncJobs } = useIntegrations();
+  const { data, checkJobs } = useIntegrations();
   const { clientId } = useClientScope();
 
   return useMemo(() => {
     const connections = scopedConnections(data.connections, clientId);
     const visibleIds = new Set(connections.map((connection) => connection.id));
     const dependencies = scopedDependencies(data.dependencies, clientId).filter((dependency) => visibleIds.has(dependency.connectionId));
-    const runs = scopedRuns(data.syncRuns, clientId).filter((run) => visibleIds.has(run.connectionId));
+    const runs = scopedChecks(data.checkRuns, clientId).filter((run) => visibleIds.has(run.connectionId));
     const activity = scopedActivity(data.activity, clientId).filter((item) => !item.connectionId || visibleIds.has(item.connectionId));
     const issues = deriveIssues(connections, data.providers, dependencies, runs);
-    const summary = kpis(connections, runs, dependencies, new Set(Object.keys(syncJobs)));
+    const summary = kpis(connections, runs, dependencies, new Set(Object.keys(checkJobs)));
     return { connections, dependencies, runs, activity, issues, summary };
-  }, [data, clientId, syncJobs]);
+  }, [data, clientId, checkJobs]);
 }
 
 export function useConnection(id: string | null) {
@@ -129,16 +129,16 @@ export function useProvider(id: string | null | undefined) {
 
 /** Per-connection gates, combining the user's role with the connection's own state. */
 export function useConnectionGates(connection: IntegrationConnection | null) {
-  const { can, syncJobs } = useIntegrations();
+  const { can, checkJobs } = useIntegrations();
   return useMemo(() => {
     if (!connection) return null;
     return {
-      sync: syncCapability(connection, can.canSync, Boolean(syncJobs[connection.id])),
+      check: checkCapability(connection, can.canCheck, Boolean(checkJobs[connection.id])),
       reconnect: reconnectCapability(connection, can.canReconnect),
       disconnect: disconnectCapability(connection, can.canDisconnect),
       mapping: can.canChangeMapping,
     };
-  }, [connection, can, syncJobs]);
+  }, [connection, can, checkJobs]);
 }
 
 /* ------------------------------------------------------------------ */

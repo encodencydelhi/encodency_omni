@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { isToday, parseISO, subDays } from "date-fns";
 import { Activity, CheckCircle2, Download, Filter, KeyRound, ShieldCheck, XCircle } from "lucide-react";
 import { EVENT_LABEL } from "../integrations-data/config";
@@ -8,20 +8,18 @@ import { useClientScope, useQueryState, useScopedData } from "../integrations-da
 import { downloadFile, toCsv } from "../integrations-data/selectors";
 import { useIntegrations } from "../store/integrations-store";
 import type { ActivityEvent } from "../integrations-data/types";
-import { ActivityTable, PageSkeleton, RunDialog } from "../components/blocks";
+import { ActivityTable, PageSkeleton } from "../components/blocks";
 import { Button, Card, EmptyState, KpiTile, Pagination, SearchField, SelectMenu, useDebounced } from "../components/ui";
 
 const DEFAULTS = { q: "", integration: "all", event: "all", result: "all", user: "all", range: "all", page: "1" };
 const PAGE_SIZE = 15;
 
 const EVENT_GROUPS: { value: string; label: string; events: ActivityEvent[] }[] = [
-  { value: "sync", label: "Syncs", events: ["sync_completed", "sync_partial", "sync_failed", "sync_started"] },
+  { value: "check", label: "Checks", events: ["sync_completed", "sync_failed"] },
   { value: "connection", label: "Connect & disconnect", events: ["connected", "disconnected"] },
   { value: "reconnect", label: "Reconnects", events: ["reconnected", "reconnect_required"] },
-  { value: "permission", label: "Permission changes", events: ["permission_changed"] },
-  { value: "mapping", label: "Mapping changes", events: ["mapping_changed", "primary_changed", "resource_removed"] },
+  { value: "mapping", label: "Account mapping", events: ["mapping_changed", "resource_removed"] },
   { value: "settings", label: "Settings", events: ["settings_updated"] },
-  { value: "rate", label: "Rate limits", events: ["rate_limited"] },
 ];
 
 export function ActivityPage() {
@@ -36,7 +34,6 @@ function ActivityView() {
   const { activity, connections } = useScopedData();
   const { values, set, reset } = useQueryState(useMemo(() => DEFAULTS, []));
   const { value: search } = useDebounced(values.q, 200);
-  const [runId, setRunId] = useState<string | null>(null);
 
   const today = activity.filter((item) => isToday(parseISO(item.at)));
   const kpi = {
@@ -44,7 +41,7 @@ function ActivityView() {
     success: activity.filter((item) => item.event === "sync_completed").length,
     failed: activity.filter((item) => item.event === "sync_failed").length,
     reconnects: activity.filter((item) => item.event === "reconnected" || item.event === "reconnect_required").length,
-    permissions: activity.filter((item) => item.event === "permission_changed").length,
+    mappings: activity.filter((item) => item.event === "mapping_changed" || item.event === "resource_removed").length,
   };
 
   const users = [...new Set(activity.map((item) => item.actor))].sort();
@@ -91,10 +88,10 @@ function ActivityView() {
     <div className="space-y-1">
       <div className="grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-5">
         <KpiTile label="Events today" value={kpi.events} detail={label} icon={Activity} tone="blue" onClick={() => set({ range: "1", event: "all", result: "all", page: "1" })} active={values.range === "1"} />
-        <KpiTile label="Successful syncs" value={kpi.success} icon={CheckCircle2} tone="green" onClick={() => set({ event: "sync", result: "success", page: "1" })} active={values.event === "sync" && values.result === "success"} />
-        <KpiTile label="Failed syncs" value={kpi.failed} icon={XCircle} tone={kpi.failed ? "red" : "neutral"} onClick={() => set({ event: "sync", result: "failed", page: "1" })} active={values.event === "sync" && values.result === "failed"} />
+        <KpiTile label="Successful checks" value={kpi.success} icon={CheckCircle2} tone="green" onClick={() => set({ event: "check", result: "success", page: "1" })} active={values.event === "check" && values.result === "success"} />
+        <KpiTile label="Failed checks" value={kpi.failed} icon={XCircle} tone={kpi.failed ? "red" : "neutral"} onClick={() => set({ event: "check", result: "failed", page: "1" })} active={values.event === "check" && values.result === "failed"} />
         <KpiTile label="Reconnect events" value={kpi.reconnects} icon={KeyRound} tone="amber" onClick={() => set({ event: "reconnect", result: "all", page: "1" })} active={values.event === "reconnect"} />
-        <KpiTile label="Permission changes" value={kpi.permissions} icon={ShieldCheck} tone="violet" onClick={() => set({ event: "permission", result: "all", page: "1" })} active={values.event === "permission"} />
+        <KpiTile label="Mapping changes" value={kpi.mappings} icon={ShieldCheck} tone="violet" onClick={() => set({ event: "mapping", result: "all", page: "1" })} active={values.event === "mapping"} />
       </div>
 
       <Card className="overflow-hidden">
@@ -142,20 +139,18 @@ function ActivityView() {
           <EmptyState
             icon={Activity}
             title={activity.length ? "No activity matches these filters" : "No activity"}
-            description={activity.length ? "Try a wider date range or clear the filters." : "Syncs, reconnects and connection changes will appear here as they happen."}
+            description={activity.length ? "Try a wider date range or clear the filters." : "Connections, checks, reconnects and mapping changes will appear here as they happen."}
             action={activity.length ? <Button variant="primary" onClick={() => reset(["client"])}>Clear filters</Button> : undefined}
           />
         ) : (
           <>
-            <ActivityTable items={rows} onOpenRun={setRunId} />
+            <ActivityTable items={rows} />
             <div className="border-t border-[#EEF1F5]">
               <Pagination page={safePage} pageCount={pageCount} total={filtered.length} pageSize={PAGE_SIZE} noun="events" onPage={(next) => set({ page: String(next) })} />
             </div>
           </>
         )}
       </Card>
-
-      <RunDialog runId={runId} onOpenChange={(open) => !open && setRunId(null)} />
     </div>
   );
 }

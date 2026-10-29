@@ -9,11 +9,11 @@ import { cn } from "@/lib/utils/cn";
 import { intRoutes } from "../integrations-data/config";
 import { useClientScope, useScopedData } from "../integrations-data/hooks";
 import { ALL_CLIENTS, clientName, downloadFile, isActive, toCsv } from "../integrations-data/selectors";
-import { syncCapability } from "../integrations-data/capability-provider";
+import { checkCapability } from "../integrations-data/capability-provider";
 import { useIntegrations } from "../store/integrations-store";
 import { ConnectFlow } from "./connect-flow";
 import { OAuthCallbackHandler } from "./oauth-callback";
-import { SyncAllDialog } from "./dialogs";
+import { AddAccountsDialog, CheckAllDialog } from "./dialogs";
 import { ActionMenu, Button, Card, EmptyState, SelectMenu, buttonClass, x } from "./ui";
 
 const TABS = [
@@ -34,7 +34,7 @@ function activeTab(pathname: string) {
 export function IntegrationsWorkspace({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? intRoutes.overview;
   const tab = activeTab(pathname);
-  const { serviceError, simulation, retryLoad } = useIntegrations();
+  const { serviceError, retryLoad } = useIntegrations();
   const isDetail = !TABS.some((item) => item.href === pathname);
 
   return (
@@ -58,16 +58,6 @@ export function IntegrationsWorkspace({ children }: { children: ReactNode }) {
                 secondary={<Button variant="secondary" href="/admin">Back to dashboard</Button>}
               />
             </Card>
-          ) : simulation.loadError ? (
-            <Card>
-              <EmptyState
-                icon={AlertTriangle}
-                title="Connection data unavailable"
-                description="OmniPlatform couldn't load connection data. Your integrations keep running — only this view is affected."
-                action={<Button variant="primary" icon={RefreshCw} onClick={retryLoad}>Retry</Button>}
-                secondary={<Button variant="secondary" href={intRoutes.settings}>Open settings</Button>}
-              />
-            </Card>
           ) : (
             children
           )}
@@ -75,6 +65,7 @@ export function IntegrationsWorkspace({ children }: { children: ReactNode }) {
       </div>
       <OAuthCallbackHandler />
       <ConnectFlow />
+      <AccountsPrompt />
       <UnsavedChangesDialog />
     </div>
   );
@@ -88,15 +79,15 @@ function Header({ tab, isDetail }: { tab: string; isDetail: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const { data, can, ready, syncJobs } = useIntegrations();
+  const { data, can, ready, checkJobs } = useIntegrations();
   const { clientId, label, withScope } = useClientScope();
   const { connections } = useScopedData();
-  const [syncAllOpen, setSyncAllOpen] = useState(false);
+  const [checkAllOpen, setCheckAllOpen] = useState(false);
 
-  // Only connections that can actually sync are offered to Sync All.
-  const syncable = useMemo(
-    () => connections.filter((connection) => isActive(connection) && syncCapability(connection, can.canSync, Boolean(syncJobs[connection.id])).allowed).map((connection) => connection.id),
-    [connections, can.canSync, syncJobs],
+  // Only connections that can actually be checked are offered to Check all.
+  const checkable = useMemo(
+    () => connections.filter((connection) => isActive(connection) && checkCapability(connection, can.canCheck, Boolean(checkJobs[connection.id])).allowed).map((connection) => connection.id),
+    [connections, can.canCheck, checkJobs],
   );
 
   const setClient = (value: string) => {
@@ -120,8 +111,8 @@ function Header({ tab, isDetail }: { tab: string; isDetail: boolean }) {
       account: connection.accountName,
       client: clientName(data.clients, connection.clientId),
       status: connection.status,
-      last_sync: connection.lastSyncAt ?? "",
-      next_sync: connection.nextSyncAt ?? "",
+      last_check: connection.lastCheckedAt ?? "",
+      access_ends: connection.autoRenews ? "" : (connection.tokenExpiresAt ?? ""),
       resources: connection.resources.map((resource) => resource.name).join(" | "),
       connected_by: connection.connectedBy,
       connected_at: connection.connectedAt,
@@ -177,12 +168,12 @@ function Header({ tab, isDetail }: { tab: string; isDetail: boolean }) {
             variant="secondary"
             icon={RefreshCw}
             className="h-9"
-            disabled={!ready || syncable.length === 0}
-            disabledReason={!ready ? "Still loading integrations." : `Nothing in ${label} can be synced right now.`}
-            gate={ready ? can.canSync : undefined}
-            onClick={() => setSyncAllOpen(true)}
+            disabled={!ready || checkable.length === 0}
+            disabledReason={!ready ? "Still loading integrations." : `Nothing in ${label} can be checked right now.`}
+            gate={ready ? can.canCheck : undefined}
+            onClick={() => setCheckAllOpen(true)}
           >
-            Sync all
+            Check all
           </Button>
           <Button variant="primary" icon={Plus} className="h-9" gate={ready ? can.canConnect : undefined} disabled={!ready} disabledReason="Still loading integrations." onClick={openConnect}>
             Connect integration
@@ -205,9 +196,38 @@ function Header({ tab, isDetail }: { tab: string; isDetail: boolean }) {
         </div>
       </div>
 
-      <SyncAllDialog open={syncAllOpen} onOpenChange={setSyncAllOpen} connectionIds={syncable} scopeLabel={label} />
+      <CheckAllDialog open={checkAllOpen} onOpenChange={setCheckAllOpen} connectionIds={checkable} scopeLabel={label} />
     </header>
   );
+}
+
+/* ------------------------------------------------------------------ */
+/* After connecting: choose the accounts                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Coming back from a provider's consent screen with a new login, the person still has to say which pages, locations or
+ * channels to use. This opens "Add accounts" for that login as soon as the fresh snapshot contains it.
+ */
+function AccountsPrompt() {
+  const { data, ready, connectMarker, offerAccountsFor } = useIntegrations();
+  const { clientId } = useClientScope();
+
+  // The login to offer is whichever one the snapshot has that did not exist before leaving for the provider; when the
+  // same login was reconnected, the one that still has no accounts.
+  const mine = connectMarker && ready ? data.connections.filter((connection) => connection.providerId === connectMarker.providerId && connection.status !== "disconnected") : [];
+  const fresh = connectMarker ? (mine.find((connection) => !connectMarker.before.includes(connection.id)) ?? mine.find((connection) => connection.resources.length === 0)) : undefined;
+
+  // Remember the pick, so the dialog stays on this login after its accounts are added and the snapshot changes.
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  if (fresh && !pickedId) setPickedId(fresh.id);
+
+  const connection = connectMarker ? (data.connections.find((item) => item.id === pickedId) ?? null) : null;
+  const close = () => {
+    setPickedId(null);
+    offerAccountsFor(null);
+  };
+  return <AddAccountsDialog connection={connection} open={connection !== null} onOpenChange={(open) => !open && close()} defaultClientId={clientId === ALL_CLIENTS ? null : clientId} />;
 }
 
 /* ------------------------------------------------------------------ */

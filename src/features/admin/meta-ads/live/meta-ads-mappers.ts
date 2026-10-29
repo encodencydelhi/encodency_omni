@@ -105,6 +105,7 @@ function toCampaign(raw: ApiCampaign, adSets: AdSet[]): Campaign {
     buyingType: raw.buyingType ?? "",
     budgetType,
     budget: ownBudget ? minor(raw.budget) : sumBudget(children, budgetType),
+    budgetSource: ownBudget ? "Campaign budget" : "Ad set budgets",
     bidStrategy: raw.bidStrategy ?? "",
     specialCategory: raw.specialCategory.length ? raw.specialCategory.join(", ") : "None",
     optimization: children[0]?.performanceGoal ?? "",

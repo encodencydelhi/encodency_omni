@@ -10,7 +10,6 @@ export * from "./provider-card";
 export * from "./provider-logo";
 export * from "./provider-impact-dialog";
 export * from "./provider-config-modal";
-export * from "./provider-config-panel";
 export * from "./capability-detail-drawer";
 export * from "./provider-capability-matrix";
 export * from "./connections-table";

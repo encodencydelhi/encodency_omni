@@ -1,4 +1,5 @@
 "use client";
+import { openMetaTool } from "@/features/admin/meta-ads/meta-tool";
 
 import Link from "next/link";
 import { Suspense, useMemo } from "react";
@@ -62,7 +63,7 @@ const STATUS_TONE = {
 } as const;
 
 function AudiencesView() {
-  const { audiences } = useAdsData();
+  const { accountId, audiences } = useAdsData();
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS);
 
   const rows = useMemo(() => {
@@ -102,7 +103,7 @@ function AudiencesView() {
       actions={
         <button
           type="button"
-          onClick={() => toast.success("Opening the audience builder…")}
+          onClick={() => openMetaTool("audiences", accountId)}
           className={cn(btnPrimary, "h-10")}
         >
           <Plus className="size-3.5" />
@@ -183,7 +184,7 @@ function AudiencesView() {
                 ? undefined
                 : {
                     label: "Create Audience",
-                    onClick: () => toast.success("Opening the audience builder…"),
+                    onClick: () => openMetaTool("audiences", accountId),
                   }
             }
             secondary={{ label: "Audience guide", href: `${ADS_ROOT}/help?category=audiences` }}
@@ -221,18 +222,19 @@ function UsedIn({ audience }: { audience: Audience }) {
 }
 
 function AudienceMenu({ audience }: { audience: Audience }) {
+  const { accountId } = useAdsData();
   return (
     <RowMenu
       label={`Actions for ${audience.name}`}
       groups={[
         [
           {
-            label: "Edit",
-            onSelect: () => toast.success(`Editing “${audience.name}”`),
+            label: "Edit In Meta",
+            onSelect: () => openMetaTool("audiences", accountId),
           },
           {
-            label: "Duplicate",
-            onSelect: () => toast.success(`Duplicating “${audience.name}”…`),
+            label: "Duplicate In Meta",
+            onSelect: () => openMetaTool("audiences", accountId),
           },
           { label: "Use in Ad Set", href: `${ADS_ROOT}/create?audience=${audience.id}&step=adset` },
         ],
@@ -241,14 +243,14 @@ function AudienceMenu({ audience }: { audience: Audience }) {
             ? [
                 {
                   label: "Retry sync",
-                  onSelect: () => toast.success(`Re-syncing “${audience.name}”…`),
+                  onSelect: () => openMetaTool("audiences", accountId),
                 },
               ]
             : []),
           {
-            label: "Archive",
+            label: "Archive In Meta",
             danger: true,
-            onSelect: () => toast.success(`Archived “${audience.name}”`),
+            onSelect: () => openMetaTool("audiences", accountId),
           },
         ],
       ]}

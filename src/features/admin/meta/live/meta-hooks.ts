@@ -1,5 +1,6 @@
 "use client";
 
+import { useMetaScopeKey } from "./meta-scope";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -51,12 +52,13 @@ export interface MetaConnection {
 
 /** The single source of truth for "is Meta connected, as whom, with which permissions", plus connect / disconnect. */
 export function useMetaConnection(): MetaConnection {
+  const scopeKey = useMetaScopeKey();
   const { companyId, clientId, isReady } = useTenancyContext();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState<MetaConnection["busy"]>(null);
 
   const overview = useQuery({
-    queryKey: [META_KEY, companyId, clientId, "overview"],
+    queryKey: [META_KEY, scopeKey, companyId, clientId, "overview"],
     enabled: isReady && Boolean(companyId) && Boolean(clientId),
     queryFn: ({ signal }) => integrationsApi.getOverview(companyId, clientId, signal),
     staleTime: 15_000,
@@ -142,8 +144,9 @@ export function useMetaConnection(): MetaConnection {
 
 /** The connected personal Facebook profile, its permissions and token facts (live from Meta). */
 export function useMetaProfile(companyId: string, enabled: boolean) {
+  const scopeKey = useMetaScopeKey();
   return useQuery({
-    queryKey: [META_KEY, companyId, "profile"],
+    queryKey: [META_KEY, scopeKey, companyId, "profile"],
     enabled: enabled && Boolean(companyId),
     queryFn: ({ signal }) => metaSocialApi.profile(companyId, signal),
     staleTime: 5 * 60_000,
@@ -154,9 +157,10 @@ export function useMetaProfile(companyId: string, enabled: boolean) {
 
 /** Facebook Pages + linked Instagram accounts this login manages (live from Meta). */
 export function useSocialOverview(companyId: string, enabled: boolean) {
+  const scopeKey = useMetaScopeKey();
   const force = useRef(0);
   const query = useQuery({
-    queryKey: [META_KEY, companyId, "social"],
+    queryKey: [META_KEY, scopeKey, companyId, "social"],
     enabled: enabled && Boolean(companyId),
     queryFn: ({ signal }) => metaSocialApi.overview(companyId, signal, Date.now() < force.current),
     staleTime: 60_000,
@@ -191,12 +195,14 @@ function useCursorFeed<T>(key: unknown[], enabled: boolean, load: (after: string
 }
 
 export function usePagePosts(companyId: string, pageId: string | null) {
-  return useCursorFeed<SocialPost>([META_KEY, companyId, "posts", pageId], Boolean(companyId && pageId), (after, signal, refresh) => metaSocialApi.posts(companyId, pageId!, after, signal, refresh));
+  const scopeKey = useMetaScopeKey();
+  return useCursorFeed<SocialPost>([META_KEY, scopeKey, companyId, "posts", pageId], Boolean(companyId && pageId), (after, signal, refresh) => metaSocialApi.posts(companyId, pageId!, after, signal, refresh));
 }
 
 export function useInstagramProfile(companyId: string, instagramId: string | null) {
+  const scopeKey = useMetaScopeKey();
   return useQuery({
-    queryKey: [META_KEY, companyId, "instagram", instagramId],
+    queryKey: [META_KEY, scopeKey, companyId, "instagram", instagramId],
     enabled: Boolean(companyId && instagramId),
     queryFn: ({ signal }) => metaSocialApi.instagramProfile(companyId, instagramId!, signal),
     staleTime: 60_000,
@@ -206,7 +212,8 @@ export function useInstagramProfile(companyId: string, instagramId: string | nul
 }
 
 export function useInstagramMedia(companyId: string, instagramId: string | null) {
-  return useCursorFeed<InstagramMedia>([META_KEY, companyId, "media", instagramId], Boolean(companyId && instagramId), (after, signal, refresh) => metaSocialApi.instagramMedia(companyId, instagramId!, after, signal, refresh));
+  const scopeKey = useMetaScopeKey();
+  return useCursorFeed<InstagramMedia>([META_KEY, scopeKey, companyId, "media", instagramId], Boolean(companyId && instagramId), (after, signal, refresh) => metaSocialApi.instagramMedia(companyId, instagramId!, after, signal, refresh));
 }
 
 const ACCOUNT_KEY = (companyId: string) => `omni.meta-ads.account.${companyId}`;
@@ -236,8 +243,9 @@ export function defaultAdAccount(companyId: string, accounts: ApiAdAccount[]): A
 
 /** Ad accounts (shares its cache with the Ads workspace). */
 export function useAdAccounts(companyId: string, enabled: boolean) {
+  const scopeKey = useMetaScopeKey();
   return useQuery({
-    queryKey: ["meta-ads", companyId, "accounts"],
+    queryKey: ["meta-ads", companyId, scopeKey, "accounts"],
     enabled: enabled && Boolean(companyId),
     queryFn: ({ signal }) => metaAdsApi.accounts(companyId, signal),
     staleTime: 60_000,
@@ -248,8 +256,9 @@ export function useAdAccounts(companyId: string, enabled: boolean) {
 
 /** Lifetime totals over every ad account: the cheap numbers the hub opens with. */
 export function useAdsOverview(companyId: string, enabled: boolean) {
+  const scopeKey = useMetaScopeKey();
   return useQuery({
-    queryKey: ["meta-ads", companyId, "overview"],
+    queryKey: ["meta-ads", companyId, scopeKey, "overview"],
     enabled: enabled && Boolean(companyId),
     queryFn: ({ signal }) => metaAdsApi.overview(companyId, signal),
     staleTime: 5 * 60_000,
@@ -263,8 +272,9 @@ export function useAdsOverview(companyId: string, enabled: boolean) {
  * workspace already loaded, so a page can use it without spending the ad-account quota.
  */
 export function useAdSnapshot(companyId: string, accountId: string | null, period: ApiPeriod = "30d", enabled = true) {
+  const scopeKey = useMetaScopeKey();
   return useQuery<ApiSnapshot>({
-    queryKey: ["meta-ads", companyId, "snapshot", accountId, period],
+    queryKey: ["meta-ads", companyId, scopeKey, "snapshot", accountId, period],
     enabled: enabled && Boolean(companyId && accountId),
     queryFn: ({ signal }) => metaAdsApi.snapshot(companyId, accountId!, period, signal),
     staleTime: 60_000,
@@ -275,8 +285,9 @@ export function useAdSnapshot(companyId: string, accountId: string | null, perio
 
 /** Scheduled / published posts of this Client across Facebook and Instagram (newest 100 by schedule; filtered on the page). */
 export function useMetaScheduledPosts(companyId: string, clientId: string, enabled: boolean) {
+  const scopeKey = useMetaScopeKey();
   const query = useQuery({
-    queryKey: [META_KEY, companyId, clientId, "scheduled"],
+    queryKey: [META_KEY, scopeKey, companyId, clientId, "scheduled"],
     enabled: enabled && Boolean(companyId && clientId),
     queryFn: ({ signal }) => schedulingApi.list(companyId, clientId, { limit: 100 }, signal),
     staleTime: 15_000,

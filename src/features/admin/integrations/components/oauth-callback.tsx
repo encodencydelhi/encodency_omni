@@ -17,13 +17,13 @@ import {
   stripOAuthCallbackParams,
 } from "../integrations-data/oauth-callback";
 import { consumeGbpReturn } from "@/features/admin/google-business/live/gbp-return";
-import { useIntegrations } from "../store/integrations-store";
+import { CONNECT_MARKER_KEY, useIntegrations, type ConnectMarker } from "../store/integrations-store";
 
 export function OAuthCallbackHandler() {
   const params = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const { reload } = useIntegrations();
+  const { reload, offerAccountsFor } = useIntegrations();
   const raw = params?.toString() ?? "";
   const handled = useRef<string | null>(null);
 
@@ -43,15 +43,30 @@ export function OAuthCallbackHandler() {
         router.replace("/admin/google-business");
         return;
       }
+      // A brand-new login is offered "Add accounts" once the fresh snapshot arrives (see AccountsPrompt).
+      try {
+        const stored = window.sessionStorage.getItem(CONNECT_MARKER_KEY);
+        if (stored) {
+          window.sessionStorage.removeItem(CONNECT_MARKER_KEY);
+          offerAccountsFor(JSON.parse(stored) as ConnectMarker);
+        }
+      } catch {
+        // Storage blocked: the person opens "Add accounts" from the integration instead.
+      }
       reload();
     } else {
+      try {
+        window.sessionStorage.removeItem(CONNECT_MARKER_KEY);
+      } catch {
+        // Nothing to clean up.
+      }
       toast.error(feedback.title, { description: feedback.description });
     }
 
     const next = stripOAuthCallbackParams(params);
     const query = next.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [params, raw, pathname, router, reload]);
+  }, [params, raw, pathname, router, reload, offerAccountsFor]);
 
   return null;
 }

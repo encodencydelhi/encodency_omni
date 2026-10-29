@@ -2,16 +2,12 @@ import type {
   ActivityEvent,
   ConnectionStatus,
   ModuleKey,
-  NotificationKey,
   PermissionStatus,
   ProviderCategory,
   ReconnectReason,
   ResourceType,
   Severity,
-  SyncDataType,
-  SyncFrequency,
 } from "./types";
-export const INTEGRATIONS_MOCK_MODE = process.env.NEXT_PUBLIC_INTEGRATIONS_MOCK_MODE !== "false";
 
 export const INT_ROOT = "/admin/integrations";
 
@@ -27,12 +23,12 @@ export const STATUS_META: Record<
   ConnectionStatus,
   { label: string; chip: string; dot: string; healthy: boolean; order: number }
 > = {
-  sync_failed: { label: "Sync failed", chip: "bg-[#FEF1F2] text-[#C81E2B] ring-[#FBD5D9]", dot: "bg-[#E11D48]", healthy: false, order: 0 },
+  sync_failed: { label: "Check failed", chip: "bg-[#FEF1F2] text-[#C81E2B] ring-[#FBD5D9]", dot: "bg-[#E11D48]", healthy: false, order: 0 },
   needs_reconnect: { label: "Needs reconnect", chip: "bg-[#FFF7E8] text-[#B54708] ring-[#FBE3B6]", dot: "bg-[#F79009]", healthy: false, order: 1 },
   permission_missing: { label: "Permission missing", chip: "bg-[#FFF3EC] text-[#C4320A] ring-[#FCD9C4]", dot: "bg-[#EF6820]", healthy: false, order: 2 },
   expiring: { label: "Expiring", chip: "bg-[#FFF7E8] text-[#B54708] ring-[#FBE3B6]", dot: "bg-[#FDB022]", healthy: false, order: 3 },
   rate_limited: { label: "Rate limited", chip: "bg-[#F4F0FF] text-[#6D28D9] ring-[#E2D8FD]", dot: "bg-[#7C3AED]", healthy: false, order: 4 },
-  syncing: { label: "Syncing", chip: "bg-[#EFF4FF] text-[#1D4ED8] ring-[#D5E1FD]", dot: "bg-[#2563EB]", healthy: true, order: 5 },
+  syncing: { label: "Checking", chip: "bg-[#EFF4FF] text-[#1D4ED8] ring-[#D5E1FD]", dot: "bg-[#2563EB]", healthy: true, order: 5 },
   connected: { label: "Connected", chip: "bg-[#ECFAF3] text-[#067647] ring-[#C6EFD9]", dot: "bg-[#12B76A]", healthy: true, order: 6 },
   disconnected: { label: "Disconnected", chip: "bg-[#F1F4F8] text-[#475467] ring-[#E4E9F0]", dot: "bg-[#98A2B3]", healthy: false, order: 7 },
 };
@@ -69,6 +65,7 @@ export const PERMISSION_STATUS_META: Record<PermissionStatus, { label: string; c
   missing: { label: "Missing", chip: "bg-[#FFF3EC] text-[#C4320A] ring-[#FCD9C4]" },
   expired: { label: "Expired", chip: "bg-[#FEF1F2] text-[#C81E2B] ring-[#FBD5D9]" },
   optional: { label: "Optional", chip: "bg-[#F1F4F8] text-[#475467] ring-[#E4E9F0]" },
+  unknown: { label: "Not reported", chip: "bg-[#F1F4F8] text-[#475467] ring-[#E4E9F0]" },
 };
 export const MODULE_META: Record<ModuleKey, { label: string; href: string }> = {
   content_studio: { label: "Content Studio", href: "/admin/content" },
@@ -110,58 +107,14 @@ export const RESOURCE_LABEL: Record<ResourceType, string> = {
   smtp_sender: "Sender Address",
 };
 
-export const DATA_TYPE_LABEL: Record<SyncDataType, string> = {
-  posts: "Posts",
-  analytics: "Analytics",
-  comments: "Comments",
-  reviews: "Reviews",
-  leads: "Leads",
-  profile: "Profile",
-  audience: "Audience",
-  messages: "Messages",
-  search_performance: "Search performance",
-};
-
-export const FREQUENCY_LABEL: Record<SyncFrequency, string> = {
-  "15m": "Every 15 minutes",
-  hourly: "Every hour",
-  "6h": "Every 6 hours",
-  daily: "Once a day",
-  manual: "Manual only",
-};
-
-export const FREQUENCY_MINUTES: Record<SyncFrequency, number | null> = {
-  "15m": 15,
-  hourly: 60,
-  "6h": 360,
-  daily: 1440,
-  manual: null,
-};
-
 export const EVENT_LABEL: Record<ActivityEvent, string> = {
   connected: "Connected",
   disconnected: "Disconnected",
   reconnected: "Reconnected",
-  reconnect_required: "Reconnect required",
-  sync_completed: "Sync completed",
-  sync_partial: "Sync partially completed",
-  sync_failed: "Sync failed",
-  sync_started: "Sync started",
-  permission_changed: "Permission updated",
+  reconnect_required: "Reconnect requested",
+  sync_completed: "Check completed",
+  sync_failed: "Check failed",
   mapping_changed: "Client mapping changed",
-  primary_changed: "Primary account changed",
-  resource_removed: "Resource disconnected",
+  resource_removed: "Account removed",
   settings_updated: "Settings updated",
-  rate_limited: "Rate limited",
 };
-
-export const NOTIFICATION_LABEL: Record<NotificationKey, { label: string; description: string }> = {
-  connectionExpired: { label: "Connection expired", description: "An access token expired and syncing has stopped." },
-  reconnectRequired: { label: "Reconnect required", description: "A provider revoked access or changed permissions." },
-  syncFailed: { label: "Sync failed", description: "A scheduled or manual sync didn't complete." },
-  permissionMissing: { label: "Permission missing", description: "A permission a module relies on isn't granted." },
-  rateLimit: { label: "Rate limit", description: "A provider is temporarily throttling requests." },
-  accountRemoved: { label: "Account removed", description: "A page, property or account is no longer accessible." },
-};
-
-export const ROLE_LABEL = { org_admin: "Organization Admin", manager: "Manager", member: "Member" } as const;

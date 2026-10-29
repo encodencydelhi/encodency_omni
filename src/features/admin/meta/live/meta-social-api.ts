@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api/client";
-import { companyScopeHeaders } from "@/lib/api/company-scope";
+import { metaScopeHeaders } from "./meta-scope";
 
 /**
  * Read-only Facebook Page / Instagram Business surface
@@ -104,29 +104,29 @@ const BASE = "/integrations/meta-social";
 
 export const metaSocialApi = {
   profile(companyId: string, signal?: AbortSignal, refresh = false): Promise<MetaProfile> {
-    return apiClient.request<MetaProfile>({ method: "GET", path: `${BASE}/me`, query: refresh ? { refresh: "true" } : undefined, headers: companyScopeHeaders(companyId), signal });
+    return apiClient.request<MetaProfile>({ method: "GET", path: `${BASE}/me`, query: refresh ? { refresh: "true" } : undefined, headers: metaScopeHeaders(companyId), signal });
   },
   overview(companyId: string, signal?: AbortSignal, refresh = false): Promise<SocialOverview> {
-    return apiClient.request<SocialOverview>({ method: "GET", path: `${BASE}/pages`, query: refresh ? { refresh: "true" } : undefined, headers: companyScopeHeaders(companyId), signal });
+    return apiClient.request<SocialOverview>({ method: "GET", path: `${BASE}/pages`, query: refresh ? { refresh: "true" } : undefined, headers: metaScopeHeaders(companyId), signal });
   },
   posts(companyId: string, pageId: string, after: string | undefined, signal?: AbortSignal, refresh = false): Promise<Feed<SocialPost>> {
     return apiClient.request<Feed<SocialPost>>({
       method: "GET",
       path: `${BASE}/pages/${encodeURIComponent(pageId)}/posts`,
       query: { limit: 25, ...(after ? { after } : {}), ...(refresh ? { refresh: "true" } : {}) },
-      headers: companyScopeHeaders(companyId),
+      headers: metaScopeHeaders(companyId),
       signal,
     });
   },
   instagramProfile(companyId: string, instagramId: string, signal?: AbortSignal): Promise<InstagramProfile> {
-    return apiClient.request<InstagramProfile>({ method: "GET", path: `${BASE}/instagram/${encodeURIComponent(instagramId)}`, headers: companyScopeHeaders(companyId), signal });
+    return apiClient.request<InstagramProfile>({ method: "GET", path: `${BASE}/instagram/${encodeURIComponent(instagramId)}`, headers: metaScopeHeaders(companyId), signal });
   },
   instagramMedia(companyId: string, instagramId: string, after: string | undefined, signal?: AbortSignal, refresh = false): Promise<Feed<InstagramMedia>> {
     return apiClient.request<Feed<InstagramMedia>>({
       method: "GET",
       path: `${BASE}/instagram/${encodeURIComponent(instagramId)}/media`,
       query: { limit: 25, ...(after ? { after } : {}), ...(refresh ? { refresh: "true" } : {}) },
-      headers: companyScopeHeaders(companyId),
+      headers: metaScopeHeaders(companyId),
       signal,
     });
   },

@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { downloadRecords } from "@/features/admin/meta-ads/export";
 import { Suspense, useMemo } from "react";
 import { Activity, Download } from "lucide-react";
-import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
 import { useAdsData } from "@/features/admin/meta-ads/data-source";
 import { date, dateTime, time } from "@/features/admin/meta-ads/format";
@@ -90,7 +90,7 @@ function ActivityView() {
       actions={
         <button
           type="button"
-          onClick={() => toast.success("Audit log export queued.")}
+          onClick={() => downloadRecords("meta-activity", rows)}
           className={cn(btn, "h-10")}
         >
           <Download className="size-3.5" />

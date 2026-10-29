@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { accountDisplayName } from "@/features/admin/meta-ads/account-name";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { FaFacebookF, FaInstagram, FaMeta } from "react-icons/fa6";
@@ -247,7 +248,7 @@ function AdAccountsSection({ accounts, totals, loading, onOpenAds }: { accounts:
   const filtered = status !== "All statuses" || search !== "";
 
   return (
-    <Section title="Ad accounts" description="Every ad account this Meta login can see. Open one to work in Ads Manager." flush>
+    <Section title="Ad accounts" description="Available Ad Accounts And Their Results. Numeric Meta Names Use A Short Account Label; Full IDs Stay Below." flush>
       <div id="ad-accounts" />
       {accounts.length > 0 && (
         <FilterBar>
@@ -289,10 +290,10 @@ function AdAccountsSection({ accounts, totals, loading, onOpenAds }: { accounts:
             {paged.visible.map((account) => (
               <Tr key={account.id}>
                 <Td>
-                  <button type="button" onClick={() => setOpenId(account.id)} className="block max-w-[260px] truncate text-left font-semibold text-blue-700 hover:underline">
-                    {account.name}
+                  <button type="button" onClick={() => setOpenId(account.id)} title={`Name Returned By Meta: ${account.name}`} className="block max-w-[260px] truncate text-left font-semibold text-blue-700 hover:underline">
+                    {accountDisplayName(account)}
                   </button>
-                  <span className="block text-[10px] font-medium text-slate-500">{account.id}</span>
+                  <span className="mt-1 block font-mono text-[10px] font-normal tracking-wide text-slate-400">ID: {account.id}</span>
                 </Td>
                 <Td>
                   <Pill tone={ACCOUNT_TONE[account.status ?? ""] ?? "amber"}>{titleCase(account.status ?? "Unknown")}</Pill>

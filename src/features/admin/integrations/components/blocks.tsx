@@ -6,21 +6,21 @@ import { useState } from "react";
 import { AlertTriangle, CheckCircle2, Info, KeyRound, RefreshCw, ShieldAlert, XCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils/cn";
-import { reconnectCapability, syncCapability } from "../integrations-data/capability-provider";
-import { DATA_TYPE_LABEL, EVENT_LABEL, MODULE_META, intRoutes } from "../integrations-data/config";
+import { checkCapability, disconnectCapability, reconnectCapability } from "../integrations-data/capability-provider";
+import { EVENT_LABEL, MODULE_META, intRoutes } from "../integrations-data/config";
 import { useClientScope, useProvider } from "../integrations-data/hooks";
-import { dependenciesFor, primaryResource, scopedDisplay } from "../integrations-data/selectors";
+import { dependenciesFor, leadResource, scopedDisplay } from "../integrations-data/selectors";
 import { useIntegrations } from "../store/integrations-store";
 import type {
   ActivityResult,
+  CheckRunStatus,
   IntegrationActivity,
+  IntegrationCheckRun,
   IntegrationConnection,
   IntegrationIssue,
-  IntegrationSyncRun,
-  SyncRunStatus,
 } from "../integrations-data/types";
 import type { ConnectionActionsApi } from "./connection-actions";
-import { SyncButton } from "./connection-actions";
+import { CheckButton } from "./connection-actions";
 import {
   ActionMenu,
   Button,
@@ -44,26 +44,26 @@ import {
 
 export function IssueRow({ issue, actions, compact }: { issue: IntegrationIssue; actions: ConnectionActionsApi; compact?: boolean }) {
   const router = useRouter();
-  const { data, can, syncJobs, syncNow } = useIntegrations();
+  const { data, can, checkJobs, checkNow } = useIntegrations();
   const { withScope } = useClientScope();
   const connection = data.connections.find((item) => item.id === issue.connectionId);
   if (!connection) return null;
 
   const Icon = issue.severity === "critical" ? ShieldAlert : issue.severity === "warning" ? AlertTriangle : Info;
   const tone = issue.severity === "critical" ? "bg-[#FEF1F2] text-[#C81E2B]" : issue.severity === "warning" ? "bg-[#FFF7E8] text-[#B54708]" : "bg-[#EFF4FF] text-[#1D4ED8]";
-  const running = Boolean(syncJobs[connection.id]);
+  const running = Boolean(checkJobs[connection.id]);
 
   const primary =
     issue.action === "reconnect" ? (
       <Button size="sm" variant="primary" icon={KeyRound} gate={reconnectCapability(connection, can.canReconnect)} onClick={() => actions.openReconnect(connection)}>
         Reconnect
       </Button>
-    ) : issue.action === "retry_sync" ? (
+    ) : issue.action === "retry_check" ? (
       running ? (
-        <SyncButton connection={connection} />
+        <CheckButton connection={connection} />
       ) : (
-        <Button size="sm" variant="primary" icon={RefreshCw} gate={syncCapability(connection, can.canSync, running)} onClick={() => void syncNow(connection.id, "retry")}>
-          Retry sync
+        <Button size="sm" variant="primary" icon={RefreshCw} gate={checkCapability(connection, can.canCheck, running)} onClick={() => void checkNow(connection.id)}>
+          Check again
         </Button>
       )
     ) : issue.action === "review_permissions" ? (
@@ -94,6 +94,7 @@ export function IssueRow({ issue, actions, compact }: { issue: IntegrationIssue;
           </p>
         )}
         <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11.5px] text-[#98A2B3]">
+          <span className="font-medium text-[#6B7890]">Account: {connection.accountName}</span>
           <ClientTag clientId={issue.clientId} className="text-[11.5px] text-[#6B7890]" />
           <span>
             Detected <RelativeTime iso={issue.detectedAt} />
@@ -102,6 +103,11 @@ export function IssueRow({ issue, actions, compact }: { issue: IntegrationIssue;
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         {primary}
+        {issue.unused && (
+          <Button size="sm" variant="secondary" gate={disconnectCapability(connection, can.canDisconnect)} onClick={() => actions.openDisconnect(connection)}>
+            Disconnect
+          </Button>
+        )}
         {issue.action !== "view_details" && (
           <Button size="sm" variant="ghost" onClick={() => router.push(withScope(intRoutes.detail(connection.id)))}>
             Details
@@ -117,14 +123,14 @@ export function IssueRow({ issue, actions, compact }: { issue: IntegrationIssue;
 /* ------------------------------------------------------------------ */
 
 export function ConnectionCard({ connection, actions }: { connection: IntegrationConnection; actions: ConnectionActionsApi }) {
-  const { data, can, syncJobs } = useIntegrations();
+  const { data, can, checkJobs } = useIntegrations();
   const { withScope, clientId } = useClientScope();
   const provider = useProvider(connection.providerId);
-  const job = syncJobs[connection.id];
+  const job = checkJobs[connection.id];
   const modules = dependenciesFor(data.dependencies, connection.id)
     .filter((dependency) => dependency.activeCount > 0)
     .map((dependency) => dependency.module);
-  const resource = primaryResource(connection);
+  const resource = leadResource(connection);
   const needsReconnect = connection.status === "needs_reconnect" || connection.status === "expiring" || connection.status === "permission_missing";
   const view = scopedDisplay(connection, clientId);
 
@@ -143,27 +149,28 @@ export function ConnectionCard({ connection, actions }: { connection: Integratio
             {view.extra > 0 && <span className="text-[#98A2B3]"> +{view.extra} more</span>}
           </p>
         </div>
-        <StatusChip status={connection.status} progress={job?.progress} />
+        <StatusChip status={connection.status} />
       </div>
 
-      {job && (
-        <div className="mx-3 mt-2">
-          <span className="block h-1 overflow-hidden rounded-sm bg-[#EEF1F5]">
-            <span className="block h-full bg-[#2563EB] transition-[width] duration-300" style={{ width: `${job.progress}%` }} />
-          </span>
-          <p className="mt-0.5 text-[10.5px] text-[#6B7890]">{job.phase}</p>
-        </div>
-      )}
+      {job && <p className="mx-3 mt-2 text-[10.5px] text-[#6B7890]">Asking {provider.name} what this login can reach…</p>}
 
       <div className="mt-2.5 space-y-1 px-3">
         <MetaRow label="Client">
           <ClientTag clientId={view.clientId} className="justify-end" />
         </MetaRow>
-        <MetaRow label="Last sync">
-          <RelativeTime iso={connection.lastSyncAt} fallback="Never" />
+        <MetaRow label="Last check">
+          <RelativeTime iso={connection.lastCheckedAt} fallback="Not yet" />
         </MetaRow>
-        <MetaRow label="Next sync">
-          {connection.nextSyncAt ? <RelativeTime iso={connection.nextSyncAt} future /> : <span className="text-[#98A2B3]">{connection.status === "disconnected" ? "—" : "Paused"}</span>}
+        <MetaRow label="Access">
+          {connection.status === "disconnected" ? (
+            <span className="text-[#98A2B3]">—</span>
+          ) : connection.tokenExpiresAt && !connection.autoRenews ? (
+            <span>
+              Ends <RelativeTime iso={connection.tokenExpiresAt} future />
+            </span>
+          ) : (
+            <span>{connection.autoRenews ? "Renews itself" : "No end date"}</span>
+          )}
         </MetaRow>
       </div>
 
@@ -181,7 +188,7 @@ export function ConnectionCard({ connection, actions }: { connection: Integratio
             Reconnect
           </Button>
         ) : (
-          <SyncButton connection={connection} size="xs" />
+          <CheckButton connection={connection} size="xs" />
         )}
         <span className="ml-auto" />
         <ActionMenu
@@ -219,11 +226,11 @@ export function ResultChip({ result }: { result: ActivityResult }) {
   );
 }
 
-const RUN_RESULT: Record<SyncRunStatus, ActivityResult> = { success: "success", partial: "warning", failed: "failed", running: "info" };
+const RUN_RESULT: Record<CheckRunStatus, ActivityResult> = { success: "success", failed: "failed", running: "info" };
 
-export function RunStatusChip({ status }: { status: SyncRunStatus }) {
+export function CheckStatusChip({ status }: { status: CheckRunStatus }) {
   if (status === "running") return <StatusChip status="syncing" />;
-  const labels = { success: "Success", partial: "Partial", failed: "Failed" } as const;
+  const labels = { success: "Working", failed: "Failed" } as const;
   const meta = RESULT_META[RUN_RESULT[status]];
   return (
     <span className={cn("inline-flex h-[22px] items-center gap-1 whitespace-nowrap rounded-sm px-1.5 text-[11px] font-semibold ring-1 ring-inset", meta.chip)}>
@@ -240,11 +247,10 @@ export function formatDuration(ms: number | null) {
   return seconds < 60 ? `${seconds.toFixed(1)}s` : `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
 }
 
-/** Activity table shared by Overview and the Activity tab. */
-export function ActivityTable({ items, onOpenRun, showUser = true, compact }: { items: IntegrationActivity[]; onOpenRun: (runId: string) => void; showUser?: boolean; compact?: boolean }) {
+/** Activity table shared by Overview and the Activity tab. Every row is a recorded event. */
+export function ActivityTable({ items, showUser = true, compact }: { items: IntegrationActivity[]; showUser?: boolean; compact?: boolean }) {
   const { data } = useIntegrations();
   const { withScope } = useClientScope();
-  const run = (id: string | null) => (id ? data.syncRuns.find((item) => item.id === id) ?? null : null);
 
   return (
     <>
@@ -256,7 +262,6 @@ export function ActivityTable({ items, onOpenRun, showUser = true, compact }: { 
               <th scope="col" className={cn(thClass, compact ? "min-w-[170px]" : "min-w-[220px]")}>Event</th>
               <th scope="col" className={cn(thClass, compact && "max-lg:hidden")}>Client</th>
               <th scope="col" className={thClass}>Result</th>
-              {!compact && <th scope="col" className={cn(thClass, "text-right max-lg:hidden")}>Duration</th>}
               {showUser && <th scope="col" className={cn(thClass, "max-xl:hidden")}>User</th>}
               <th scope="col" className={thClass}>Time</th>
               <th scope="col" className={cn(thClass, "w-px")}>
@@ -267,7 +272,6 @@ export function ActivityTable({ items, onOpenRun, showUser = true, compact }: { 
           <tbody>
             {items.map((item) => {
               const provider = data.providers.find((entry) => entry.id === item.providerId);
-              const linked = run(item.syncRunId);
               return (
                 <tr key={item.id} className="transition-colors hover:bg-[#FAFBFD]">
                   <td className={tdClass}>
@@ -290,13 +294,12 @@ export function ActivityTable({ items, onOpenRun, showUser = true, compact }: { 
                   <td className={tdClass}>
                     <ResultChip result={item.result} />
                   </td>
-                  {!compact && <td className={cn(tdClass, "text-right tabular-nums max-lg:hidden")}>{formatDuration(linked?.durationMs ?? null)}</td>}
                   {showUser && <td className={cn(tdClass, "whitespace-nowrap max-xl:hidden")}>{item.actor}</td>}
                   <td className={cn(tdClass, "whitespace-nowrap")}>
                     <RelativeTime iso={item.at} />
                   </td>
                   <td className={cn(tdClass, "text-right")}>
-                    <ActivityActions item={item} hasRun={Boolean(linked)} onOpenRun={onOpenRun} withScope={withScope} />
+                    <ActivityActions item={item} withScope={withScope} />
                   </td>
                 </tr>
               );
@@ -308,7 +311,6 @@ export function ActivityTable({ items, onOpenRun, showUser = true, compact }: { 
       <ul className="divide-y divide-[#EEF1F5] md:hidden">
         {items.map((item) => {
           const provider = data.providers.find((entry) => entry.id === item.providerId);
-          const linked = run(item.syncRunId);
           return (
             <li key={item.id} className="flex items-start gap-2.5 px-4 py-3">
               {provider ? <ProviderLogo providerId={provider.id} className="size-7 p-1" /> : <span className="size-7" />}
@@ -324,7 +326,7 @@ export function ActivityTable({ items, onOpenRun, showUser = true, compact }: { 
                   <span>{item.actor}</span>
                 </p>
               </div>
-              <ActivityActions item={item} hasRun={Boolean(linked)} onOpenRun={onOpenRun} withScope={withScope} />
+              <ActivityActions item={item} withScope={withScope} />
             </li>
           );
         })}
@@ -333,15 +335,12 @@ export function ActivityTable({ items, onOpenRun, showUser = true, compact }: { 
   );
 }
 
-function ActivityActions({ item, hasRun, onOpenRun, withScope }: { item: IntegrationActivity; hasRun: boolean; onOpenRun: (id: string) => void; withScope: (href: string) => string }) {
+function ActivityActions({ item, withScope }: { item: IntegrationActivity; withScope: (href: string) => string }) {
   return (
     <ActionMenu
       label={`Actions for ${EVENT_LABEL[item.event]}`}
       width={190}
-      items={[
-        { label: "View integration", href: item.connectionId ? withScope(intRoutes.detail(item.connectionId)) : withScope(intRoutes.settings) },
-        { label: item.result === "failed" ? "View error" : "View sync", onSelect: () => item.syncRunId && onOpenRun(item.syncRunId), hidden: !hasRun },
-      ]}
+      items={[{ label: item.connectionId ? "View integration" : "Open settings", href: item.connectionId ? withScope(intRoutes.detail(item.connectionId)) : withScope(intRoutes.settings) }]}
       trigger={
         <button type="button" className={buttonClass("ghost", "iconSm")}>
           <span aria-hidden="true" className="text-[14px] font-bold leading-none tracking-[0.08em]">⋯</span>
@@ -351,11 +350,11 @@ function ActivityActions({ item, hasRun, onOpenRun, withScope }: { item: Integra
   );
 }
 
-/** Details of one sync run, with a retry when it went wrong. */
-export function RunDialog({ runId, onOpenChange }: { runId: string | null; onOpenChange: (open: boolean) => void }) {
-  const { data, can, syncJobs, syncNow } = useIntegrations();
+/** Details of one recorded check, with a way to check again when it went wrong. */
+export function CheckDialog({ runId, onOpenChange }: { runId: string | null; onOpenChange: (open: boolean) => void }) {
+  const { data, can, checkJobs, checkNow } = useIntegrations();
   const { withScope } = useClientScope();
-  const run = runId ? data.syncRuns.find((item) => item.id === runId) ?? null : null;
+  const run = runId ? data.checkRuns.find((item) => item.id === runId) ?? null : null;
   const connection = run ? data.connections.find((item) => item.id === run.connectionId) ?? null : null;
   const provider = useProvider(connection?.providerId);
   const [retried, setRetried] = useState(false);
@@ -368,43 +367,41 @@ export function RunDialog({ runId, onOpenChange }: { runId: string | null; onOpe
             <div className="flex items-start gap-3 px-5 pt-5">
               <ProviderLogo providerId={provider.id} />
               <div className="min-w-0 flex-1">
-                <DialogTitle className="text-[15px] text-[#0F1B3D]">Sync run · {provider.name}</DialogTitle>
+                <DialogTitle className="text-[15px] text-[#0F1B3D]">Check · {provider.name}</DialogTitle>
                 <DialogDescription className="mt-0.5 text-[12.5px] text-[#6B7890]">{connection.accountName}</DialogDescription>
               </div>
-              <RunStatusChip status={run.status} />
+              <CheckStatusChip status={run.status} />
             </div>
             <dl className="mx-5 mt-4 divide-y divide-[#EEF1F5] rounded-sm border border-[#E4E9F0]">
               <RunRow label="Started"><RelativeTime iso={run.startedAt} /></RunRow>
               <RunRow label="Duration">{formatDuration(run.durationMs)}</RunRow>
-              <RunRow label="Trigger">{run.trigger.replace("_", " ")}</RunRow>
-              <RunRow label="Records processed">{run.recordsProcessed.toLocaleString("en-IN")}</RunRow>
-              <RunRow label="Failed records">{run.failedRecords.toLocaleString("en-IN")}</RunRow>
-              <RunRow label="Data">{run.dataTypes.map((type) => DATA_TYPE_LABEL[type]).join(", ")}</RunRow>
+              <RunRow label="Started by">{run.trigger === "manual" ? "A person" : "Automatic renewal"}</RunRow>
+              <RunRow label="Accounts found">{run.accountsFound === null ? "Not asked (access renewal only)" : run.accountsFound.toLocaleString("en-IN")}</RunRow>
             </dl>
             {run.error && (
-              <div className={cn("mx-5 mt-3 rounded-sm border p-3", run.status === "failed" ? "border-[#FBD5D9] bg-[#FEF6F7]" : "border-[#FBE3B6] bg-[#FFFAF0]")}>
+              <div className="mx-5 mt-3 rounded-sm border border-[#FBD5D9] bg-[#FEF6F7] p-3">
                 <p className="text-[12.5px] font-semibold text-[#0F1B3D]">{run.error.message}</p>
                 <p className="mt-0.5 text-[12px] leading-4 text-[#3C4A66]">{run.error.hint}</p>
               </div>
             )}
-            {retried && <p className="mx-5 mt-3 text-[12px] text-[#067647]">Retry started — progress shows on the integration.</p>}
+            {retried && <p className="mx-5 mt-3 text-[12px] text-[#067647]">Checking again — the result shows on the integration.</p>}
             <DialogFooter className="mt-4 border-t border-[#EEF1F5] px-5 py-3">
-              <Button variant="secondary" href={withScope(intRoutes.detail(connection.id, "sync"))}>
-                Open sync history
+              <Button variant="secondary" href={withScope(intRoutes.detail(connection.id, "checks"))}>
+                Open check history
               </Button>
               {run.status !== "success" && (
                 <Button
                   variant="primary"
                   icon={RefreshCw}
-                  gate={syncCapability(connection, can.canSync, Boolean(syncJobs[connection.id]))}
+                  gate={checkCapability(connection, can.canCheck, Boolean(checkJobs[connection.id]))}
                   disabled={retried}
-                  disabledReason="A retry is already running."
+                  disabledReason="A check is already running."
                   onClick={() => {
                     setRetried(true);
-                    void syncNow(connection.id, "retry");
+                    void checkNow(connection.id);
                   }}
                 >
-                  Retry sync
+                  Check again
                 </Button>
               )}
             </DialogFooter>
@@ -424,17 +421,16 @@ function RunRow({ label, children }: { label: string; children: React.ReactNode 
   );
 }
 
-export function SyncRunsTable({ runs, onOpenRun }: { runs: IntegrationSyncRun[]; onOpenRun: (id: string) => void }) {
+export function CheckRunsTable({ runs, onOpenRun }: { runs: IntegrationCheckRun[]; onOpenRun: (id: string) => void }) {
   return (
     <div className="scrollbar-thin overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
           <tr>
             <th scope="col" className={thClass}>Started</th>
-            <th scope="col" className={cn(thClass, "max-sm:hidden")}>Trigger</th>
-            <th scope="col" className={thClass}>Status</th>
-            <th scope="col" className={cn(thClass, "text-right")}>Records</th>
-            <th scope="col" className={cn(thClass, "text-right")}>Errors</th>
+            <th scope="col" className={cn(thClass, "max-sm:hidden")}>Started by</th>
+            <th scope="col" className={thClass}>Result</th>
+            <th scope="col" className={cn(thClass, "text-right")}>Accounts found</th>
             <th scope="col" className={cn(thClass, "text-right max-sm:hidden")}>Duration</th>
             <th scope="col" className={cn(thClass, "w-px")}><span className="sr-only">Actions</span></th>
           </tr>
@@ -443,10 +439,9 @@ export function SyncRunsTable({ runs, onOpenRun }: { runs: IntegrationSyncRun[];
           {runs.map((run) => (
             <tr key={run.id} className="transition-colors hover:bg-[#FAFBFD]">
               <td className={cn(tdClass, "whitespace-nowrap")}><RelativeTime iso={run.startedAt} /></td>
-              <td className={cn(tdClass, "capitalize max-sm:hidden")}>{run.trigger.replace("_", " ")}</td>
-              <td className={tdClass}><RunStatusChip status={run.status} /></td>
-              <td className={cn(tdClass, "text-right tabular-nums")}>{run.recordsProcessed.toLocaleString("en-IN")}</td>
-              <td className={cn(tdClass, "text-right tabular-nums", run.failedRecords > 0 && "font-semibold text-[#B54708]")}>{run.status === "failed" ? "—" : run.failedRecords}</td>
+              <td className={cn(tdClass, "max-sm:hidden")}>{run.trigger === "manual" ? "A person" : "Automatic renewal"}</td>
+              <td className={tdClass}><CheckStatusChip status={run.status} /></td>
+              <td className={cn(tdClass, "text-right tabular-nums")}>{run.accountsFound === null ? "—" : run.accountsFound.toLocaleString("en-IN")}</td>
               <td className={cn(tdClass, "text-right tabular-nums max-sm:hidden")}>{formatDuration(run.durationMs)}</td>
               <td className={cn(tdClass, "text-right")}>
                 <Button size="xs" variant={run.status === "failed" ? "danger" : "ghost"} onClick={() => onOpenRun(run.id)}>

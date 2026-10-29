@@ -16,21 +16,21 @@ import {
   KeyRound,
   Layers,
   Plug,
+  Plus,
   RefreshCw,
   ShieldAlert,
-  Star,
   Unplug,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils/cn";
 import { reconnectCapability } from "../integrations-data/capability-provider";
-import { DATA_TYPE_LABEL, EVENT_LABEL, FREQUENCY_LABEL, MODULE_META, RESOURCE_LABEL, intRoutes } from "../integrations-data/config";
+import { EVENT_LABEL, MODULE_META, RESOURCE_LABEL, intRoutes } from "../integrations-data/config";
 import { useClientScope, useConnection, useConnectionGates, useProvider, useQueryState, useScopedData } from "../integrations-data/hooks";
-import { clientName, dependenciesFor, deriveIssues, disconnectImpact, downloadFile, isActive, primaryResource, scopedResources, toCsv } from "../integrations-data/selectors";
+import { clientName, dependenciesFor, deriveIssues, disconnectImpact, downloadFile, isActive, scopedResources, toCsv } from "../integrations-data/selectors";
 import { useIntegrations } from "../store/integrations-store";
 import type { IntegrationConnection, IntegrationProvider, IntegrationResource } from "../integrations-data/types";
-import { IssueRow, PageSkeleton, ResultChip, RunDialog, SyncRunsTable, formatDuration } from "../components/blocks";
-import { SyncButton, useConnectionActions } from "../components/connection-actions";
+import { CheckDialog, CheckRunsTable, IssueRow, PageSkeleton, ResultChip, formatDuration } from "../components/blocks";
+import { CheckButton, useConnectionActions } from "../components/connection-actions";
 import {
   ActionMenu,
   Badge,
@@ -53,7 +53,7 @@ import {
   x,
 } from "../components/ui";
 
-type Tab = "overview" | "accounts" | "permissions" | "sync" | "usage" | "activity";
+type Tab = "overview" | "accounts" | "permissions" | "checks" | "usage" | "activity";
 const DEFAULTS = { tab: "overview" };
 
 export function DetailPage() {
@@ -95,7 +95,7 @@ export function DetailPage() {
 
 function Detail({ connection }: { connection: IntegrationConnection }) {
   const provider = useProvider(connection.providerId)!;
-  const { data, syncJobs } = useIntegrations();
+  const { data } = useIntegrations();
   const { withScope } = useClientScope();
   const { values, set } = useQueryState(useMemo(() => DEFAULTS, []));
   const tab = values.tab as Tab;
@@ -104,8 +104,8 @@ function Detail({ connection }: { connection: IntegrationConnection }) {
   const [runId, setRunId] = useState<string | null>(null);
 
   const dependencies = dependenciesFor(data.dependencies, connection.id);
-  const runs = data.syncRuns.filter((run) => run.connectionId === connection.id).sort((a, b) => b.startedAt.localeCompare(a.startedAt));
-  const issues = deriveIssues([connection], data.providers, data.dependencies, data.syncRuns);
+  const runs = data.checkRuns.filter((run) => run.connectionId === connection.id).sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  const issues = deriveIssues([connection], data.providers, data.dependencies, data.checkRuns);
   const activity = data.activity.filter((item) => item.connectionId === connection.id);
   const lacking = connection.permissions.filter((permission) => permission.status === "missing" || permission.status === "expired").length;
   const live = isActive(connection);
@@ -125,7 +125,7 @@ function Detail({ connection }: { connection: IntegrationConnection }) {
               </Link>
               <h2 className="flex flex-wrap items-center gap-2 text-[17px] font-semibold leading-6 text-[#0F1B3D]">
                 {provider.name}
-                <StatusChip status={connection.status} progress={syncJobs[connection.id]?.progress} />
+                <StatusChip status={connection.status} />
                 {issues.length === 0 && live && <Badge tone="green" icon={CheckCircle2}>Healthy</Badge>}
               </h2>
               <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-[#6B7890]">
@@ -134,19 +134,19 @@ function Detail({ connection }: { connection: IntegrationConnection }) {
                 <ClientTag clientId={connection.clientId} />
                 <span className="text-[#C9D1DC]">·</span>
                 <span>
-                  Last sync <RelativeTime iso={connection.lastSyncAt} fallback="never" />
+                  Last check <RelativeTime iso={connection.lastCheckedAt} fallback="not yet" />
                 </span>
               </p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
-            {live && <SyncButton connection={connection} />}
+            {live && <CheckButton connection={connection} />}
             {live ? (
               <Button size="sm" variant={needsReconnect ? "primary" : "secondary"} icon={KeyRound} gate={gates.reconnect} onClick={() => actions.openReconnect(connection)}>
                 Reconnect
               </Button>
             ) : (
-              <Button size="sm" variant="primary" icon={Plug} href={withScope(`${intRoutes.detail(connection.id)}?connect=1&provider=${connection.providerId}${connection.clientId ? `&for=${connection.clientId}` : ""}`)}>
+              <Button size="sm" variant="primary" icon={Plug} href={withScope(`${intRoutes.detail(connection.id)}?connect=1&provider=${connection.providerId}`)}>
                 Connect again
               </Button>
             )}
@@ -158,7 +158,8 @@ function Detail({ connection }: { connection: IntegrationConnection }) {
             <ActionMenu
               label="More"
               items={[
-                { label: "Manage mapping", icon: ArrowRightLeft, onSelect: () => actions.openMapping(connection), gate: gates.mapping, hidden: !live },
+                { label: "Add accounts", icon: Plus, onSelect: () => actions.openAddAccounts(connection), gate: gates.mapping, hidden: !live },
+                { label: "Manage accounts", icon: ArrowRightLeft, onSelect: () => actions.openMapping(connection), gate: gates.mapping, hidden: !live },
                 { label: "View usage", icon: Layers, onSelect: () => set({ tab: "usage" }) },
                 {
                   label: "Export activity (CSV)",
@@ -187,7 +188,7 @@ function Detail({ connection }: { connection: IntegrationConnection }) {
         <Card className="flex flex-wrap items-center gap-3 border-[#E4E9F0] bg-[#F8FAFC] px-3.5 py-2.5">
           <Unplug className="size-4 shrink-0 text-[#6B7890]" />
           <p className="min-w-[220px] flex-1 text-[12.5px] leading-5 text-[#3C4A66]">
-            <b className="font-semibold text-[#0F1B3D]">Disconnected {connection.disconnectedAt ? <RelativeTime iso={connection.disconnectedAt} /> : ""}.</b> Nothing is syncing, and features that relied on it are paused. History is kept.
+            <b className="font-semibold text-[#0F1B3D]">Disconnected {connection.disconnectedAt ? <RelativeTime iso={connection.disconnectedAt} /> : ""}.</b> Posts and reports that relied on it are paused. History is kept.
           </p>
         </Card>
       )}
@@ -202,7 +203,7 @@ function Detail({ connection }: { connection: IntegrationConnection }) {
               { value: "overview" as Tab, label: "Overview" },
               { value: "accounts" as Tab, label: "Accounts", count: connection.resources.length },
               { value: "permissions" as Tab, label: "Permissions", count: lacking || undefined, alert: lacking > 0 },
-              { value: "sync" as Tab, label: "Sync" },
+              { value: "checks" as Tab, label: "Checks" },
               { value: "usage" as Tab, label: "Usage", count: dependencies.filter((dependency) => dependency.activeCount > 0).length },
               { value: "activity" as Tab, label: "Activity" },
             ]}
@@ -212,14 +213,14 @@ function Detail({ connection }: { connection: IntegrationConnection }) {
           {tab === "overview" && <OverviewTab connection={connection} provider={provider} actions={actions} issuesCount={issues.length} />}
           {tab === "accounts" && <AccountsTab connection={connection} actions={actions} />}
           {tab === "permissions" && <PermissionsTab connection={connection} provider={provider} actions={actions} />}
-          {tab === "sync" && <SyncTab connection={connection} provider={provider} runs={runs} onOpenRun={setRunId} />}
+          {tab === "checks" && <ChecksTab connection={connection} runs={runs} onOpenRun={setRunId} />}
           {tab === "usage" && <UsageTab connection={connection} actions={actions} />}
-          {tab === "activity" && <ActivityTab connection={connection} onOpenRun={setRunId} />}
+          {tab === "activity" && <ActivityTab connection={connection} />}
         </div>
       </Card>
 
       {actions.dialogs}
-      <RunDialog runId={runId} onOpenChange={(open) => !open && setRunId(null)} />
+      <CheckDialog runId={runId} onOpenChange={(open) => !open && setRunId(null)} />
     </div>
   );
 }
@@ -231,10 +232,9 @@ function Detail({ connection }: { connection: IntegrationConnection }) {
 function OverviewTab({ connection, provider, actions, issuesCount }: { connection: IntegrationConnection; provider: IntegrationProvider; actions: ReturnType<typeof useConnectionActions>; issuesCount: number }) {
   const { data } = useIntegrations();
   const { withScope } = useClientScope();
-  const issues = deriveIssues([connection], data.providers, data.dependencies, data.syncRuns);
+  const issues = deriveIssues([connection], data.providers, data.dependencies, data.checkRuns);
   const dependencies = dependenciesFor(data.dependencies, connection.id).filter((dependency) => dependency.activeCount > 0);
-  const primary = primaryResource(connection);
-  const lastRun = data.syncRuns.filter((run) => run.connectionId === connection.id).sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
+  const lastRun = data.checkRuns.filter((run) => run.connectionId === connection.id).sort((a, b) => b.startedAt.localeCompare(a.startedAt))[0];
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
@@ -245,12 +245,11 @@ function OverviewTab({ connection, provider, actions, issuesCount }: { connectio
           <DefinitionRow label="Health">{issuesCount ? `${issuesCount} issue${issuesCount === 1 ? "" : "s"}` : connection.status === "disconnected" ? "Off" : "Healthy"}</DefinitionRow>
           <DefinitionRow label="Connected since"><RelativeTime iso={connection.connectedAt} /></DefinitionRow>
           <DefinitionRow label="Connected by">{connection.connectedBy}</DefinitionRow>
-          <DefinitionRow label="Last sync"><RelativeTime iso={connection.lastSyncAt} fallback="Never" /></DefinitionRow>
-          <DefinitionRow label="Next sync">{connection.nextSyncAt ? <RelativeTime iso={connection.nextSyncAt} future /> : "Paused"}</DefinitionRow>
-          <DefinitionRow label="Primary account">{primary?.name ?? "—"}</DefinitionRow>
+          <DefinitionRow label="Last check"><RelativeTime iso={connection.lastCheckedAt} fallback="Not yet" /></DefinitionRow>
+          <DefinitionRow label="Accounts mapped">{connection.resources.length}</DefinitionRow>
           <DefinitionRow label="Mapped client">{clientName(data.clients, connection.clientId)}</DefinitionRow>
-          <DefinitionRow label="Sync frequency">{FREQUENCY_LABEL[connection.syncFrequency]}</DefinitionRow>
-          {connection.tokenExpiresAt && <DefinitionRow label="Access expires"><RelativeTime iso={connection.tokenExpiresAt} future /></DefinitionRow>}
+          <DefinitionRow label="Access">{connection.autoRenews ? "Renews itself" : connection.tokenExpiresAt ? <>Ends <RelativeTime iso={connection.tokenExpiresAt} future /></> : "No end date"}</DefinitionRow>
+          {connection.autoRenews && connection.tokenExpiresAt && <DefinitionRow label="Current token ends"><RelativeTime iso={connection.tokenExpiresAt} future /></DefinitionRow>}
         </dl>
         <p className="mt-2 text-[11.5px] leading-4 text-[#98A2B3]">Access tokens and provider credentials are held by OmniPlatform&apos;s integration service and never shown here.</p>
       </div>
@@ -261,7 +260,7 @@ function OverviewTab({ connection, provider, actions, issuesCount }: { connectio
           {issues.length === 0 ? (
             <p className="flex items-center gap-2 rounded-sm border border-[#C6EFD9] bg-[#F4FCF8] px-3 py-2.5 text-[12.5px] text-[#067647]">
               <CheckCircle2 className="size-4" />
-              {connection.status === "disconnected" ? "Disconnected — nothing to fix while it's off." : "Nothing to fix. Syncing on schedule."}
+              {connection.status === "disconnected" ? "Disconnected — nothing to fix while it's off." : "Nothing to fix."}
             </p>
           ) : (
             <ul className="divide-y divide-[#EEF1F5] rounded-sm border border-[#E4E9F0]">
@@ -299,11 +298,10 @@ function OverviewTab({ connection, provider, actions, issuesCount }: { connectio
 
         {lastRun && (
           <div>
-            <p className="mb-1.5 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Last sync result</p>
+            <p className="mb-1.5 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Last check</p>
             <div className="flex flex-wrap items-center gap-3 rounded-sm border border-[#E4E9F0] px-3 py-2.5 text-[12.5px] text-[#3C4A66]">
-              <ResultChip result={lastRun.status === "success" ? "success" : lastRun.status === "partial" ? "warning" : lastRun.status === "failed" ? "failed" : "info"} />
-              <span>{lastRun.recordsProcessed.toLocaleString("en-IN")} records</span>
-              {lastRun.failedRecords > 0 && <span className="text-[#B54708]">{lastRun.failedRecords} skipped</span>}
+              <ResultChip result={lastRun.status === "success" ? "success" : lastRun.status === "failed" ? "failed" : "info"} />
+              <span>{lastRun.accountsFound === null ? "Access renewed" : `${lastRun.accountsFound.toLocaleString("en-IN")} ${lastRun.accountsFound === 1 ? "account" : "accounts"} reachable`}</span>
               <span className="text-[#98A2B3]">{formatDuration(lastRun.durationMs)}</span>
               <span className="ml-auto text-[#98A2B3]"><RelativeTime iso={lastRun.startedAt} /></span>
             </div>
@@ -319,7 +317,7 @@ function OverviewTab({ connection, provider, actions, issuesCount }: { connectio
 /* ------------------------------------------------------------------ */
 
 function AccountsTab({ connection, actions }: { connection: IntegrationConnection; actions: ReturnType<typeof useConnectionActions> }) {
-  const { can, setPrimary, disconnectResource } = useIntegrations();
+  const { can, removeResource } = useIntegrations();
   const { clientId } = useClientScope();
   const { visible, hidden } = scopedResources(connection, clientId);
   const [removeTarget, setRemoveTarget] = useState<IntegrationResource | null>(null);
@@ -333,8 +331,20 @@ function AccountsTab({ connection, actions }: { connection: IntegrationConnectio
           {hidden} more account{hidden === 1 ? " is" : "s are"} mapped to other clients and hidden in this view.
         </p>
       )}
+      {live && (
+        <div className="flex justify-end">
+          <Button size="sm" variant="secondary" icon={Plus} gate={can.canChangeMapping} onClick={() => actions.openAddAccounts(connection)}>
+            Add accounts
+          </Button>
+        </div>
+      )}
       {visible.length === 0 ? (
-        <EmptyState icon={Database} compact title="No accounts in this view" description="Every account on this connection belongs to another client." />
+        <EmptyState
+          icon={Database}
+          compact
+          title={connection.resources.length === 0 ? "No accounts mapped yet" : "No accounts in this view"}
+          description={connection.resources.length === 0 ? "Choose which pages, locations or channels this login should be used for, and which client each belongs to." : "Every account on this connection belongs to another client."}
+        />
       ) : (
         <div className="scrollbar-thin overflow-x-auto rounded-sm border border-[#E4E9F0]">
           <table className="w-full border-collapse">
@@ -343,9 +353,8 @@ function AccountsTab({ connection, actions }: { connection: IntegrationConnectio
                 <th scope="col" className={cn(thClass, "min-w-[200px]")}>Account / property</th>
                 <th scope="col" className={cn(thClass, "max-md:hidden")}>Type</th>
                 <th scope="col" className={thClass}>Client</th>
-                <th scope="col" className={thClass}>Primary</th>
                 <th scope="col" className={thClass}>Status</th>
-                <th scope="col" className={cn(thClass, "max-lg:hidden")}>Last sync</th>
+                <th scope="col" className={cn(thClass, "max-lg:hidden")}>Posts waiting</th>
                 <th scope="col" className={cn(thClass, "w-px")}><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
@@ -359,28 +368,24 @@ function AccountsTab({ connection, actions }: { connection: IntegrationConnectio
                   <td className={cn(tdClass, "whitespace-nowrap max-md:hidden")}>{RESOURCE_LABEL[resource.type]}</td>
                   <td className={cn(tdClass, "whitespace-nowrap")}><ClientTag clientId={resource.clientId} /></td>
                   <td className={tdClass}>
-                    {resource.primary ? <Badge tone="blue" icon={Star}>Primary</Badge> : <span className="text-[12px] text-[#98A2B3]">—</span>}
-                  </td>
-                  <td className={tdClass}>
                     {resource.status === "active" ? <Badge tone="green" dot>Active</Badge> : <Badge tone="red" dot>{resource.status === "removed" ? "Removed" : "Access revoked"}</Badge>}
                   </td>
-                  <td className={cn(tdClass, "whitespace-nowrap max-lg:hidden")}><RelativeTime iso={resource.lastSyncAt} fallback="Never" /></td>
+                  <td className={cn(tdClass, "whitespace-nowrap tabular-nums max-lg:hidden")}>{resource.pendingPosts}</td>
                   <td className={cn(tdClass, "text-right")}>
                     <ActionMenu
                       label={`Actions for ${resource.name}`}
                       width={210}
                       items={[
                         { label: "View details", onSelect: () => setDetailTarget(resource) },
-                        { label: "Set as primary", icon: Star, onSelect: () => void setPrimary(connection.id, resource.id), gate: can.canChangeMapping, hidden: resource.primary || !live },
-                        { label: "Change client mapping", icon: ArrowRightLeft, onSelect: () => actions.openMapping(connection, resource), gate: can.canChangeMapping, hidden: !live },
+                        { label: "Change client", icon: ArrowRightLeft, onSelect: () => actions.openMapping(connection, resource), gate: can.canChangeMapping, disabledReason: resource.hasPostHistory ? "Posts were scheduled through this account, so it can't move to another client." : undefined, hidden: !live },
                         "separator",
                         {
-                          label: "Disconnect resource",
+                          label: "Remove account",
                           icon: Unplug,
                           danger: true,
                           onSelect: () => setRemoveTarget(resource),
-                          gate: can.canDisconnect,
-                          disabledReason: connection.resources.length <= 1 ? "This is the only account. Disconnect the whole integration instead." : undefined,
+                          gate: can.canChangeMapping,
+                          disabledReason: resource.hasPostHistory ? "Posts were scheduled through this account, so it can't be removed. Disconnect the whole integration instead." : undefined,
                           hidden: !live,
                         },
                       ]}
@@ -401,11 +406,11 @@ function AccountsTab({ connection, actions }: { connection: IntegrationConnectio
       <ConfirmDialog
         open={removeTarget !== null}
         onOpenChange={(open) => !open && setRemoveTarget(null)}
-        title={`Stop syncing “${removeTarget?.name ?? ""}”?`}
-        description="Only this account stops syncing. The rest of the integration keeps working, and you can add it back by reconnecting."
-        affected={removeTarget ? [`${RESOURCE_LABEL[removeTarget.type]} · ${removeTarget.handle}`] : undefined}
-        confirmLabel="Disconnect resource"
-        onConfirm={() => (removeTarget ? disconnectResource(connection.id, removeTarget.id) : false)}
+        title={`Remove “${removeTarget?.name ?? ""}” from its client?`}
+        description="Only this account is removed. The rest of the integration keeps working, and you can add it back with “Add accounts”."
+        affected={removeTarget ? [`${RESOURCE_LABEL[removeTarget.type]}${removeTarget.pendingPosts ? ` · ${removeTarget.pendingPosts} scheduled posts` : ""}`] : undefined}
+        confirmLabel="Remove account"
+        onConfirm={() => (removeTarget ? removeResource(connection.id, removeTarget.id) : false)}
       />
 
       <Dialog open={detailTarget !== null} onOpenChange={(open) => !open && setDetailTarget(null)}>
@@ -417,16 +422,15 @@ function AccountsTab({ connection, actions }: { connection: IntegrationConnectio
                 <DialogDescription className="mt-0.5 text-[12.5px] text-[#6B7890]">{RESOURCE_LABEL[detailTarget.type]}</DialogDescription>
               </div>
               <dl className="mx-5 mt-3 rounded-sm border border-[#E4E9F0] px-3 py-0.5">
-                <DefinitionRow label="Handle">{detailTarget.handle}</DefinitionRow>
+                <DefinitionRow label="Provider id">{detailTarget.externalId}</DefinitionRow>
                 <DefinitionRow label="Client"><ClientTag clientId={detailTarget.clientId} /></DefinitionRow>
-                <DefinitionRow label="Primary">{detailTarget.primary ? "Yes" : "No"}</DefinitionRow>
                 <DefinitionRow label="Status">{detailTarget.status === "active" ? "Active" : detailTarget.status === "removed" ? "Removed" : "Access revoked"}</DefinitionRow>
-                <DefinitionRow label="Last sync"><RelativeTime iso={detailTarget.lastSyncAt} fallback="Never" /></DefinitionRow>
+                <DefinitionRow label="Posts waiting">{detailTarget.pendingPosts}</DefinitionRow>
               </dl>
               <div className="mt-4 flex justify-end gap-2 border-t border-[#EEF1F5] px-5 py-3">
                 {live && (
                   <Button variant="secondary" icon={ArrowRightLeft} gate={can.canChangeMapping} onClick={() => { const target = detailTarget; setDetailTarget(null); actions.openMapping(connection, target); }}>
-                    Change mapping
+                    Manage
                   </Button>
                 )}
                 <Button variant="primary" onClick={() => setDetailTarget(null)}>Close</Button>
@@ -447,6 +451,7 @@ function PermissionsTab({ connection, provider, actions }: { connection: Integra
   const { can } = useIntegrations();
   const [advanced, setAdvanced] = useState(false);
   const lacking = connection.permissions.filter((permission) => permission.status === "missing" || permission.status === "expired");
+  const unreported = connection.permissions.length > 0 && connection.permissions.every((permission) => permission.status === "unknown");
 
   return (
     <div className="space-y-2">
@@ -460,6 +465,11 @@ function PermissionsTab({ connection, provider, actions }: { connection: Integra
             Reconnect to grant permission
           </Button>
         </div>
+      ) : unreported ? (
+        <p className="flex items-center gap-2 rounded-sm border border-[#E4E9F0] bg-[#F8FAFC] px-3 py-2 text-[12.5px] text-[#3C4A66]">
+          <ShieldAlert className="size-4 shrink-0 text-[#6B7890]" />
+          {provider.name} does not tell OmniPlatform which permissions were granted, so they are listed as “Not reported”. If something does not work, a check shows the reason.
+        </p>
       ) : (
         <p className="flex items-center gap-2 rounded-sm border border-[#C6EFD9] bg-[#F4FCF8] px-3 py-2 text-[12.5px] text-[#067647]">
           <CheckCircle2 className="size-4" />
@@ -505,50 +515,42 @@ function PermissionsTab({ connection, provider, actions }: { connection: Integra
 }
 
 /* ------------------------------------------------------------------ */
-/* Sync                                                                */
+/* Checks                                                              */
 /* ------------------------------------------------------------------ */
 
-function SyncTab({ connection, provider, runs, onOpenRun }: { connection: IntegrationConnection; provider: IntegrationProvider; runs: ReturnType<typeof useIntegrations>["data"]["syncRuns"]; onOpenRun: (id: string) => void }) {
-  const { syncJobs, syncNow } = useIntegrations();
+function ChecksTab({ connection, runs, onOpenRun }: { connection: IntegrationConnection; runs: ReturnType<typeof useIntegrations>["data"]["checkRuns"]; onOpenRun: (id: string) => void }) {
+  const { checkJobs, checkNow } = useIntegrations();
   const gates = useConnectionGates(connection)!;
-  const job = syncJobs[connection.id];
+  const job = checkJobs[connection.id];
   const last = runs[0];
-  const failed = runs.find((run) => run.status === "failed");
   const live = isActive(connection);
 
   const stats = [
-    { label: "Last sync", value: <RelativeTime iso={connection.lastSyncAt} fallback="Never" /> },
-    { label: "Next sync", value: connection.nextSyncAt ? <RelativeTime iso={connection.nextSyncAt} future /> : "Paused" },
-    { label: "Frequency", value: FREQUENCY_LABEL[connection.syncFrequency] },
-    { label: "Duration", value: formatDuration(last?.durationMs ?? null) },
-    { label: "Records processed", value: last ? last.recordsProcessed.toLocaleString("en-IN") : "—" },
-    { label: "Failed records", value: last ? last.failedRecords.toLocaleString("en-IN") : "—" },
+    { label: "Last successful check", value: <RelativeTime iso={connection.lastCheckedAt} fallback="Not yet" /> },
+    { label: "Last result", value: last ? (last.status === "success" ? "Working" : "Failed") : "—" },
+    { label: "Accounts found", value: last && last.accountsFound !== null ? last.accountsFound.toLocaleString("en-IN") : "—" },
+    { label: "Took", value: formatDuration(last?.durationMs ?? null) },
+    { label: "Access", value: connection.autoRenews ? "Renews itself" : connection.tokenExpiresAt ? <>Ends <RelativeTime iso={connection.tokenExpiresAt} future /></> : "No end date" },
   ];
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <StatusChip status={connection.status} progress={job?.progress} />
-          {job && <span className="text-[12px] text-[#6B7890]">{job.phase}</span>}
+          <StatusChip status={connection.status} />
+          {job && <span className="text-[12px] text-[#6B7890]">Asking the provider what this login can reach…</span>}
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {failed && live && connection.status === "sync_failed" && !job && (
-            <Button size="sm" variant="primary" icon={RefreshCw} gate={gates.sync} onClick={() => void syncNow(connection.id, "retry")}>
-              Retry failed sync
+          {connection.status === "sync_failed" && live && !job && (
+            <Button size="sm" variant="primary" icon={RefreshCw} gate={gates.check} onClick={() => void checkNow(connection.id)}>
+              Check again
             </Button>
           )}
-          {live && <SyncButton connection={connection} />}
+          {live && <CheckButton connection={connection} />}
         </div>
       </div>
 
-      {job && (
-        <span className="block h-1.5 overflow-hidden rounded-sm bg-[#EEF1F5]" role="progressbar" aria-valuenow={job.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Sync progress">
-          <span className="block h-full bg-[#2563EB] transition-[width] duration-300" style={{ width: `${job.progress}%` }} />
-        </span>
-      )}
-
-      <dl className="grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-6">
+      <dl className="grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-5">
         {stats.map((stat) => (
           <div key={stat.label} className="rounded-sm border border-[#E4E9F0] px-3 py-2">
             <dt className="text-[11px] text-[#6B7890]">{stat.label}</dt>
@@ -557,25 +559,17 @@ function SyncTab({ connection, provider, runs, onOpenRun }: { connection: Integr
         ))}
       </dl>
 
-      <div>
-        <p className="mb-1.5 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Data synced</p>
-        <div className="flex flex-wrap gap-1">
-          {provider.dataTypes.map((type) => (
-            <span key={type} className="inline-flex h-6 items-center gap-1 rounded-sm bg-[#F1F4F8] px-2 text-[11.5px] font-medium text-[#24324F]">
-              <Clock3 className="size-3 text-[#98A2B3]" />
-              {DATA_TYPE_LABEL[type]}
-            </span>
-          ))}
-        </div>
-      </div>
+      <p className="rounded-sm bg-[#F8FAFC] px-3 py-2 text-[12px] leading-4 text-[#6B7890]">
+        A check asks the provider what this login can still reach, renews access where it is allowed to, and refreshes the saved names of your pages and channels. It does not copy any posts or reports. Logins that renew themselves are also renewed in the background about once a day.
+      </p>
 
       <div>
-        <p className="mb-1.5 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Recent sync runs</p>
+        <p className="mb-1.5 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">Recent checks</p>
         {runs.length === 0 ? (
-          <EmptyState icon={RefreshCw} compact title="No syncs yet" description="Runs appear here after the first sync." />
+          <EmptyState icon={RefreshCw} compact title="No checks yet" description="Press “Check now” to run the first one. Each check is recorded here." />
         ) : (
           <div className="rounded-sm border border-[#E4E9F0]">
-            <SyncRunsTable runs={runs.slice(0, 12)} onOpenRun={onOpenRun} />
+            <CheckRunsTable runs={runs.slice(0, 12)} onOpenRun={onOpenRun} />
           </div>
         )}
       </div>
@@ -661,7 +655,7 @@ function UsageTab({ connection, actions }: { connection: IntegrationConnection; 
 
 const ACTIVITY_DEFAULTS = { event: "all", result: "all", user: "all", range: "all" };
 
-function ActivityTab({ connection, onOpenRun }: { connection: IntegrationConnection; onOpenRun: (id: string) => void }) {
+function ActivityTab({ connection }: { connection: IntegrationConnection }) {
   const { data } = useIntegrations();
   const [filters, setFilters] = useState(ACTIVITY_DEFAULTS);
   const all = data.activity.filter((item) => item.connectionId === connection.id).sort((a, b) => b.at.localeCompare(a.at));
@@ -700,7 +694,7 @@ function ActivityTab({ connection, onOpenRun }: { connection: IntegrationConnect
       </div>
 
       {items.length === 0 ? (
-        <EmptyState icon={Clock3} compact title={all.length ? "No events match" : "No activity"} description={all.length ? "Try clearing the filters." : "Connection changes and syncs will be recorded here."} />
+        <EmptyState icon={Clock3} compact title={all.length ? "No events match" : "No activity"} description={all.length ? "Try clearing the filters." : "Connection changes and checks will be recorded here."} />
       ) : (
         <ol className="relative space-y-0 pl-4 before:absolute before:bottom-2 before:left-[5px] before:top-2 before:w-px before:bg-[#E4E9F0]">
           {items.map((item) => (
@@ -716,11 +710,6 @@ function ActivityTab({ connection, onOpenRun }: { connection: IntegrationConnect
                 </div>
                 <span className="flex items-center gap-2 text-[11.5px] text-[#98A2B3]">
                   <RelativeTime iso={item.at} />
-                  {item.syncRunId && data.syncRuns.some((run) => run.id === item.syncRunId) && (
-                    <Button size="xs" variant="ghost" onClick={() => onOpenRun(item.syncRunId!)}>
-                      {item.result === "failed" ? "View error" : "View sync"}
-                    </Button>
-                  )}
                 </span>
               </div>
             </li>

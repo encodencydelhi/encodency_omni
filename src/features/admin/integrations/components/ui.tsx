@@ -126,13 +126,12 @@ export function ProviderLogo({ providerId, className, muted }: { providerId: Pro
 /* ------------------------------------------------------------------ */
 
 /** The single status chip. Text label + dot, so meaning never rides on colour alone. */
-export function StatusChip({ status, progress, className }: { status: ConnectionStatus; progress?: number; className?: string }) {
+export function StatusChip({ status, className }: { status: ConnectionStatus; className?: string }) {
   const meta = STATUS_META[status];
   return (
     <span className={cn("inline-flex h-[22px] items-center gap-1.5 whitespace-nowrap rounded-sm px-1.5 text-[11px] font-semibold ring-1 ring-inset", meta.chip, className)}>
       {status === "syncing" ? <Loader2 className="size-3 animate-spin" /> : <span className={cn("size-1.5 rounded-full", meta.dot)} />}
       {meta.label}
-      {status === "syncing" && progress !== undefined && <span className="tabular-nums opacity-80">{progress}%</span>}
     </span>
   );
 }

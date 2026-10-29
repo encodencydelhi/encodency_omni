@@ -50,9 +50,8 @@ export type ResourceType =
   | "website"
   | "smtp_sender";
 
-export type SyncDataType = "posts" | "analytics" | "comments" | "reviews" | "leads" | "profile" | "audience" | "messages" | "search_performance";
-
 export interface PermissionDefinition {
+  /** The provider's own scope name. */
   key: string;
   label: string;
   description: string;
@@ -68,11 +67,11 @@ export interface IntegrationProvider {
   name: string;
   category: ProviderCategory;
   description: string;
-  /** `organization` providers (e.g. SMTP) serve every client at once. */
+  /** `organization` providers serve every client at once; every connectable provider today is per client. */
   scope: "client" | "organization";
   resourceTypes: { type: ResourceType; label: string; multiple: boolean }[];
+  /** The scopes the authorization really asks for, with plain-language explanations. */
   permissions: PermissionDefinition[];
-  dataTypes: SyncDataType[];
   modules: ModuleKey[];
   requirements: string[];
   availability: ProviderAvailability;
@@ -85,7 +84,7 @@ export interface IntegrationProvider {
 /* Connections                                                         */
 /* ------------------------------------------------------------------ */
 
-/** The one status model used on every screen. */
+/** The one status model used on every screen. `syncing` only ever means "a check is running right now". */
 export type ConnectionStatus =
   | "connected"
   | "syncing"
@@ -98,25 +97,28 @@ export type ConnectionStatus =
 
 export type ReconnectReason = "token_expired" | "access_revoked" | "scope_changed" | "permission_missing" | "expiring";
 
-export type SyncFrequency = "15m" | "hourly" | "6h" | "daily" | "manual";
-
 export type ResourceStatus = "active" | "access_revoked" | "removed";
 
 export interface IntegrationResource {
   id: string;
   connectionId: string;
   type: ResourceType;
+  /** The provider's name for it; a placeholder until a check has captured one. */
   name: string;
-  /** A human-recognisable handle or URL, not an internal id. */
+  /** A human-recognisable handle or URL, not an internal id. Empty when the provider gave none. */
   handle: string;
+  /** The provider's own id for the account (what discovery returns), used to tell which found accounts are already mapped. */
+  externalId: string;
   /** Resources can be mapped to a different client than their connection. */
   clientId: string;
-  primary: boolean;
   status: ResourceStatus;
-  lastSyncAt: Maybe<ISODate>;
+  /** Posts still waiting to go out through this account. */
+  pendingPosts: number;
+  /** Whether posts were ever scheduled through it (such an account can no longer be removed or moved). */
+  hasPostHistory: boolean;
 }
 
-export type PermissionStatus = "granted" | "missing" | "expired" | "optional";
+export type PermissionStatus = "granted" | "missing" | "expired" | "optional" | "unknown";
 
 export interface IntegrationPermission {
   key: string;
@@ -126,7 +128,7 @@ export interface IntegrationPermission {
 export interface IntegrationConnection {
   id: string;
   providerId: ProviderId;
-  /** Home client. `null` means organization-wide. */
+  /** Home client. `null` means it is a company login with no account mapped yet. */
   clientId: Maybe<string>;
   accountName: string;
   status: ConnectionStatus;
@@ -134,43 +136,43 @@ export interface IntegrationConnection {
   statusReason: Maybe<{ code: ReconnectReason | "sync_error" | "rate_limit"; detail: string }>;
   connectedAt: ISODate;
   connectedBy: string;
-  lastSyncAt: Maybe<ISODate>;
-  nextSyncAt: Maybe<ISODate>;
+  /** When a check of this connection last succeeded. */
+  lastCheckedAt: Maybe<ISODate>;
   tokenExpiresAt: Maybe<ISODate>;
-  rateLimitResetAt: Maybe<ISODate>;
-  syncFrequency: SyncFrequency;
+  /** Whether the login renews its own access (Google, LinkedIn, YouTube) or must be reconnected (Meta). */
+  autoRenews: boolean;
   resources: IntegrationResource[];
   permissions: IntegrationPermission[];
+  /** Posts still waiting to go out through this connection. */
+  pendingPosts: number;
   disconnectedAt: Maybe<ISODate>;
 }
 
 /* ------------------------------------------------------------------ */
-/* Sync                                                                */
+/* Checks                                                              */
 /* ------------------------------------------------------------------ */
 
-export type SyncRunStatus = "running" | "success" | "partial" | "failed";
-export type SyncTrigger = "scheduled" | "manual" | "sync_all" | "retry" | "reconnect";
+export type CheckRunStatus = "running" | "success" | "failed";
+export type CheckTrigger = "scheduled" | "manual";
 
-export interface IntegrationSyncRun {
+/** One recorded check of a connection: either a person pressed "Check now" or the background renewal ran. */
+export interface IntegrationCheckRun {
   id: string;
   connectionId: string;
   clientId: Maybe<string>;
-  trigger: SyncTrigger;
-  status: SyncRunStatus;
+  trigger: CheckTrigger;
+  status: CheckRunStatus;
   startedAt: ISODate;
   endedAt: Maybe<ISODate>;
   durationMs: Maybe<number>;
-  recordsProcessed: number;
-  failedRecords: number;
-  dataTypes: SyncDataType[];
+  /** Accounts, pages or channels the provider returned; null for a token-only renewal. */
+  accountsFound: Maybe<number>;
   error: Maybe<{ message: string; hint: string }>;
 }
 
-/** A sync currently in flight in this session. */
-export interface SyncJob {
+/** A check currently in flight in this session. */
+export interface CheckJob {
   runId: string;
-  progress: number;
-  phase: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -186,7 +188,7 @@ export interface IntegrationDependency {
   module: ModuleKey;
   feature: string;
   activeCount: number;
-  /** "workflows", "scheduled posts" — reads as "3 workflows". */
+  /** "scheduled posts", "accounts" — reads as "3 scheduled posts". */
   unit: string;
   /** Critical dependencies break something live if the connection goes away. */
   critical: boolean;
@@ -204,15 +206,10 @@ export type ActivityEvent =
   | "reconnected"
   | "reconnect_required"
   | "sync_completed"
-  | "sync_partial"
   | "sync_failed"
-  | "sync_started"
-  | "permission_changed"
   | "mapping_changed"
-  | "primary_changed"
   | "resource_removed"
-  | "settings_updated"
-  | "rate_limited";
+  | "settings_updated";
 
 export type ActivityResult = "success" | "warning" | "failed" | "info";
 
@@ -226,7 +223,6 @@ export interface IntegrationActivity {
   actor: string;
   summary: string;
   at: ISODate;
-  syncRunId: Maybe<string>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -234,7 +230,7 @@ export interface IntegrationActivity {
 /* ------------------------------------------------------------------ */
 
 export type Severity = "critical" | "warning" | "info";
-export type IssueAction = "reconnect" | "review_permissions" | "retry_sync" | "view_details";
+export type IssueAction = "reconnect" | "review_permissions" | "retry_check" | "view_details";
 
 export interface IntegrationIssue {
   id: string;
@@ -250,57 +246,34 @@ export interface IntegrationIssue {
   /** What the admin should do. */
   todo: string;
   action: IssueAction;
+  /** Nothing in OmniPlatform uses this login (no account mapped, nothing scheduled), so it may simply be removed. */
+  unused?: boolean;
   detectedAt: ISODate;
 }
 
 /* ------------------------------------------------------------------ */
-/* Settings (company-level only)                                       */
+/* Settings (company-level; every field is applied by the server)       */
 /* ------------------------------------------------------------------ */
 
-export type NotificationKey =
-  | "connectionExpired"
-  | "reconnectRequired"
-  | "syncFailed"
-  | "permissionMissing"
-  | "rateLimit"
-  | "accountRemoved";
-
 export interface IntegrationSettings {
-  sync: {
-    defaultFrequency: SyncFrequency;
-    retryFailed: boolean;
-    retryAttempts: number;
-    manualSyncBehavior: "incremental" | "full";
-    backgroundRefresh: boolean;
-  };
-  notifications: Record<NotificationKey, { inApp: boolean; email: boolean; slack: boolean }>;
-  clientMapping: {
-    oneAccountPerClient: boolean;
-    allowMultipleResources: boolean;
-    primaryBehavior: "first_selected" | "ask_every_time";
-  };
-  security: {
-    orgAdminOnly: boolean;
-    confirmCriticalDisconnect: boolean;
-    requirePauseBeforeDisconnect: boolean;
-  };
-  dataHandling: {
-    retentionDays: number;
-  };
+  /** The background job renews this company's expiring tokens. */
+  autoRefresh: boolean;
+  /** The console asks for a typed confirmation before it disconnects something that live posts depend on. */
+  confirmBeforeDisconnect: boolean;
+  /** The server refuses to disconnect while posts are still waiting to go out through it. */
+  blockDisconnectWithScheduledPosts: boolean;
 }
 
 /* ------------------------------------------------------------------ */
 /* Access                                                              */
 /* ------------------------------------------------------------------ */
 
-export type OrgRole = "org_admin" | "manager" | "member";
-
 export interface Capability {
   allowed: boolean;
   reason?: string;
 }
 
-export type CapabilityKey = "canConnect" | "canDisconnect" | "canReconnect" | "canSync" | "canChangeMapping" | "canManageSettings";
+export type CapabilityKey = "canConnect" | "canDisconnect" | "canReconnect" | "canCheck" | "canChangeMapping" | "canManageSettings";
 
 export type CapabilityMap = Record<CapabilityKey, Capability>;
 
@@ -312,9 +285,10 @@ export interface IntegrationsSnapshot {
   clients: IntegrationClient[];
   providers: IntegrationProvider[];
   connections: IntegrationConnection[];
-  syncRuns: IntegrationSyncRun[];
+  checkRuns: IntegrationCheckRun[];
   dependencies: IntegrationDependency[];
   activity: IntegrationActivity[];
   settings: IntegrationSettings;
-  currentUser: { name: string; role: OrgRole };
+  /** `canManage` is the server's answer to "may this person change connections" (integrations:write). */
+  currentUser: { name: string; email: string; canManage: boolean };
 }

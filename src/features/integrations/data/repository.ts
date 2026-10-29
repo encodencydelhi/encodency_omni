@@ -49,6 +49,8 @@ export interface IntegrationsRepository {
   getActivities(): Promise<IntegrationActivity[]>;
   getReauthorizationRequests(): Promise<ReauthorizationRequest[]>;
   getSettings(): Promise<IntegrationSettings>;
+  /** People an issue can be assigned to: active platform staff. */
+  getIssueOwners(): Promise<{ id: string; name: string; email: string }[]>;
 
   // Mutate
   updateProviderAvailability(
@@ -58,13 +60,12 @@ export interface IntegrationsRepository {
   ): Promise<boolean>;
   updateProviderOperationalControls(
     providerId: string,
-    controls: Partial<Pick<ProviderConfiguration, "allowNewConnections" | "allowExistingPublishing" | "allowExistingSync" | "enableWebhooks" | "maintenanceMode" | "visibilityInCompanyAdmin">>
+    controls: Partial<Pick<ProviderConfiguration, "allowNewConnections" | "maintenanceMode">>
   ): Promise<boolean>;
   updateProviderConfig(
     providerId: string,
     updates: Partial<ProviderConfiguration>
   ): Promise<boolean>;
-  toggleCapability(capabilityId: string, enabled: boolean): Promise<boolean>;
   createReauthorizationRequest(params: {
     providerId: string;
     authorizationId: string;
@@ -160,6 +161,13 @@ const mockIntegrationsProvider: IntegrationsRepository = {
     return store.getSettings();
   },
 
+  async getIssueOwners(): Promise<{ id: string; name: string; email: string }[]> {
+    return [
+      { id: "usr_superadmin", name: "Super Administrator", email: "admin@encodency.com" },
+      { id: "usr_support", name: "Support Lead", email: "support@encodency.com" },
+    ];
+  },
+
   async updateProviderAvailability(
     providerId: string,
     newAvailability: PlatformAvailability,
@@ -170,7 +178,7 @@ const mockIntegrationsProvider: IntegrationsRepository = {
 
   async updateProviderOperationalControls(
     providerId: string,
-    controls: Partial<Pick<ProviderConfiguration, "allowNewConnections" | "allowExistingPublishing" | "allowExistingSync" | "enableWebhooks" | "maintenanceMode" | "visibilityInCompanyAdmin">>
+    controls: Partial<Pick<ProviderConfiguration, "allowNewConnections" | "maintenanceMode">>
   ): Promise<boolean> {
     return store.updateProviderOperationalControls(providerId, controls);
   },
@@ -180,10 +188,6 @@ const mockIntegrationsProvider: IntegrationsRepository = {
     updates: Partial<ProviderConfiguration>
   ): Promise<boolean> {
     return store.updateProviderConfig(providerId, updates);
-  },
-
-  async toggleCapability(capabilityId: string, enabled: boolean): Promise<boolean> {
-    return store.toggleCapability(capabilityId, enabled);
   },
 
   async createReauthorizationRequest(params): Promise<ReauthorizationRequest> {
@@ -221,5 +225,5 @@ const mockIntegrationsProvider: IntegrationsRepository = {
 const useLiveIntegrations = !INTEGRATIONS_MOCK_MODE || process.env.NEXT_PUBLIC_DATA_SOURCE === "api";
 
 export const integrationsRepository: IntegrationsRepository = useLiveIntegrations
-  ? createApiIntegrationsProvider(mockIntegrationsProvider)
+  ? createApiIntegrationsProvider()
   : mockIntegrationsProvider;

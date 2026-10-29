@@ -83,12 +83,12 @@ export const PLATFORM_AVAILABILITY_META: Record<
   live: {
     label: "Live",
     tone: "success",
-    description: "Fully enabled for all eligible company tenants.",
+    description: "Companies can connect it and its connections work.",
   },
   restricted: {
-    label: "Restricted",
+    label: "Maintenance",
     tone: "warning",
-    description: "Limited to beta tenants or specific plan entitlements.",
+    description: "In maintenance: new and reconnect logins and connection checks are paused.",
   },
   testing: {
     label: "Testing",
@@ -96,14 +96,14 @@ export const PLATFORM_AVAILABILITY_META: Record<
     description: "Internal sandbox testing only.",
   },
   draft: {
-    label: "Draft",
+    label: "Not built",
     tone: "neutral",
-    description: "Connector scaffolded; awaiting implementation.",
+    description: "There is no connector for it yet, so it cannot be connected.",
   },
   disabled: {
     label: "Disabled",
     tone: "danger",
-    description: "New connections and operations paused by platform.",
+    description: "Nobody can connect or reconnect it: it is switched off or the server has no credentials for it.",
   },
   retired: {
     label: "Retired",
@@ -116,6 +116,11 @@ export const EXTERNAL_API_ACCESS_META: Record<
   ExternalApiAccess,
   { label: string; tone: "success" | "warning" | "danger" | "neutral" | "info"; description: string }
 > = {
+  not_recorded: {
+    label: "Not recorded",
+    tone: "neutral",
+    description: "Nobody has recorded the provider-side approval status yet. Set it in the provider's configuration.",
+  },
   approved: {
     label: "Approved",
     tone: "success",
@@ -256,33 +261,9 @@ export const ISSUE_STATUS_META: Record<
   resolved: { label: "Resolved", tone: "success" },
 };
 
+/** The same defaults the server uses when nothing has been saved. */
 export const DEFAULT_INTEGRATION_SETTINGS: IntegrationSettings = {
-  newConnectionApprovalPolicy: "automatic",
-  inactiveConnectionReviewDays: 60,
-  reauthorizationRequestDefaults: {
-    reminderDays: 7,
-    escalateToOwner: true,
-    autoPauseAfterDays: 14,
-  },
-  connectionOwnershipPolicy: "strict_company_silo",
-  tokenExpiryWarningDays: 14,
-  connectionHealthCheckIntervalMinutes: 15,
-  providerIncidentAlertThreshold: "any_degradation",
-  repeatedFailureThreshold: 5,
-  defaultSyncIntervalMinutes: 30,
-  retryPolicy: "exponential_backoff",
-  backoffMaxRetries: 4,
-  failureEscalationPolicy: "flag_connection",
-  notificationPolicies: {
-    providerOutageAlerts: true,
-    connectionExpiryAlerts: true,
-    permissionRevocationAlerts: true,
-    integrationFailureEscalation: true,
-  },
-  accessAndSecurity: {
-    whoCanEditConfig: "super_admin_only",
-    whoCanChangeAvailability: "super_admin_only",
-    whoCanPauseOperations: "super_admin_only",
-    requireTwoFactorForSensitiveActions: true,
-  },
+  autoRefreshEnabled: true,
+  notifyCompanyAdmins: true,
+  repeatedFailureThreshold: 2,
 };

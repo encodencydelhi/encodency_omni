@@ -1,4 +1,5 @@
 "use client";
+import { openMetaTool } from "@/features/admin/meta-ads/meta-tool";
 
 import { AdImage } from "@/features/admin/meta-ads/components/ad-image";
 import Link from "next/link";
@@ -75,7 +76,7 @@ const PERFORMANCE_TONE: Record<Creative["performance"], Tone> = {
 };
 
 function CreativeView() {
-  const { campaigns, creatives, getAd, getCreative } = useAdsData();
+  const { accountId, campaigns, creatives, getAd, getCreative } = useAdsData();
   const router = useRouter();
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS);
 
@@ -123,11 +124,11 @@ function CreativeView() {
       actions={
         <button
           type="button"
-          onClick={() => toast.success("Opening the media uploader…")}
+          onClick={() => openMetaTool("adcreatives", accountId)}
           className={cn(btnPrimary, "h-10")}
         >
           <Upload className="size-3.5" />
-          Upload Creative
+          Upload In Meta
         </button>
       }
     >
@@ -210,8 +211,8 @@ function CreativeView() {
                 isFiltered
                   ? undefined
                   : {
-                    label: "Upload Creative",
-                    onClick: () => toast.success("Opening the media uploader…"),
+                    label: "Upload In Meta",
+                    onClick: () => openMetaTool("adcreatives", accountId),
                   }
               }
               secondary={{ label: "Creative specs", href: `${ADS_ROOT}/help/aspect-ratios` }}
@@ -281,11 +282,11 @@ function CreativeView() {
                               { label: "Use in Ad", href: `${ADS_ROOT}/create?creative=${c.id}&step=ad` },
                               {
                                 label: "Edit metadata",
-                                onSelect: () => toast.success(`Editing “${c.name}”`),
+                                onSelect: () => openMetaTool("adcreatives", accountId),
                               },
                               {
-                                label: "Duplicate",
-                                onSelect: () => toast.success(`Duplicating “${c.name}”…`),
+                                label: "Duplicate In Meta",
+                                onSelect: () => openMetaTool("adcreatives", accountId),
                               },
                             ],
                             [
@@ -294,9 +295,9 @@ function CreativeView() {
                                 onSelect: () => toast.success(`Downloading “${c.name}”…`),
                               },
                               {
-                                label: "Archive",
+                                label: "Archive In Meta",
                                 danger: true,
-                                onSelect: () => toast.success(`Archived “${c.name}”`),
+                                onSelect: () => openMetaTool("adcreatives", accountId),
                               },
                             ],
                           ]}

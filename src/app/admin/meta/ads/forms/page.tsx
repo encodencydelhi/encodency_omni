@@ -1,6 +1,8 @@
 "use client";
+import { openMetaTool } from "@/features/admin/meta-ads/meta-tool";
 
 import Link from "next/link";
+import { downloadRecords } from "@/features/admin/meta-ads/export";
 import { Suspense, useMemo } from "react";
 import {
   CheckCircle2,
@@ -9,7 +11,6 @@ import {
   Plus,
   UsersRound,
 } from "lucide-react";
-import { toast } from "@/features/admin/meta-ads/toast";
 import { cn } from "@/lib/utils/cn";
 import { LIVE, useAdsData } from "@/features/admin/meta-ads/data-source";
 import { num, pct, relative } from "@/features/admin/meta-ads/format";
@@ -56,7 +57,7 @@ const TABS = [
 ];
 
 function FormsView() {
-  const { adsOfForm, campaigns, campaignsOfForm, getCampaign, instantForms, leadsOf } = useAdsData();
+  const { accountId, adsOfForm, campaigns, campaignsOfForm, getCampaign, instantForms, leadsOf } = useAdsData();
   const { values, setFilter, reset, isFiltered } = useFilters(DEFAULTS, {
     campaign: (v) => getCampaign(v)?.name ?? v,
   });
@@ -134,7 +135,7 @@ function FormsView() {
           />
           <button
             type="button"
-            onClick={() => toast.success("Instant form export queued.")}
+            onClick={() => downloadRecords("meta-forms", rows)}
             className={cn(btn, "my-2")}
           >
             Export
@@ -282,19 +283,19 @@ function FormsView() {
                         groups={[
                           [
                             { label: "Preview", href: `${ADS_ROOT}/forms/${f.id}` },
-                            { label: "Edit", href: `${ADS_ROOT}/create?form=${f.id}&step=form` },
+                            { label: "Edit In Meta", href: `${ADS_ROOT}/create?form=${f.id}&step=form` },
                             {
-                              label: "Duplicate",
-                              onSelect: () => toast.success(`Duplicating “${f.name}”…`),
+                              label: "Duplicate In Meta",
+                              onSelect: () => openMetaTool("leadgen", accountId),
                             },
                             { label: "Use in Ad", href: `${ADS_ROOT}/create?form=${f.id}&step=ad` },
                           ],
                           [{ label: "View Leads", href: `${ADS_ROOT}/leads?form=${f.id}` }],
                           [
                             {
-                              label: "Archive",
+                              label: "Archive In Meta",
                               danger: true,
-                              onSelect: () => toast.success(`Archived “${f.name}”`),
+                              onSelect: () => openMetaTool("leadgen", accountId),
                             },
                           ],
                         ]}

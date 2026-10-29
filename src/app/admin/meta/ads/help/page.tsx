@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useSyncExternalStore, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   BarChart3,
   CircleHelp,
@@ -21,7 +21,6 @@ import {
   WalletCards,
   Wrench,
 } from "lucide-react";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import {
   articlesInCategory,
@@ -63,9 +62,11 @@ const ICONS: Record<string, typeof Rocket> = {
 const RECENT_KEY = "meta-ads-help-recent";
 
 function HelpCenter() {
+  const router = useRouter();
   const params = useSearchParams();
   const [query, setQuery] = useState("");
-  const [recent, setRecent] = useState<string[]>([]);
+  const storedRecent = useSyncExternalStore(callback => { window.addEventListener("storage", callback); return () => window.removeEventListener("storage", callback); }, () => { try { return window.localStorage.getItem(RECENT_KEY) ?? "[]"; } catch { return "[]"; } }, () => "[]");
+  const recent = useMemo<string[]>(() => { try { const value = JSON.parse(storedRecent); return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []; } catch { return []; } }, [storedRecent]);
 
   /** Contextual entry: ?category=ads, or ?from=create from the campaign builder. */
   const requestedCategory = params?.get("category") as HelpCategoryId | null;
@@ -75,14 +76,7 @@ function HelpCenter() {
       ? requestedCategory
       : null) ?? (from ? (CONTEXT_CATEGORY[from] ?? null) : null);
 
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(RECENT_KEY);
-      if (stored) setRecent(JSON.parse(stored) as string[]);
-    } catch {
-      // Private browsing or blocked storage — recently viewed is optional.
-    }
-  }, []);
+
 
   const results = useMemo(() => searchArticles(query), [query]);
   const searching = query.trim().length >= 2;
@@ -103,9 +97,7 @@ function HelpCenter() {
         <button
           type="button"
           onClick={() =>
-            toast.success("Support request started", {
-              description: "Our team replies within one business day.",
-            })
+            router.push("/admin/support")
           }
           className={cn(btnPrimary, "h-10")}
         >
@@ -300,9 +292,7 @@ function HelpCenter() {
               <button
                 type="button"
                 onClick={() =>
-                  toast.success("Support request started", {
-                    description: "Our team replies within one business day.",
-                  })
+                  router.push("/admin/support")
                 }
                 className={cn(btnPrimary, "mt-2.5 w-full")}
               >
