@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState, useEffect } from "react";
 import { ChevronRight, ChevronsLeft, X } from "lucide-react";
 import { adminNavigation } from "@/config/admin-navigation";
+import { AnimatedIcon } from "@/components/shared/animated-icon";
 import { cn } from "@/lib/utils/cn";
 import { useAdminContext } from "./admin-context";
 import { ChannelLogo } from "../shared/channel-logo";
@@ -81,17 +82,6 @@ const brandLabels = new Set([
   "X (Twitter)",
 ]);
 
-const iconColors: Record<string, string> = {
-  "Dashboard": "text-[#38BDF8]",
-  "Clients": "text-[#3B82F6]",
-  "Content Studio": "text-[#A78BFA]",
-  "Calendar": "text-[#F472B6]",
-  "Campaigns": "text-[#FB923C]",
-  "Media Library": "text-[#2DD4BF]",
-  "SEO Overview": "text-[#7DD3FC]",
-  "Site Audit": "text-[#CBD5E1]",
-  "Pages": "text-[#BAE6FD]",
-};
 function useActiveHref(pathname: string) {
   return useMemo(() => {
     const hrefs = adminNavigation.flatMap((section) =>
@@ -262,17 +252,21 @@ export function AdminSidebar() {
                         )}
                       >
                         {brandLabels.has(item.label) ? (
-                          <ChannelLogo
-                            channel={item.label}
-                            className="size-[18px] shrink-0 rounded-[4px]"
-                          />
+                          <span className="ai inline-flex size-[18px] shrink-0" data-active="true">
+                            <span className="ai-bob inline-flex size-full">
+                              <ChannelLogo
+                                channel={item.label}
+                                className="size-[18px] shrink-0 rounded-[4px]"
+                              />
+                            </span>
+                          </span>
                         ) : (
-                          <Icon
+                          <AnimatedIcon
+                            name={item.animatedIcon}
+                            active
                             className={cn(
-                              "size-[16px] shrink-0 transition-colors",
-                              active
-                                ? "text-[#38BDF8]"
-                                : iconColors[item.label] || "text-[#94A3B8]",
+                              "size-[16px] shrink-0 transition-[filter] group-hover:brightness-125",
+                              item.iconColor,
                             )}
                           />
                         )}

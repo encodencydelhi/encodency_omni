@@ -1055,7 +1055,7 @@ mark[data-spell-typo]:hover {
 
 /* Keep looping icons visibly animated at a gentle pace. */
 .ai[data-active="true"] [class] {
-  animation-duration: 2.4s;
+  animation-duration: 1.4s;
   animation-iteration-count: infinite;
 }
 

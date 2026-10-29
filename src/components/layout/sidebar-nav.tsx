@@ -13,7 +13,7 @@ interface SidebarNavProps {
   onNavigate?: () => void;
 }
 
-const ICON_COLORS: Record<AnimatedIconName, string> = {
+const ICON_COLORS: Partial<Record<AnimatedIconName, string>> = {
   dashboard: "text-sky-400",
   companies: "text-amber-400",
   users: "text-violet-400",

@@ -21,7 +21,20 @@ export type AnimatedIconName =
   | "support"
   | "assistant"
   | "notifications"
-  | "settings";
+  | "settings"
+  | "content"
+  | "calendar"
+  | "campaigns"
+  | "media"
+  | "competitor"
+  | "website"
+  | "infrastructure"
+  | "leads"
+  | "contacts"
+  | "pipeline"
+  | "analytics"
+  | "reports"
+  | "roles";
 
 interface Part {
   tag: "path" | "circle";
@@ -32,6 +45,237 @@ interface Part {
 }
 
 const GLYPHS: Record<AnimatedIconName, Part[]> = {
+  "content": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M3 3h18v18H3z M3 9h18 M9 9v12"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "m13 13 4 2-4 2z"
+      },
+      "cls": "ai-pop"
+    }
+  ],
+  "calendar": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2 M3 10h18 M8 3v4 M16 3v4"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "m9 15 2 2 4-4"
+      },
+      "cls": "ai-pop"
+    }
+  ],
+  "campaigns": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "m3 10 14-5v14L3 14z M6 15l2 6h3l-2-5"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M21 7l1-1 M21 12h2 M21 17l1 1"
+      },
+      "cls": "ai-blink"
+    }
+  ],
+  "media": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "m3 17 5-5 4 4 4-6 5 7"
+      },
+      "cls": "ai-layer-up"
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M7 7h.01"
+      },
+      "cls": "ai-blink"
+    }
+  ],
+  "competitor": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "m4 3 17 17 M3 4l1 4 4-4z M16 16l-3 3 M18 18l3 3"
+      },
+      "cls": "ai-tilt"
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M20 3 3 20 M21 4l-1 4-4-4z M8 16l3 3 M6 18l-3 3"
+      },
+      "cls": "ai-bob"
+    }
+  ],
+  "website": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20 M2 12h20"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M12 2c-5 5-5 15 0 20 5-5 5-15 0-20"
+      },
+      "cls": "ai-coin"
+    }
+  ],
+  "infrastructure": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M4 3h16v7H4z M4 14h16v7H4z"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M8 6.5h.01 M8 17.5h.01"
+      },
+      "cls": "ai-blink"
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M12 6.5h5 M12 17.5h5"
+      },
+      "cls": "ai-seq"
+    }
+  ],
+  "leads": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M12 3a9 9 0 1 0 9 9 M12 7a5 5 0 1 0 5 5"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "m12 12 9-9 M16 3h5v5"
+      },
+      "cls": "ai-needle"
+    }
+  ],
+  "contacts": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5z M3 7h3 M3 12h3 M3 17h3"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M10 17v-1a3 3 0 0 1 6 0v1 M13 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4"
+      },
+      "cls": "ai-bob"
+    }
+  ],
+  "pipeline": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M3 5h4v14H3z"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M10 5h4v10h-4z"
+      },
+      "cls": "ai-layer-up"
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M17 5h4v6h-4z"
+      },
+      "cls": "ai-bob"
+    }
+  ],
+  "analytics": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M3 3v18h18"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M7 17v-5"
+      },
+      "cls": "ai-layer-up"
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M12 17V8"
+      },
+      "cls": "ai-bob"
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M17 17V4"
+      },
+      "cls": "ai-layer-up"
+    }
+  ],
+  "reports": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M5 3h10l4 4v14H5z M14 3v5h5"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M8 17v-3 M12 17v-6 M16 17v-4"
+      },
+      "cls": "ai-layer-up"
+    }
+  ],
+  "roles": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "m8 12 3 3 5-6"
+      },
+      "cls": "ai-pop"
+    }
+  ],
   "dashboard": [
     {
       "tag": "path",
