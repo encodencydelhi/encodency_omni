@@ -98,6 +98,7 @@ function OwnerCell({ summary }: { summary: CompanySummary }) {
         className="flex min-w-0 items-center gap-2 rounded-sm hover:underline"
       >
         <Avatar className="size-5 shrink-0">
+          {owner.avatarUrl ? <AvatarImage src={owner.avatarUrl} alt={owner.name} /> : null}
           <AvatarFallback className="text-[10px]">{getInitials(owner.name)}</AvatarFallback>
         </Avatar>
         <span className="min-w-0 max-w-24 truncate text-[0.8125rem] text-foreground">{owner.name}</span>

@@ -127,6 +127,8 @@ interface SuperAdminCompanySummary {
   ownerOnboarding?: OwnerOnboarding | null;
   /** Display name of the owner account. */
   ownerName?: string | null;
+  /** Profile photo of the owner account. */
+  ownerAvatarUrl?: string | null;
   connections?: { total: number; active: number; needsAttention: number };
   billing?: { status: "paid" | "payment_due" | "payment_failed" | "none"; openInvoices: number };
   lastActiveAt?: string | null;
@@ -182,6 +184,7 @@ interface SuperAdminCompanyDetailResponse extends SuperAdminCompanySummary {
     userId?: string;
     email: string;
     name?: string | null;
+    avatarUrl?: string | null;
     systemRole: string;
     suspendedAt?: string | null;
     createdAt?: string;
@@ -300,6 +303,7 @@ function toOwner(
   onboarding?: OwnerOnboarding | null,
   invitationUrl?: string | null,
   ownerName?: string | null,
+  ownerAvatarUrl?: string | null,
 ): CompanyOwner {
   const state = onboarding?.state ?? (ownerEmail ? "active" : "none");
   const effectiveEmail = onboarding?.ownerEmail || ownerEmail || "";
@@ -310,6 +314,7 @@ function toOwner(
     name: (state === "active" && ownerName?.trim()) || local,
     email: effectiveEmail,
     phone: null,
+    avatarUrl: state === "active" ? (ownerAvatarUrl ?? null) : null,
     state,
     invitationUrl: invitationUrl ?? null,
     invitationExpiresAt: onboarding?.invitationExpiresAt ?? null,
@@ -495,7 +500,7 @@ function toCompanySummary(row: SuperAdminCompanySummary): CompanySummary {
     },
     attention: [],
     onboarding: row.ownerOnboarding?.state === "active" || (!row.ownerOnboarding && row.ownerEmail) ? "completed" : "awaiting_owner",
-    owner: toOwner(row.ownerEmail, row.ownerOnboarding, ownerInviteUrl(row), row.ownerName),
+    owner: toOwner(row.ownerEmail, row.ownerOnboarding, ownerInviteUrl(row), row.ownerName, row.ownerAvatarUrl),
     internalOwners: resolvedOwners,
   };
 }
@@ -512,6 +517,7 @@ function mapApiRow(row: SuperAdminCompanySummary): CompanySummary {
     summary.owner.userId = ownerMembership.membershipId;
     if (ownerMembership.name) summary.owner.name = ownerMembership.name;
     if (ownerMembership.email) summary.owner.email = ownerMembership.email;
+    if (ownerMembership.avatarUrl) summary.owner.avatarUrl = ownerMembership.avatarUrl;
     summary.owner.state = "active";
   }
   try {
@@ -1876,7 +1882,7 @@ export function createApiCompaniesProvider(fallback: CompaniesRepository): Compa
         }
 
         const clients = (companyDetail.clients || []).map((c) => ({ id: c.id, name: c.name }));
-        const owner = toOwner(companyDetail.ownerEmail, companyDetail.ownerOnboarding, ownerInviteUrl(companyDetail), companyDetail.ownerName);
+        const owner = toOwner(companyDetail.ownerEmail, companyDetail.ownerOnboarding, ownerInviteUrl(companyDetail), companyDetail.ownerName, companyDetail.ownerAvatarUrl);
 
         return { users, clients, owner };
       } catch (err) {

@@ -130,6 +130,8 @@ export interface CompanyOwner {
   name: string;
   email: string;
   phone: string | null;
+  /** The owner's profile photo, when the account has one. */
+  avatarUrl?: string | null;
   state: OwnerState;
   /**
    * One-time owner invite link, returned only by the create / resend responses
