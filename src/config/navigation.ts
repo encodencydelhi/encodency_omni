@@ -26,6 +26,7 @@ import type { Permission } from "@/types/domain/team";
 
 export interface NavItem {
   label: string;
+  description: string;
   href: string;
   icon: LucideIcon;
   animatedIcon: AnimatedIconName;
@@ -62,6 +63,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
     items: [
       {
         label: "Dashboard",
+        description: "View platform activity, revenue, and service health.",
         href: ROUTES.superAdmin.dashboard,
         icon: HouseIcon,
         animatedIcon: "dashboard",
@@ -75,6 +77,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
     items: [
       {
         label: "Companies",
+        description: "Manage companies, ownership, and account status.",
         href: ROUTES.superAdmin.companies,
         icon: Building2Icon,
         animatedIcon: "companies",
@@ -83,6 +86,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "Users",
+        description: "Manage user accounts, access, and activity.",
         href: ROUTES.superAdmin.users,
         icon: UsersIcon,
         animatedIcon: "users",
@@ -91,6 +95,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "Clients",
+        description: "Manage client records and company associations.",
         href: ROUTES.superAdmin.Clients,
         icon: FolderIcon,
         animatedIcon: "clients",
@@ -99,6 +104,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "Internal Team",
+        description: "Manage internal staff and platform access.",
         href: ROUTES.superAdmin.team,
         icon: UserCogIcon,
         animatedIcon: "team",
@@ -113,6 +119,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
     items: [
       {
         label: "Plans & Subscriptions",
+        description: "Manage plans, pricing, and company subscriptions.",
         href: ROUTES.superAdmin.plans,
         icon: LayersIcon,
         animatedIcon: "plans",
@@ -121,6 +128,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "Billing & Payments",
+        description: "Review invoices, payments, and billing activity.",
         href: ROUTES.superAdmin.billing,
         icon: ReceiptIcon,
         animatedIcon: "billing",
@@ -129,6 +137,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "Usage & Limits",
+        description: "Monitor consumption, quotas, and limit overrides.",
         href: ROUTES.superAdmin.usage,
         icon: GaugeIcon,
         animatedIcon: "usage",
@@ -143,6 +152,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
     items: [
       {
         label: "Integrations",
+        description: "Monitor connected services and connection issues.",
         href: ROUTES.superAdmin.integrations,
         icon: PlugIcon,
         animatedIcon: "integrations",
@@ -151,6 +161,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "System Health",
+        description: "Check service availability and investigate incidents.",
         href: ROUTES.superAdmin.systemHealth,
         icon: HeartPulseIcon,
         animatedIcon: "health",
@@ -159,6 +170,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "Jobs & Queues",
+        description: "Monitor queues, scheduled jobs, and failures.",
         href: ROUTES.superAdmin.jobs,
         icon: ListChecksIcon,
         animatedIcon: "jobs",
@@ -166,6 +178,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "API Monitoring",
+        description: "Track API traffic, errors, and response times.",
         href: ROUTES.superAdmin.apiMonitoring,
         icon: ActivityIcon,
         animatedIcon: "apiMonitoring",
@@ -174,6 +187,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "Webhooks",
+        description: "Manage endpoints and inspect delivery attempts.",
         href: ROUTES.superAdmin.webhooks,
         icon: WebhookIcon,
         animatedIcon: "webhooks",
@@ -187,6 +201,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
     items: [
       {
         label: "Feature Flags",
+        description: "Control feature availability and targeted rollouts.",
         href: ROUTES.superAdmin.featureFlags,
         icon: FlagIcon,
         animatedIcon: "flags",
@@ -195,6 +210,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "Audit Logs",
+        description: "Review platform changes and staff actions.",
         href: ROUTES.superAdmin.auditLogs,
         icon: ScrollTextIcon,
         animatedIcon: "audit",
@@ -202,6 +218,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "Support & Tickets",
+        description: "Track support requests and manage resolutions.",
         href: ROUTES.superAdmin.support,
         icon: HeadsetIcon,
         animatedIcon: "support",
@@ -209,6 +226,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "AI Assistant",
+        description: "Get help navigating and understanding the platform.",
         href: ROUTES.superAdmin.assistant,
         icon: BotMessageSquareIcon,
         animatedIcon: "assistant",
@@ -217,6 +235,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
       },
       {
         label: "Notifications",
+        description: "Review alerts and manage notification delivery.",
         href: ROUTES.superAdmin.notifications,
         icon: BellIcon,
         animatedIcon: "notifications",
@@ -230,6 +249,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
     items: [
       {
         label: "Global Settings",
+        description: "Configure platform identity, security, and preferences.",
         href: ROUTES.superAdmin.settings,
         icon: SettingsIcon,
         animatedIcon: "settings",

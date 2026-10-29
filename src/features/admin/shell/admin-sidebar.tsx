@@ -7,6 +7,7 @@ import { useMemo, useState, useEffect } from "react";
 import { ChevronRight, ChevronsLeft, X } from "lucide-react";
 import { adminNavigation } from "@/config/admin-navigation";
 import { AnimatedIcon } from "@/components/shared/animated-icon";
+import { SidebarItemTooltip } from "@/components/shared/sidebar-item-tooltip";
 import { cn } from "@/lib/utils/cn";
 import { useAdminContext } from "./admin-context";
 import { ChannelLogo } from "../shared/channel-logo";
@@ -207,13 +208,14 @@ export function AdminSidebar() {
                     // Under construction: shown, dimmed, with the animated icon, but not a link: nobody can open it from the sidebar.
                     if (item.underConstruction) {
                       return (
+                        <SidebarItemTooltip key={item.href} label={item.label} description={item.description} collapsed={isSidebarCollapsed} icon={item.animatedIcon} iconColor={item.iconColor}>
                         <div
-                          key={item.href}
                           role="link"
                           aria-disabled="true"
-                          title={`${item.label} is under construction`}
+                          aria-label={isSidebarCollapsed ? item.label : undefined}
+                          tabIndex={0}
                           className={cn(
-                            "flex h-[30px] cursor-not-allowed select-none items-center gap-3 rounded-sm border border-transparent text-[12px] font-medium text-[#64748B]",
+                            "flex h-[30px] cursor-not-allowed select-none items-center gap-3 rounded-sm border border-transparent text-[12px] font-medium text-[#64748B] outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
                             isSidebarCollapsed ? "justify-center px-0" : "px-3",
                           )}
                         >
@@ -233,18 +235,19 @@ export function AdminSidebar() {
                           )}
                           <span className="sr-only">Under construction</span>
                         </div>
+                        </SidebarItemTooltip>
                       );
                     }
 
                     return (
+                      <SidebarItemTooltip key={item.href} label={item.label} description={item.description} collapsed={isSidebarCollapsed} icon={item.animatedIcon} iconColor={item.iconColor}>
                       <Link
-                        key={item.href}
                         href={item.href}
                         aria-current={active ? "page" : undefined}
-                        title={isSidebarCollapsed ? item.label : undefined}
+                        aria-label={isSidebarCollapsed ? item.label : undefined}
                         onClick={() => setMobileNavOpen(false)}
                         className={cn(
-                          "group flex h-[30px] items-center gap-3 rounded-sm border text-[12px] transition-all duration-200",
+                          "group flex h-[30px] items-center gap-3 rounded-sm border text-[12px] transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
                           isSidebarCollapsed ? "justify-center px-0" : "px-3",
                           active
                             ? "border-[#2563EB]/40 bg-[#1E3A8A]/50 text-white shadow-[0_0_20px_rgba(59,130,246,0.25)]"
@@ -277,6 +280,7 @@ export function AdminSidebar() {
                           </>
                         )}
                       </Link>
+                      </SidebarItemTooltip>
                     );
                   })}
                 </div>

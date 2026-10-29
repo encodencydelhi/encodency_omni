@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { SidebarItemTooltip } from "@/components/shared/sidebar-item-tooltip";
 import { AnimatedIcon, type AnimatedIconName } from "@/components/shared/animated-icon";
 import { SUPER_ADMIN_NAV, isNavItemActive } from "@/config/navigation";
 import { useAuth } from "@/features/auth/components/auth-provider";
@@ -72,6 +72,7 @@ export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
                   href={item.href}
                   onClick={onNavigate}
                   aria-current={isActive ? "page" : undefined}
+                  aria-label={isCollapsed ? item.label : undefined}
                   className={cn(
                     "group flex h-[28px] items-center gap-3 rounded-md text-[13px] transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
                     isCollapsed ? "justify-center px-0 w-[28px] mx-auto" : "px-3",
@@ -94,14 +95,9 @@ export function SidebarNav({ isCollapsed, onNavigate }: SidebarNavProps) {
 
               return (
                 <li key={item.href}>
-                  {isCollapsed ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>{link}</TooltipTrigger>
-                      <TooltipContent side="right">{item.label}</TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    link
-                  )}
+                  <SidebarItemTooltip label={item.label} description={item.description} collapsed={isCollapsed} icon={item.animatedIcon} iconColor={ICON_COLORS[item.animatedIcon] ?? "text-sky-400"}>
+                    {link}
+                  </SidebarItemTooltip>
                 </li>
               );
             })}
