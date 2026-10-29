@@ -34,7 +34,10 @@ export type AnimatedIconName =
   | "pipeline"
   | "analytics"
   | "reports"
-  | "roles";
+  | "roles"
+  | "subscription"
+  | "revenue"
+  | "clock";
 
 interface Part {
   tag: "path" | "circle";
@@ -45,6 +48,47 @@ interface Part {
 }
 
 const GLYPHS: Record<AnimatedIconName, Part[]> = {
+  "subscription": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1 M3 10h18"
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "m13 15 2 2 4-4"
+      },
+      "cls": "ai-pop"
+    }
+  ],
+  "revenue": [
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M6 4h12 M6 8h12 M8 4c8 0 8 8 0 8H6l9 8"
+      },
+      "cls": "ai-bob"
+    }
+  ],
+  "clock": [
+    {
+      "tag": "circle",
+      "attrs": {
+        "cx": 12,
+        "cy": 12,
+        "r": 9
+      }
+    },
+    {
+      "tag": "path",
+      "attrs": {
+        "d": "M12 7v5l4 2"
+      },
+      "cls": "ai-needle"
+    }
+  ],
   "content": [
     {
       "tag": "path",

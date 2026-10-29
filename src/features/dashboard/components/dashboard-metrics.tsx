@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  Building2Icon,
-  ClockIcon,
-  CreditCardIcon,
-  IndianRupeeIcon,
-  LayersIcon,
-  PlugIcon,
-  ShieldAlertIcon,
-  ShieldCheckIcon,
-  UsersIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { AnimatedIcon, type AnimatedIconName } from "@/components/shared/animated-icon";
 import { isMockMode } from "@/config/env";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils/cn";
@@ -26,17 +15,17 @@ type Tone = StatColor;
 /** Icon and colour per measurement. */
 const METRIC_PRESENTATION: Record<
   DashboardMetricKey,
-  { label: string; icon: LucideIcon; tone: Tone }
+  { label: string; icon: AnimatedIconName; tone: Tone }
 > = {
-  totalCompanies: { label: "Total Companies", icon: Building2Icon, tone: "blue" },
-  totalUsers: { label: "Total Users", icon: UsersIcon, tone: "violet" },
-  totalClients: { label: "Total Clients", icon: LayersIcon, tone: "red" },
-  activeSubscriptions: { label: "Active Subscriptions", icon: CreditCardIcon, tone: "green" },
-  monthlyRevenue: { label: "Monthly Revenue", icon: IndianRupeeIcon, tone: "amber" },
-  connectedIntegrations: { label: "Connected Integrations", icon: PlugIcon, tone: "blue" },
-  runningJobs: { label: "Running Jobs", icon: ClockIcon, tone: "violet" },
-  systemUptime: { label: "System Uptime", icon: ShieldCheckIcon, tone: "green" },
-  openIncidents: { label: "Open Incidents", icon: ShieldAlertIcon, tone: "danger" },
+  totalCompanies: { label: "Total Companies", icon: "companies", tone: "blue" },
+  totalUsers: { label: "Total Users", icon: "users", tone: "violet" },
+  totalClients: { label: "Total Clients", icon: "plans", tone: "red" },
+  activeSubscriptions: { label: "Active Subscriptions", icon: "subscription", tone: "green" },
+  monthlyRevenue: { label: "Monthly Revenue", icon: "revenue", tone: "amber" },
+  connectedIntegrations: { label: "Connected Integrations", icon: "integrations", tone: "blue" },
+  runningJobs: { label: "Running Jobs", icon: "clock", tone: "violet" },
+  systemUptime: { label: "System Uptime", icon: "roles", tone: "green" },
+  openIncidents: { label: "Open Incidents", icon: "roles", tone: "danger" },
 };
 
 /** Display order. The first row is scale, the second is operations. */
@@ -63,59 +52,53 @@ function formatValue(metric: DashboardMetric): string {
 }
 
 function MetricTile({ metric }: { metric: DashboardMetric }) {
-  const { label, icon: Icon, tone: presetTone } = METRIC_PRESENTATION[metric.key];
-  // Open incidents: red only while something is open; a quiet platform shows green.
+  const { label, icon, tone: presetTone } = METRIC_PRESENTATION[metric.key];
   const tone: Tone = metric.key === "openIncidents" && metric.value === 0 ? "green" : presetTone;
   const { card, chip, ink } = TONES[tone];
+  const series = metric.series;
+  const seriesMax = Math.max(1, ...(series ?? []));
 
   return (
-    <div className={cn("flex items-start gap-3 rounded-sm border px-4 py-3.5 shadow-xs", card)}>
-      <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-sm", chip)}>
-        <Icon className="size-[1.125rem]" />
+    <article className={cn("group flex min-w-0 items-start gap-3 rounded-lg border px-4 py-3.5 shadow-xs transition-shadow duration-200 hover:shadow-md", card)}>
+      <span className={cn("grid size-10 shrink-0 place-items-center rounded-lg", chip)}>
+        <AnimatedIcon name={icon} size={23} active />
       </span>
-
-      <div className="min-w-0 flex-1 flex flex-col">
-        <div className="mb-1.5 flex items-center justify-between gap-1">
-          <p className="truncate text-[0.8125rem] font-medium leading-none text-muted-foreground">{label}</p>
-          {metric.isLive ? (
-            <span className="inline-flex items-center gap-1 rounded-[3px] bg-white/70 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-success">
-              <span className="size-1.5 rounded-full bg-success animate-pulse" />
-              Live
-            </span>
-          ) : (
-            <span className="inline-flex items-center rounded-[3px] bg-muted px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
-              Demo
-            </span>
-          )}
+      <div className="min-w-0 flex-1">
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <p className="truncate text-[0.8125rem] font-medium leading-none text-muted-foreground" title={label}>{label}</p>
+          <span className={cn(
+            "inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none",
+            metric.isLive ? "bg-white/70 text-success" : "bg-muted text-muted-foreground",
+          )}>
+            <span className={cn("size-1.5 rounded-full", metric.isLive ? "bg-success" : "bg-muted-foreground/50")} />
+            {metric.isLive ? "Live" : "Demo"}
+          </span>
         </div>
-
         <div className="flex items-end justify-between gap-2">
           <div className="flex flex-wrap items-baseline gap-2">
-            <span className="text-xl font-semibold leading-none tracking-tight tabular text-foreground">
+            <span className="text-xl font-semibold leading-none tracking-tight text-foreground tabular-nums">
               {formatValue(metric)}
             </span>
             {metric.delta ? <TrendIndicator delta={metric.delta} /> : null}
           </div>
-
-          {metric.series ? (
-            <div className={cn("flex items-end gap-[1px] h-6 w-[60px] shrink-0 opacity-40 transition-opacity hover:opacity-100", ink)}>
-              {metric.series.map((val, i) => (
-                <div key={i} className="flex-1 bg-current rounded-[1px]" style={{ height: `${Math.max((val / Math.max(...(metric.series || [1]))) * 100, 15)}%` }} />
+          {series && series.length > 0 ? (
+            <div aria-hidden="true" className={cn("flex h-6 w-[60px] shrink-0 items-end gap-px opacity-50", ink)}>
+              {series.map((value, index) => (
+                <span key={index} className="flex-1 rounded-t-sm bg-current" style={{ height: `${Math.max((value / seriesMax) * 100, 12)}%` }} />
               ))}
             </div>
           ) : null}
         </div>
-
-        <p className="truncate text-2xs leading-none text-muted-foreground mt-1.5">{metric.hint}</p>
+        <p className="mt-1.5 truncate text-2xs leading-none text-muted-foreground capitalize" title={metric.hint}>{metric.hint}</p>
       </div>
-    </div>
+    </article>
   );
 }
 
 function MetricTileSkeleton() {
   return (
-    <div className="flex items-start gap-3 rounded-sm border border-border bg-muted/40 px-4 py-3.5">
-      <Skeleton className="size-10 shrink-0 rounded-sm" />
+    <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3.5">
+      <Skeleton className="size-10 shrink-0 rounded-lg" />
       <div className="w-full space-y-2">
         <Skeleton className="h-3 w-28" />
         <Skeleton className="h-5 w-24" />
@@ -133,7 +116,7 @@ interface DashboardMetricsProps {
 export function DashboardMetrics({ metrics, isLoading }: DashboardMetricsProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 xl:grid-cols-4">
         {METRIC_ORDER.map((key) => (
           <MetricTileSkeleton key={key} />
         ))}
@@ -144,7 +127,7 @@ export function DashboardMetrics({ metrics, isLoading }: DashboardMetricsProps) 
   const byKey = new Map(metrics.map((metric) => [metric.key, metric]));
 
   return (
-    <div className="grid gap-1 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 xl:grid-cols-4">
       {METRIC_ORDER.map((key) => {
         const metric = byKey.get(key);
         return metric ? <MetricTile key={key} metric={metric} /> : null;
