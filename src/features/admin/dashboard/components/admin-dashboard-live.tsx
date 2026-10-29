@@ -130,10 +130,10 @@ export function LiveAdminDashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8 gap-1">
         <Stat label="Clients" value={String(stats.clients.total)} trend={newClientsTrend > 0 ? `${newClientsTrend}%` : ""} note={`${stats.clients.newInRange} added in this period`} icon={Layers} color="blue" />
-        <Stat label="Active Campaigns" value={String(stats.activeCampaigns.count)} trend="" note={`${stats.activeCampaigns.endingSoon} ending within 7 days`} icon={Megaphone} color="red" />
+        <Stat label="Active Campaigns" value={String(stats.activeCampaigns.count)} trend="" note={`${stats.activeCampaigns.endingSoon} ending in 7 days`} icon={Megaphone} color="red" />
         <Stat label="Scheduled Posts" value={String(stats.scheduledPosts.upcoming)} trend="" note={`${stats.scheduledPosts.nextSevenDays} in the next 7 days`} icon={CalendarClock} color="blue" />
         <Stat label="Published" value={String(stats.publishedInRange)} trend="" note={`In the last ${days} days`} icon={Send} color="green" />
-        <Stat label="Failed Posts" value={String(stats.failedInRange)} trend="" note={`In the last ${days} days`} icon={CircleAlert} color={stats.failedInRange > 0 ? "red" : "green"} />
+        <Stat label="Failed Posts" value={String(stats.failedInRange)} trend="" note={`In the last ${days} days`} icon={CircleAlert} color={stats.failedInRange > 0 ? "danger" : "green"} />
         <Stat label="Drafts" value={String(stats.drafts.total)} trend="" note={`${stats.drafts.pendingReview} waiting for review`} icon={FileText} color="purple" />
         <Stat label="Channels" value={String(stats.channels.connections)} trend="" note={stats.channels.needAttention > 0 ? `${stats.channels.needAttention} need attention` : "All connections healthy"} icon={Plug} color={stats.channels.needAttention > 0 ? "amber" : "green"} />
         <Stat label="Team Members" value={String(stats.members)} trend="" note={`${stats.pendingInvitations} invitations pending`} icon={UsersRound} color="amber" />

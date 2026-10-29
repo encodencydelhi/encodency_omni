@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { BarChart3, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { STAT_COLORS, statColorForTone, type StatColor } from "@/components/shared/stat-color";
 
+/** The dashboard's old colour words ("purple") and the shared palette's names both work; anything else falls back to blue. */
+function paletteFor(color: string): (typeof STAT_COLORS)[StatColor] {
+  const name = (color === "purple" ? "violet" : color) as StatColor;
+  return STAT_COLORS[name] ?? STAT_COLORS[statColorForTone(color) ?? "blue"];
+}
+
+/** A coloured stat card: the whole card is tinted in its colour family (same palette as the Super Admin cards). */
 export function Stat({
   label,
   value,
@@ -19,37 +27,31 @@ export function Stat({
   icon: typeof BarChart3;
   color: string;
 }) {
-  const c: Record<string, { bg: string; text: string }> = {
-    blue: { bg: "bg-blue-50/90", text: "text-blue-600" },
-    red: { bg: "bg-rose-50/90", text: "text-rose-600" },
-    green: { bg: "bg-emerald-50/90", text: "text-emerald-600" },
-    purple: { bg: "bg-purple-50/90", text: "text-purple-600" },
-    amber: { bg: "bg-amber-50/90", text: "text-amber-600" },
-  };
-  const style = c[color] ?? { bg: "bg-blue-50/90", text: "text-blue-600" };
+  const palette = paletteFor(color);
 
+  // Compact and equal height: the label and the note stay on one line (cut with "…" and shown in full on hover), so no card grows taller than its neighbours.
   return (
-    <div className="group relative flex flex-col justify-between min-h-[84px] rounded-sm border border-slate-200/80 bg-white px-3.5 py-2.5 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-xs">
+    <div className={cn("group relative flex min-w-0 flex-col gap-1 rounded-sm border px-3 py-2 shadow-2xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs", palette.card)}>
+      <span className="truncate text-[10.5px] font-bold uppercase leading-none tracking-wide text-slate-600" title={label}>
+        {label}
+      </span>
+
       <div className="flex items-center justify-between gap-1.5">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 leading-none">
-          {label}
-        </span>
-        <span className={cn("grid size-7 shrink-0 place-items-center rounded-sm transition-transform group-hover:scale-105", style.bg, style.text)}>
+        <div className="flex min-w-0 items-baseline gap-1.5">
+          <b className="text-xl font-bold leading-none tracking-tight text-slate-900 tabular-nums">{value}</b>
+          {trend && (
+            <span className="inline-flex items-center gap-0.5 rounded-sm bg-emerald-50 px-1 py-0.5 text-[10px] font-bold leading-none text-emerald-700 border border-emerald-200/50">
+              <ArrowUp className="size-2.5" />
+              {trend}
+            </span>
+          )}
+        </div>
+        <span className={cn("grid size-6 shrink-0 place-items-center rounded-sm transition-transform group-hover:scale-105", palette.chip)}>
           <Icon className="size-3.5" />
         </span>
       </div>
 
-      <div className="mt-1.5 flex items-baseline justify-between gap-1">
-        <b className="text-xl font-bold tracking-tight text-slate-900 tabular-nums">{value}</b>
-        {trend && (
-          <span className="inline-flex items-center gap-0.5 rounded-sm bg-emerald-50 px-1.5 py-0.5 text-[10.5px] font-bold text-emerald-700 border border-emerald-200/50">
-            <ArrowUp className="size-2.5" />
-            {trend}
-          </span>
-        )}
-      </div>
-
-      <p className="mt-0.5 text-[11px] font-medium text-slate-500 leading-tight">{note}</p>
+      <p className="truncate text-[11px] font-medium leading-none text-slate-600" title={note}>{note}</p>
     </div>
   );
 }

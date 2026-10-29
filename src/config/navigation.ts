@@ -20,6 +20,7 @@ import {
   WebhookIcon,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { AnimatedIconName } from "@/components/shared/animated-icon";
 import { ROUTES } from "./routes";
 import type { Permission } from "@/types/domain/team";
 
@@ -27,6 +28,7 @@ export interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
+  animatedIcon: AnimatedIconName;
   /** Hidden when the signed-in staff role lacks this permission. */
   permission: Permission;
   /** Extra path prefixes that should keep this item highlighted. */
@@ -62,6 +64,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Dashboard",
         href: ROUTES.superAdmin.dashboard,
         icon: HouseIcon,
+        animatedIcon: "dashboard",
         permission: "companies:read",
       },
     ],
@@ -74,6 +77,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Companies",
         href: ROUTES.superAdmin.companies,
         icon: Building2Icon,
+        animatedIcon: "companies",
         permission: "companies:read",
         matchPrefixes: [ROUTES.superAdmin.companies],
       },
@@ -81,6 +85,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Users",
         href: ROUTES.superAdmin.users,
         icon: UsersIcon,
+        animatedIcon: "users",
         permission: "users:read",
         matchPrefixes: [ROUTES.superAdmin.users],
       },
@@ -88,6 +93,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Clients",
         href: ROUTES.superAdmin.Clients,
         icon: FolderIcon,
+        animatedIcon: "clients",
         permission: "Clients:read",
         matchPrefixes: [ROUTES.superAdmin.Clients],
       },
@@ -95,6 +101,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Internal Team",
         href: ROUTES.superAdmin.team,
         icon: UserCogIcon,
+        animatedIcon: "team",
         permission: "users:read",
         matchPrefixes: [ROUTES.superAdmin.team],
       },
@@ -108,6 +115,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Plans & Subscriptions",
         href: ROUTES.superAdmin.plans,
         icon: LayersIcon,
+        animatedIcon: "plans",
         permission: "billing:read",
         matchPrefixes: [ROUTES.superAdmin.plans, ROUTES.superAdmin.subscriptions],
       },
@@ -115,6 +123,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Billing & Payments",
         href: ROUTES.superAdmin.billing,
         icon: ReceiptIcon,
+        animatedIcon: "billing",
         permission: "billing:read",
         matchPrefixes: [ROUTES.superAdmin.billing],
       },
@@ -122,6 +131,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Usage & Limits",
         href: ROUTES.superAdmin.usage,
         icon: GaugeIcon,
+        animatedIcon: "usage",
         matchPrefixes: [ROUTES.superAdmin.usage],
         permission: "companies:read",
       },
@@ -135,6 +145,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Integrations",
         href: ROUTES.superAdmin.integrations,
         icon: PlugIcon,
+        animatedIcon: "integrations",
         permission: "platform:read",
         matchPrefixes: [ROUTES.superAdmin.integrations],
       },
@@ -142,6 +153,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "System Health",
         href: ROUTES.superAdmin.systemHealth,
         icon: HeartPulseIcon,
+        animatedIcon: "health",
         permission: "platform:read",
         matchPrefixes: [ROUTES.superAdmin.systemHealth],
       },
@@ -149,12 +161,14 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Jobs & Queues",
         href: ROUTES.superAdmin.jobs,
         icon: ListChecksIcon,
+        animatedIcon: "jobs",
         permission: "platform:read",
       },
       {
         label: "API Monitoring",
         href: ROUTES.superAdmin.apiMonitoring,
         icon: ActivityIcon,
+        animatedIcon: "apiMonitoring",
         permission: "platform:read",
         matchPrefixes: [ROUTES.superAdmin.apiMonitoring],
       },
@@ -162,6 +176,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Webhooks",
         href: ROUTES.superAdmin.webhooks,
         icon: WebhookIcon,
+        animatedIcon: "webhooks",
         permission: "platform:read",
       },
     ],
@@ -174,6 +189,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Feature Flags",
         href: ROUTES.superAdmin.featureFlags,
         icon: FlagIcon,
+        animatedIcon: "flags",
         permission: "platform:read",
         matchPrefixes: [ROUTES.superAdmin.featureFlags],
       },
@@ -181,18 +197,21 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Audit Logs",
         href: ROUTES.superAdmin.auditLogs,
         icon: ScrollTextIcon,
+        animatedIcon: "audit",
         permission: "audit:read",
       },
       {
         label: "Support & Tickets",
         href: ROUTES.superAdmin.support,
         icon: HeadsetIcon,
+        animatedIcon: "support",
         permission: "companies:read",
       },
       {
         label: "AI Assistant",
         href: ROUTES.superAdmin.assistant,
         icon: BotMessageSquareIcon,
+        animatedIcon: "assistant",
         permission: "companies:read",
         matchPrefixes: [ROUTES.superAdmin.assistant],
       },
@@ -200,6 +219,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Notifications",
         href: ROUTES.superAdmin.notifications,
         icon: BellIcon,
+        animatedIcon: "notifications",
         permission: "companies:read",
       },
     ],
@@ -212,6 +232,7 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         label: "Global Settings",
         href: ROUTES.superAdmin.settings,
         icon: SettingsIcon,
+        animatedIcon: "settings",
         matchPrefixes: [ROUTES.superAdmin.settings],
         permission: "companies:read",
       },

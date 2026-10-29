@@ -5,7 +5,8 @@ import {
   Server, Share2, Swords, UsersRound, Video, WalletCards, Webhook, type LucideIcon,
 } from "lucide-react";
 
-export interface AdminNavItem { label: string; href: string; icon: LucideIcon; }
+/** `underConstruction`: the sidebar shows an animated "under construction" icon and does not let anyone open the page from there. */
+export interface AdminNavItem { label: string; href: string; icon: LucideIcon; underConstruction?: boolean; }
 export interface AdminNavSection { label: string; items: AdminNavItem[]; }
 
 export const adminNavigation: AdminNavSection[] = [
@@ -31,7 +32,7 @@ export const adminNavigation: AdminNavSection[] = [
       { label: "Google Business", href: "/admin/google-business", icon: Landmark },
       { label: "WhatsApp", href: "/admin/whatsapp", icon: MessageCircle },
       { label: "YouTube", href: "/admin/youtube", icon: Video },
-      { label: "X (Twitter)", href: "/admin/x", icon: Hash },
+      { label: "X (Twitter)", href: "/admin/x", icon: Hash, underConstruction: true },
       { label: "Website", href: "/admin/website", icon: Globe2 },
       { label: "Infrastructure", href: "/admin/infrastructure", icon: Server },
     ]

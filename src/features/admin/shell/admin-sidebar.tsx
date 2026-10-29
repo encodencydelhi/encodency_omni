@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils/cn";
 import { useAdminContext } from "./admin-context";
 import { ChannelLogo } from "../shared/channel-logo";
 import { Clientswitcher } from "./project-switcher";
+import { UnderConstructionLottie } from "./under-construction-icon";
 import logo from "@/assets/namogange.webp";
 
 function SidebarBrandLogo({
@@ -212,6 +213,39 @@ export function AdminSidebar() {
                   {section.items.map((item) => {
                     const active = item.href === activeHref;
                     const Icon = item.icon;
+
+                    // Under construction: shown, dimmed, with the animated icon, but not a link: nobody can open it from the sidebar.
+                    if (item.underConstruction) {
+                      return (
+                        <div
+                          key={item.href}
+                          role="link"
+                          aria-disabled="true"
+                          title={`${item.label} is under construction`}
+                          className={cn(
+                            "flex h-[30px] cursor-not-allowed select-none items-center gap-3 rounded-sm border border-transparent text-[12px] font-medium text-[#64748B]",
+                            isSidebarCollapsed ? "justify-center px-0" : "px-3",
+                          )}
+                        >
+                          <span className="relative grid shrink-0 place-items-center">
+                            {brandLabels.has(item.label) ? (
+                              <ChannelLogo channel={item.label} className="size-[18px] shrink-0 rounded-[4px] opacity-35 grayscale" />
+                            ) : (
+                              <Icon className="size-[16px] shrink-0 text-[#475569]" />
+                            )}
+                            {isSidebarCollapsed && <UnderConstructionLottie size={14} style={{ position: "absolute", right: -8, bottom: -6 }} />}
+                          </span>
+                          {!isSidebarCollapsed && (
+                            <>
+                              <span className="truncate">{item.label}</span>
+                              <UnderConstructionLottie size={18} className="ml-auto" />
+                            </>
+                          )}
+                          <span className="sr-only">Under construction</span>
+                        </div>
+                      );
+                    }
+
                     return (
                       <Link
                         key={item.href}
