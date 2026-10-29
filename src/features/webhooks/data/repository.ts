@@ -26,7 +26,8 @@ import type {
 } from "./types";
 
 export interface WebhooksRepository {
-  getSnapshot(environment: WebhookEnvironment): Promise<WebhooksSnapshot>;
+  /** `hours` limits deliveries and incoming events to the selected period; configuration always loads in full. */
+  getSnapshot(environment: WebhookEnvironment, hours?: number): Promise<WebhooksSnapshot>;
   getEndpoints(environment: WebhookEnvironment): Promise<OutgoingEndpoint[]>;
   getDeliveries(environment: WebhookEnvironment): Promise<any[]>;
   getSubscriptions(environment: WebhookEnvironment): Promise<EventSubscription[]>;
@@ -38,7 +39,9 @@ export interface WebhooksRepository {
   updateEndpoint(environment: WebhookEnvironment, input: UpdateEndpointInput): Promise<MutationResult<OutgoingEndpoint>>;
   setEndpointState(environment: WebhookEnvironment, endpointId: string, state: Extract<EndpointState, "enabled" | "disabled">, reason: string): Promise<MutationResult<OutgoingEndpoint>>;
   saveSubscriptions(environment: WebhookEnvironment, endpointId: string, eventKeys: string[], reason: string): Promise<MutationResult<EventSubscription[]>>;
-  requestSecretRotationReview(environment: WebhookEnvironment, endpointId: string, reason?: string): Promise<MutationResult<WebhookActivity>>;
+  requestSecretRotationReview(environment: WebhookEnvironment, endpointId: string, reason?: string, keepOldHours?: number): Promise<MutationResult<WebhookActivity>>;
+  /** Records that a Super Admin reviewed the endpoint's destination and signing set-up (live workspace only). */
+  markSecurityReviewed(environment: WebhookEnvironment, endpointId: string, reason: string): Promise<MutationResult<OutgoingEndpoint>>;
   createRecoveryRequest(environment: WebhookEnvironment, input: CreateRecoveryInput): Promise<MutationResult<RecoveryRequest>>;
   updateRecoveryRequest(environment: WebhookEnvironment, requestId: string, state: RecoveryState): Promise<MutationResult<RecoveryRequest>>;
   updateSettings(environment: WebhookEnvironment, settings: WebhookSettings): Promise<MutationResult<WebhookSettings>>;
@@ -58,7 +61,7 @@ function toMutationResult<T>(res: unknown): MutationResult<T> {
  * it is never replaced with the bundled demo records.
  */
 const liveWebhooksRepository: WebhooksRepository = {
-  getSnapshot: (environment) => superAdminWebhooksApi.getSnapshot(environment),
+  getSnapshot: (environment, hours) => superAdminWebhooksApi.getSnapshot(environment, hours),
   getEndpoints: (environment) => superAdminWebhooksApi.getEndpoints(environment),
   getDeliveries: (environment) => superAdminWebhooksApi.getDeliveries(environment),
   getSubscriptions: (environment) => superAdminWebhooksApi.getSubscriptions(environment),
@@ -72,8 +75,10 @@ const liveWebhooksRepository: WebhooksRepository = {
     toMutationResult(await superAdminWebhooksApi.setEndpointState(environment, id, state, reason)),
   saveSubscriptions: async (environment, id, keys, reason) =>
     toMutationResult(await superAdminWebhooksApi.saveSubscriptions(environment, id, keys, reason)),
-  requestSecretRotationReview: async (environment, id, reason) =>
-    toMutationResult(await superAdminWebhooksApi.requestSecretRotationReview(environment, id, reason ?? "")),
+  requestSecretRotationReview: async (environment, id, reason, keepOldHours) =>
+    toMutationResult(await superAdminWebhooksApi.requestSecretRotationReview(environment, id, reason ?? "", keepOldHours ?? 0)),
+  markSecurityReviewed: async (environment, id, reason) =>
+    toMutationResult(await superAdminWebhooksApi.markSecurityReviewed(environment, id, reason)),
   createRecoveryRequest: async (environment, input) =>
     toMutationResult(await superAdminWebhooksApi.createRecoveryRequest(environment, input)),
   updateRecoveryRequest: async (environment, id, state) =>
@@ -99,6 +104,7 @@ const mockWebhooksRepository: WebhooksRepository = {
   setEndpointState: async (environment, id, state, reason) => store.setEndpointState(environment, id, state, reason),
   saveSubscriptions: async (environment, id, keys, reason) => store.saveSubscriptions(environment, id, keys, reason),
   requestSecretRotationReview: async (environment, id) => store.requestSecretRotationReview(environment, id),
+  markSecurityReviewed: async () => ({ ok: false, error: "Security reviews are recorded in the live workspace only." }),
   createRecoveryRequest: async (environment, input) => store.createRecoveryRequest(environment, input),
   updateRecoveryRequest: async (environment, id, state) => store.updateRecoveryRequest(environment, id, state),
   updateSettings: async (environment, settings) => store.updateSettings(environment, settings),

@@ -1,18 +1,11 @@
 import type { NextConfig } from "next";
-
-/**
- * Server-side only (no NEXT_PUBLIC_ prefix): where the Next.js server forwards
- * same-origin `/api/*` requests. The browser always talks to its own origin,
- * so the backend's HttpOnly session cookie and CSRF origin check work without
- * any cross-origin (CORS) exposure.
- */
 const BACKEND_ORIGIN = (process.env.BACKEND_ORIGIN || "http://127.0.0.1:4000").replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   // The floating dev badge sits on top of the sign-in logo.
   devIndicators: false,
-  // Lets a verification build/dev server write elsewhere without touching a running dev server's .next.
+  experimental: { turbopackFileSystemCacheForDev: false },
   distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     remotePatterns: [
@@ -20,9 +13,6 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "res.cloudinary.com",
       },
-      // YouTube channel avatars, banners and video thumbnails. Serving them through
-      // /_next/image keeps them same-origin, so host-level blockers (ad blockers,
-      // browser shields, corporate filters) cannot hide them.
       {
         protocol: "https",
         hostname: "yt3.ggpht.com",

@@ -72,16 +72,18 @@ export function formatCompactNumber(value: number): string {
 export function formatCurrency(
   amountInMinorUnits: number,
   currency = "INR",
-  options: { compact?: boolean } = {},
+  options: { compact?: boolean; compactFrom?: number } = {},
 ): string {
   const amount = amountInMinorUnits / 100;
+  // `compactFrom` (in whole currency units) keeps smaller amounts exact: "₹4,999", not "₹5K". Without it, compact applies to everything as before.
+  const abbreviate = Boolean(options.compact) && Math.abs(amount) >= (options.compactFrom ?? 0);
   return new Intl.NumberFormat(preferences ? numberLocale() : LOCALE, {
     style: "currency",
     currency,
     currencyDisplay: preferences?.currencyDisplay ?? "symbol",
-    notation: options.compact ? "compact" : "standard",
-    maximumFractionDigits: options.compact ? 1 : 2,
-    minimumFractionDigits: options.compact ? 0 : 2,
+    notation: abbreviate ? "compact" : "standard",
+    maximumFractionDigits: abbreviate ? 1 : 2,
+    minimumFractionDigits: abbreviate ? 0 : options.compact && Number.isInteger(amount) ? 0 : 2,
   }).format(amount);
 }
 

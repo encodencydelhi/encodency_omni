@@ -1,5 +1,6 @@
 "use client";
 
+import { useBreadcrumbName } from "@/components/layout/breadcrumbs";
 import { MoreHorizontalIcon, RepeatIcon, ShieldPlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -261,6 +262,7 @@ export function SubscriptionDetailPage() {
   const query = useSubscription(subscriptionId);
   const actions = useSubscriptionActions();
   const detail = query.data;
+  useBreadcrumbName(subscriptionId, detail?.company.name);
 
   if (query.error && !detail) return <PlansError subject="Subscription" error={query.error} onRetry={() => void query.refetch()} back={{ href: routes.subscriptions, label: "Back To Subscriptions" }} />;
   if (!detail) {

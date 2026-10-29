@@ -48,6 +48,13 @@ function Content({ children }: { children: ReactNode }) {
         Nothing is sent until WEBHOOKS_DELIVERY_ENABLED is turned back on. Events keep queuing meanwhile.
       </Notice>
     ) : null}
+    {snapshot?.limits && (snapshot.limits.deliveries.total > snapshot.limits.deliveries.shown || snapshot.limits.incomingEvents.total > snapshot.limits.incomingEvents.shown) ? (
+      <Notice tone="info" title="Showing the latest records only">
+        {snapshot.limits.deliveries.total > snapshot.limits.deliveries.shown ? `Loaded ${snapshot.limits.deliveries.shown.toLocaleString()} of ${snapshot.limits.deliveries.total.toLocaleString()} deliveries. ` : ""}
+        {snapshot.limits.incomingEvents.total > snapshot.limits.incomingEvents.shown ? `Loaded ${snapshot.limits.incomingEvents.shown.toLocaleString()} of ${snapshot.limits.incomingEvents.total.toLocaleString()} incoming events. ` : ""}
+        More records exist in this period, so counts and charts here cover only what is loaded. Choose a shorter period to see all of them.
+      </Notice>
+    ) : null}
     {isLoading || (!snapshot && !error) ? <PageSkeleton /> : error || !snapshot ? <div className="rounded-lg border border-border bg-card"><ErrorState error={error ?? new Error("Webhook data is unavailable")} onRetry={refetch} /></div> : children}
   </div>;
 }

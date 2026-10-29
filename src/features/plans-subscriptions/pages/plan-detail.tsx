@@ -1,5 +1,6 @@
 "use client";
 
+import { useBreadcrumbName } from "@/components/layout/breadcrumbs";
 import { EyeIcon, PencilIcon, RocketIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -370,6 +371,7 @@ export function PlanDetailPage() {
   const query = usePlan(planId);
   const actions = usePlanActions();
   const data = query.data;
+  useBreadcrumbName(planId, data?.summary.plan.name);
   const menu = useMemo(() => (data ? actions.menu(data.summary) : []), [actions, data]);
 
   if (query.error && !data) return <PlansError subject="Plan" error={query.error} onRetry={() => void query.refetch()} back={{ href: routes.plans, label: "Back To Plans" }} />;

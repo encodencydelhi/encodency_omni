@@ -11,7 +11,7 @@ import type { MutationResult, WebhookEnvironment } from "./types";
 
 export const WEBHOOK_QUERY_KEYS = {
   all: ["webhooks"] as const,
-  snapshot: (environment: WebhookEnvironment) => ["webhooks", "snapshot", environment] as const,
+  snapshot: (environment: WebhookEnvironment, hours?: number) => ["webhooks", "snapshot", environment, hours ?? "all"] as const,
   endpoints: (environment: WebhookEnvironment) => ["webhooks", "endpoints", environment] as const,
   deliveries: (environment: WebhookEnvironment) => ["webhooks", "deliveries", environment] as const,
   subscriptions: (environment: WebhookEnvironment) => ["webhooks", "subscriptions", environment] as const,
@@ -21,10 +21,10 @@ export const WEBHOOK_QUERY_KEYS = {
   settings: (environment: WebhookEnvironment) => ["webhooks", "settings", environment] as const,
 };
 
-export function useWebhooksSnapshot(environment: WebhookEnvironment) {
+export function useWebhooksSnapshot(environment: WebhookEnvironment, hours?: number) {
   return useQuery({
-    queryKey: WEBHOOK_QUERY_KEYS.snapshot(environment),
-    queryFn: () => webhooksRepository.getSnapshot(environment),
+    queryKey: WEBHOOK_QUERY_KEYS.snapshot(environment, hours),
+    queryFn: () => webhooksRepository.getSnapshot(environment, hours),
     staleTime: 30_000,
   });
 }

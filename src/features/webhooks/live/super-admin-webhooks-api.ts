@@ -21,11 +21,11 @@ import type {
 const BASE = "/super-admin/webhooks";
 
 export const superAdminWebhooksApi = {
-  getSnapshot: (environment: WebhookEnvironment = "production", signal?: AbortSignal) =>
+  getSnapshot: (environment: WebhookEnvironment = "production", hours?: number, signal?: AbortSignal) =>
     apiClient.request<WebhooksSnapshot>({
       method: "GET",
       path: `${BASE}/snapshot`,
-      query: { environment },
+      query: hours ? { environment, hours: String(hours) } : { environment },
       signal,
     }),
 
@@ -108,12 +108,12 @@ export const superAdminWebhooksApi = {
       body: { enabled, reason },
     }),
 
-  rotateSourceSecret: (environment: WebhookEnvironment, sourceId: string, reason: string) =>
+  rotateSourceSecret: (environment: WebhookEnvironment, sourceId: string, reason: string, keepOldHours = 0) =>
     apiClient.request<MutationResult<{ source: IncomingSource; secret: string }>>({
       method: "POST",
       path: `${BASE}/sources/${encodeURIComponent(sourceId)}/rotate-secret`,
       query: { environment },
-      body: { reason },
+      body: { reason, keepOldHours },
     }),
 
   createEndpoint: (environment: WebhookEnvironment, input: CreateEndpointInput) =>
@@ -167,10 +167,18 @@ export const superAdminWebhooksApi = {
       body: { eventKeys, reason },
     }),
 
-  requestSecretRotationReview: (environment: WebhookEnvironment, endpointId: string, reason: string) =>
+  requestSecretRotationReview: (environment: WebhookEnvironment, endpointId: string, reason: string, keepOldHours = 0) =>
     apiClient.request<MutationResult<WebhookActivity>>({
       method: "POST",
       path: `${BASE}/endpoints/${encodeURIComponent(endpointId)}/rotate-secret`,
+      query: { environment },
+      body: { reason, keepOldHours },
+    }),
+
+  markSecurityReviewed: (environment: WebhookEnvironment, endpointId: string, reason: string) =>
+    apiClient.request<MutationResult<OutgoingEndpoint>>({
+      method: "POST",
+      path: `${BASE}/endpoints/${encodeURIComponent(endpointId)}/security-review`,
       query: { environment },
       body: { reason },
     }),

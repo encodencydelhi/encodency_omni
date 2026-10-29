@@ -189,6 +189,8 @@ export interface EndpointSigning {
   secretVersionRef: string | null;
   lastRotationAt: string | null;
   reviewStatus: SecurityReviewStatus;
+  /** When the previous secret stops working after a rotation with an overlap window; null when none is open. */
+  previousSecretValidUntil?: string | null;
 }
 
 export interface EndpointDeliveryPolicy {
@@ -446,6 +448,8 @@ export interface WebhooksSnapshot {
   settings: WebhookSettings;
   /** Which environment the connected server delivers for, and whether its delivery worker runs. Absent in the demo workspace. */
   runtime?: { environment: WebhookEnvironment; deliveryWorkerEnabled: boolean };
+  /** How many records were loaded versus how many exist (the page loads the latest ones only). Absent in the demo workspace. */
+  limits?: { deliveries: { shown: number; total: number }; incomingEvents: { shown: number; total: number } };
 }
 
 /* ------------------------------------------------------------------ */

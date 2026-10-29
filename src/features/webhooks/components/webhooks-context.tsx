@@ -45,7 +45,9 @@ export function WebhooksProvider({ children }: { children: ReactNode }) {
   });
   const [customHours, setCustomHoursState] = useState<number>(() => Math.min(720, Math.max(1, Number(search.get("hours")) || 48)));
 
-  const query = useWebhooksSnapshot(environment);
+  // Ask the backend for the period on screen, so a busy platform does not hit the load cap for no reason.
+  const snapshotHours = RANGE_OPTIONS.find((option) => option.value === range)?.hours ?? Math.min(720, Math.max(1, Math.round(customHours) || 24));
+  const query = useWebhooksSnapshot(environment, snapshotHours);
   const { refetch: refetchQuery } = query;
 
   const writeParams = useCallback(

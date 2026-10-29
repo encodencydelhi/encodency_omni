@@ -26,7 +26,7 @@ export function SettingDetails({ definition }: { definition: GlobalSettingDefini
     ["Default or Mandatory", `${POLICY_KIND_LABEL[definition.policyKind].label} - ${POLICY_KIND_LABEL[definition.policyKind].description}`],
     ["Company Override", `${OVERRIDE_LABEL[definition.override].label} - ${OVERRIDE_LABEL[definition.override].description}`],
     ["When It Takes Effect", `${TIMING_LABEL[definition.timing].label} - ${TIMING_LABEL[definition.timing].description}`],
-    ["Enforced by", enforcement === "recorded" ? "Recorded only - no platform service reads this setting yet" : ENFORCEMENT_LABEL[definition.enforcement].label],
+    ["Enforced by", enforcement === "recorded" ? "Recorded only - no platform service reads this setting yet" : enforcement === "unavailable" ? "Not available - nothing in the platform can apply this setting" : ENFORCEMENT_LABEL[definition.enforcement].label],
     ["Change Needs", APPROVAL_LABEL[definition.approval]],
     ["Edit Capability", definition.editCapability],
   ];

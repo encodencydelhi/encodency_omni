@@ -105,7 +105,7 @@ export function usePlatformIdentity() {
  * "enforced": a platform service reads this setting. "recorded": it is saved, versioned and audited but nothing acts on it
  * yet. "none": not a security/backend setting at all. The demo workspace has no list, so it keeps the kind of the setting.
  */
-export type EnforcementState = "enforced" | "recorded" | "none";
+export type EnforcementState = "enforced" | "recorded" | "unavailable" | "none";
 
 export function useEnforcementState(): (definition: GlobalSettingDefinition) => EnforcementState {
   const { data } = useConfiguration();
@@ -113,7 +113,9 @@ export function useEnforcementState(): (definition: GlobalSettingDefinition) => 
     const enforced = data?.enforcedKeys ? new Set(data.enforcedKeys) : null;
     return (definition) => {
       if (!ENFORCEMENT_LABEL[definition.enforcement].backend) return "none";
-      return enforced === null || enforced.has(definition.key) ? "enforced" : "recorded";
+      if (enforced === null || enforced.has(definition.key)) return "enforced";
+      // Locked and not enforced: nothing in the platform can apply it, so it is not "recorded", it is not available.
+      return definition.locked ? "unavailable" : "recorded";
     };
   }, [data]);
 }

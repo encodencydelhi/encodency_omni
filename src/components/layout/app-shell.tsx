@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils/cn";
 import { AppSidebar } from "./app-sidebar";
 import { AppFooter } from "./app-footer";
 import { AppBreadcrumb } from "./app-breadcrumb";
+import { BreadcrumbLabelProvider } from "./breadcrumbs";
 import { SidebarProvider, useSidebar } from "./sidebar-context";
 import { Topbar } from "./topbar";
 import { useKeepCaseForEmailsAndUrls } from "./keep-case";
@@ -25,6 +26,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
   useKeepCaseForEmailsAndUrls(mainRef, preferencesVersion);
 
   return (
+    <BreadcrumbLabelProvider>
     <div className="min-h-dvh bg-[#F5F8FC] text-[#172044] overflow-x-hidden max-w-full">
       <AppSidebar />
       <div
@@ -44,6 +46,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
         <AppFooter />
       </div>
     </div>
+    </BreadcrumbLabelProvider>
   );
 }
 

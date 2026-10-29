@@ -6,6 +6,7 @@ export type SuperAdminSearchKind =
   | "company"
   | "client"
   | "user"
+  | "staff"
   | "support_ticket"
   | "plan"
   | "subscription"
@@ -31,9 +32,23 @@ export interface SuperAdminSearchResult {
   score: number;
 }
 
+export interface SuperAdminSearchMore {
+  kind: SuperAdminSearchKind;
+  group: string;
+  total: number;
+  shown: number;
+}
+
+export interface SuperAdminSearchResponse {
+  items: SuperAdminSearchResult[];
+  scope: SuperAdminSearchKind[] | null;
+  text: string;
+  more: SuperAdminSearchMore[];
+}
+
 export const superAdminSearchApi = {
   search(q: string, limit = 30, signal?: AbortSignal) {
-    return apiClient.request<{ items: SuperAdminSearchResult[] }>({
+    return apiClient.request<SuperAdminSearchResponse>({
       method: "GET",
       path: "/super-admin/search",
       query: { q, limit },

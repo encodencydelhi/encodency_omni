@@ -5,12 +5,14 @@ import { SUPER_ADMIN_NAV } from "@/config/navigation";
 import { ROUTES } from "@/config/routes";
 import { ChevronRight, LayoutGrid } from "lucide-react";
 import Link from "next/link";
+import { useOptionalBreadcrumbLabels } from "./breadcrumbs";
 import { useSidebar } from "./sidebar-context";
 import { cn } from "@/lib/utils/cn";
 
 export function AppBreadcrumb() {
   const pathname = usePathname();
   const { isCollapsed } = useSidebar();
+  const names = useOptionalBreadcrumbLabels()?.labels;
   let activeSection = null;
   let activeItem = null;
 
@@ -37,6 +39,8 @@ export function AppBreadcrumb() {
   // A dotted feature key such as seo.advanced_audit stays exactly as written.
   const toLabel = (segment: string, index = 0) => {
     const decoded = decodeURIComponent(segment);
+    // A detail page can say what the id stands for (a plan or company name).
+    if (names?.[decoded]) return names[decoded]!;
     // A record id (UUID) is not for people: name it after what it opens.
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decoded)) {
       const before = nestedSegments[index - 1];

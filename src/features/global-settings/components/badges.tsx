@@ -43,6 +43,7 @@ export function SettingBadges({ definition, className }: { definition: GlobalSet
       {definition.override === "allowed" || definition.override === "stricter_only" ? <Badge tone={override.tone}>{override.label}</Badge> : null}
       {enforcement === "enforced" ? <Badge tone="neutral">Backend-Enforced</Badge> : null}
       {enforcement === "recorded" ? <Badge tone="warning">Recorded Only</Badge> : null}
+      {enforcement === "unavailable" ? <Badge tone="neutral">Not Available</Badge> : null}
     </div>
   );
 }

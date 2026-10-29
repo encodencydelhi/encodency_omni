@@ -789,13 +789,18 @@ export class LivePlansRepository implements PlansRepository {
     const { summary, plan } = await this.summaryOf(planId);
     const draft = this.drafts.get(plan.id);
     if (!draft) throw invalid("There is no draft to publish.");
-    if (draft.input.name.trim() !== plan.name) throw notSupported("Renaming a plan isn't supported: plans are identified by their name.");
-    if (summary.subscribers.total > 0) {
-      throw notSupported(`This plan has ${summary.subscribers.total} subscriber${summary.subscribers.total === 1 ? "" : "s"}, and the backend applies a change to all of them at once (it has no plan versions or rollout). Create a new plan for the new terms instead.`);
+    const newName = draft.input.name.trim();
+    if (!newName) throw invalid("A plan needs a name.");
+    const renamed = newName !== plan.name;
+    // Only the terms (price, limits, features) reach subscribers; a new name does not change what anyone pays or gets.
+    const termsChanged = JSON.stringify({ price: summary.current?.price, features: summary.current?.features, limits: summary.current?.limits }) !== JSON.stringify({ price: draft.input.price, features: draft.input.features, limits: draft.input.limits });
+    if (termsChanged && summary.subscribers.total > 0) {
+      throw notSupported(`This plan has ${summary.subscribers.total} subscriber${summary.subscribers.total === 1 ? "" : "s"}, and the backend applies a change to all of them at once (it has no plan versions or rollout). Create a new plan for the new terms instead. A new name alone can still be saved.`);
     }
-    const caps = backendLimitsOf(draft.input);
+    const caps = termsChanged ? backendLimitsOf(draft.input) : null;
     if (Array.isArray(caps)) throw invalid(caps[0]!.message);
-    await superAdminPlansApi.upsertPlan({ name: plan.name, monthlyPrice: draft.input.price.monthlyMinor, annualPrice: draft.input.price.annualMinor > 0 ? draft.input.price.annualMinor : null, features: { ...caps, automationEnabled: draft.input.features.automation_engine === true } });
+    if (renamed) await superAdminPlansApi.renamePlan(plan.id, newName);
+    if (caps) await superAdminPlansApi.upsertPlan({ name: newName, monthlyPrice: draft.input.price.monthlyMinor, annualPrice: draft.input.price.annualMinor > 0 ? draft.input.price.annualMinor : null, features: { ...caps, automationEnabled: draft.input.features.automation_engine === true } });
     this.drafts.delete(plan.id);
     return (await this.summaryOf(plan.id)).summary;
   }

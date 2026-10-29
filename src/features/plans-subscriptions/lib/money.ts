@@ -1,15 +1,18 @@
 import { formatCurrency } from "@/lib/utils/format";
 
+/** Compact money ("₹1.2L") only from one lakh up. Below that the exact amount is shown: a plan at ₹4,999 must not read as "₹5K". */
+export const COMPACT_FROM = 100_000;
+
 /** Whole-currency minor units formatted for display; zero reads as a dash. */
 export function money(minor: number, currency: string, compact = false): string {
-  return minor === 0 ? "-" : formatCurrency(minor, currency, { compact });
+  return minor === 0 ? "-" : formatCurrency(minor, currency, { compact, compactFrom: COMPACT_FROM });
 }
 
 /** Sums are never mixed across currencies: each currency is listed on its own. */
 export function moneyTotals(totals: Record<string, number>, compact = false): string {
   const entries = Object.entries(totals).filter(([, minor]) => minor > 0).sort((a, b) => b[1] - a[1]);
   if (entries.length === 0) return "-";
-  return entries.map(([currency, minor]) => formatCurrency(minor, currency, { compact })).join(" + ");
+  return entries.map(([currency, minor]) => formatCurrency(minor, currency, { compact, compactFrom: COMPACT_FROM })).join(" + ");
 }
 
 export function signedMoney(minor: number, currency: string): string {

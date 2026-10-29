@@ -329,12 +329,12 @@ describe("saving", () => {
   });
 
   it("holds a security-critical change as a pending draft instead of applying it", async () => {
-    const result = await repo.saveSection({ section: "security", values: { "security.platform_staff.mfa_required": false }, reason: "Testing" }, actor);
+    const result = await repo.saveSection({ section: "security", values: { "security.sensitive.require_reauth": false }, reason: "Testing" }, actor);
     assert.equal(result.applied.length, 0);
     assert.equal(result.pending.length, 1);
     assert.equal(result.version, null);
     const config = await repo.getConfiguration();
-    assert.equal(config.values["security.platform_staff.mfa_required"], true, "the effective value must not change");
+    assert.equal(config.values["security.sensitive.require_reauth"], true, "the effective value must not change");
     assert.equal(config.version.number, 7);
     assert.equal(config.pendingSensitiveCount, 2);
     assert.match(result.pending[0]?.approvalNote ?? "", /demo draft/i);
@@ -342,7 +342,7 @@ describe("saving", () => {
 
   it("splits one save into applied and pending rows", async () => {
     const result = await repo.saveSection(
-      { section: "security", values: { "security.sessions.idle_timeout_minutes": 30, "security.mfa.reset_requires_approval": false }, reason: "Review" },
+      { section: "security", values: { "security.sessions.idle_timeout_minutes": 30, "security.sensitive.require_mfa": false }, reason: "Review" },
       actor,
     );
     assert.equal(result.applied.length, 1);

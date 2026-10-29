@@ -20,13 +20,14 @@ import {
   SettingsIcon,
   ShieldCheckIcon,
   StarIcon,
+  UserCogIcon,
   UserIcon,
   WebhookIcon,
   type LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,6 +44,7 @@ const iconByKind: Record<SuperAdminSearchKind, LucideIcon> = {
   company: Building2Icon,
   client: FolderIcon,
   user: UserIcon,
+  staff: UserCogIcon,
   support_ticket: HeadsetIcon,
   plan: ReceiptIcon,
   subscription: CreditCardIcon,
@@ -56,17 +58,36 @@ const iconByKind: Record<SuperAdminSearchKind, LucideIcon> = {
   api_request: ActivityIcon,
 };
 
+/** `prefix` limits the search to one kind ("team: anita"); the backend understands the same words. */
 const suggestedKinds = [
-  { label: "Companies", icon: Building2Icon },
-  { label: "Users", icon: UserIcon },
-  { label: "Clients", icon: FolderIcon },
-  { label: "Billing", icon: ReceiptIcon },
-  { label: "Support", icon: HeadsetIcon },
-  { label: "Assistant", icon: BotMessageSquareIcon },
-  { label: "Health", icon: HeartPulseIcon },
-  { label: "Flags", icon: FlagIcon },
-  { label: "Settings", icon: SettingsIcon },
+  { label: "Companies", icon: Building2Icon, prefix: "company: " },
+  { label: "Users", icon: UserIcon, prefix: "user: " },
+  { label: "Internal Team", icon: UserCogIcon, prefix: "team: " },
+  { label: "Clients", icon: FolderIcon, prefix: "client: " },
+  { label: "Billing", icon: ReceiptIcon, prefix: "invoice: " },
+  { label: "Support", icon: HeadsetIcon, prefix: "ticket: " },
+  { label: "Webhooks", icon: WebhookIcon, prefix: "webhook: " },
+  { label: "Audit", icon: ShieldCheckIcon, prefix: "audit: " },
+  { label: "Assistant", icon: BotMessageSquareIcon, prefix: "assistant" },
+  { label: "Health", icon: HeartPulseIcon, prefix: "health" },
+  { label: "Flags", icon: FlagIcon, prefix: "flags" },
+  { label: "Settings", icon: SettingsIcon, prefix: "settings" },
 ];
+
+const prefixByKind: Partial<Record<SuperAdminSearchKind, string>> = {
+  company: "company",
+  client: "client",
+  user: "user",
+  staff: "team",
+  support_ticket: "ticket",
+  plan: "plan",
+  subscription: "subscription",
+  invoice: "invoice",
+  payment: "payment",
+  webhook: "webhook",
+  audit_log: "audit",
+  api_request: "request",
+};
 
 const emptySuggestions: SuperAdminSearchResult[] = [
   { id: "empty-companies", kind: "page", group: "Suggestions", title: "Search Companies", subtitle: "Open company directory", href: "/super-admin/companies", preview: [{ label: "Open", value: "/super-admin/companies" }], score: 0 },
@@ -79,7 +100,11 @@ function saveRecent(item: SuperAdminSearchResult) {
   if (typeof window === "undefined") return;
   const current = readRecents();
   const next = [item, ...current.filter((recent) => recent.href !== item.href)].slice(0, 5);
-  window.localStorage.setItem(RECENTS_KEY, JSON.stringify(next));
+  try {
+    window.localStorage.setItem(RECENTS_KEY, JSON.stringify(next));
+  } catch {
+    // Storage can be blocked (private window); recents are a convenience only.
+  }
 }
 
 function readRecents(): SuperAdminSearchResult[] {
@@ -104,17 +129,23 @@ function readPinned(): SuperAdminSearchResult[] {
 
 function savePinned(items: SuperAdminSearchResult[]) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(PINNED_KEY, JSON.stringify(items.slice(0, 8)));
+  try {
+    window.localStorage.setItem(PINNED_KEY, JSON.stringify(items.slice(0, 8)));
+  } catch {
+    // Storage can be blocked (private window); pins are a convenience only.
+  }
 }
 
+/** Marks every typed word (not just the whole phrase), so "va ch" lights up both "Vansh" and "Chaudhary". */
 function Highlight({ text, term }: { text: string; term: string }) {
-  if (!term) return <>{text}</>;
-  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const words = Array.from(new Set(term.toLowerCase().split(/\s+/).filter(Boolean))).sort((a, b) => b.length - a.length);
+  if (words.length === 0) return <>{text}</>;
+  const escaped = words.map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
   const parts = text.split(new RegExp(`(${escaped})`, "ig"));
   return (
     <>
       {parts.map((part, index) =>
-        part.toLowerCase() === term.toLowerCase() ? (
+        words.includes(part.toLowerCase()) ? (
           <mark key={`${part}-${index}`} className="rounded-sm bg-amber-100 px-0.5 text-amber-900">
             {part}
           </mark>
@@ -224,19 +255,24 @@ export function GlobalSearch() {
 
   const isActive = debounced.length >= MIN_QUERY_LENGTH;
 
-  const { data, isFetching } = useQuery({
+  const { data, isFetching, isError, refetch } = useQuery({
     queryKey: ["super-admin-search", debounced],
     queryFn: ({ signal }) => superAdminSearchApi.search(debounced, 30, signal),
     enabled: isActive,
     staleTime: 20_000,
+    placeholderData: keepPreviousData,
+    retry: 1,
   });
+
+  const searchedText = data?.text ?? debounced;
+  const moreByGroup = useMemo(() => new Map((data?.more ?? []).map((entry) => [entry.group, entry])), [data?.more]);
 
   const results = isActive
     ? data?.items ?? []
     : [
-        ...pinned.map((item) => ({ ...item, group: "Pinned" })),
-        ...recents.filter((recent) => !pinned.some((item) => item.href === recent.href)).map((item) => ({ ...item, group: "Recent" })),
-      ];
+      ...pinned.map((item) => ({ ...item, group: "Pinned" })),
+      ...recents.filter((recent) => !pinned.some((item) => item.href === recent.href)).map((item) => ({ ...item, group: "Recent" })),
+    ];
   const selected = results[activeIndex] ?? results[0] ?? null;
   const grouped = useMemo(() => Array.from(new Set(results.map((item) => item.group))), [results]);
 
@@ -324,12 +360,21 @@ export function GlobalSearch() {
                     {suggestedKinds.map((item) => {
                       const Icon = item.icon;
                       return (
-                        <span key={item.label} className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() => {
+                            setTerm(item.prefix);
+                            inputRef.current?.focus();
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600 transition-colors hover:bg-slate-200"
+                        >
                           <Icon className="size-3" /> {item.label}
-                        </span>
+                        </button>
                       );
                     })}
                   </div>
+                  <p className="mt-4 text-xs text-slate-400">Tip: start with a word and a colon, like <span className="font-medium text-slate-500">team: anita</span> or <span className="font-medium text-slate-500">invoice: INV-0042</span>, to search one kind only.</p>
                 </div>
               ) : null}
 
@@ -341,9 +386,22 @@ export function GlobalSearch() {
                 </div>
               ) : null}
 
-              {isActive && !isFetching && results.length === 0 ? (
+              {isActive && isError && !isFetching && results.length === 0 ? (
+                <div className="space-y-3 px-3 py-8 text-center">
+                  <p className="text-[13px] text-slate-600">Search could not be completed right now.</p>
+                  <button type="button" onClick={() => void refetch()} className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+                    Try again
+                  </button>
+                </div>
+              ) : null}
+
+              {isActive && !isError && !isFetching && data && data.text === "" ? (
+                <p className="px-3 py-8 text-center text-[13px] text-slate-500">Type what to look for after "{debounced}"</p>
+              ) : null}
+
+              {isActive && !isError && !isFetching && results.length === 0 && !(data && data.text === "") ? (
                 <div className="space-y-3 px-3 py-6">
-                  <p className="text-center text-[13px] text-slate-500">No results found for "{debounced}"</p>
+                  <p className="text-center text-[13px] text-slate-500">No results found for "{searchedText}"</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {emptySuggestions.map((item) => (
                       <button key={item.id} type="button" onClick={() => goTo(item)} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50">
@@ -376,7 +434,7 @@ export function GlobalSearch() {
                                     item={item}
                                     active={absoluteIndex === activeIndex}
                                     pinned={pinned.some((entry) => entry.href === item.href)}
-                                    term={debounced}
+                                    term={isActive ? searchedText : ""}
                                     onHover={() => setActiveIndex(absoluteIndex)}
                                     onSelect={() => goTo(item)}
                                     onTogglePin={() => togglePin(item)}
@@ -386,6 +444,19 @@ export function GlobalSearch() {
                             );
                           })}
                       </ul>
+                      {isActive && moreByGroup.has(group) && prefixByKind[moreByGroup.get(group)!.kind] ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const entry = moreByGroup.get(group)!;
+                            setTerm(`${prefixByKind[entry.kind]}: ${searchedText}`);
+                            inputRef.current?.focus();
+                          }}
+                          className="ml-3 mt-0.5 rounded px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                        >
+                          Show all {moreByGroup.get(group)!.total} {group.toLowerCase()}
+                        </button>
+                      ) : null}
                     </div>
                   ))}
                 </div>
@@ -403,10 +474,10 @@ export function GlobalSearch() {
                       })()}
                     </div>
                     <p className="text-[15px] font-semibold leading-tight text-slate-900">
-                      <Highlight text={selected.title} term={debounced} />
+                      <Highlight text={selected.title} term={isActive ? searchedText : ""} />
                     </p>
                     <p className="mt-1 text-xs leading-5 text-slate-500">
-                      <Highlight text={selected.subtitle} term={debounced} />
+                      <Highlight text={selected.subtitle} term={isActive ? searchedText : ""} />
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -418,7 +489,7 @@ export function GlobalSearch() {
                     ))}
                   </div>
                   <p className="rounded-md bg-white px-3 py-2 text-[11px] text-slate-500">
-                    Arrow keys move, Enter opens, Ctrl+Enter opens a new tab, Tab focuses preview.
+                    Arrow keys move, Enter opens, Ctrl+Enter opens a new tab, Tab focuses preview. Start with team: or user: to search one kind only.
                   </p>
                 </div>
               ) : (

@@ -152,6 +152,16 @@ export const superAdminPlansApi = {
     });
   },
 
+  /** POST /api/v1/super-admin/plans/:id/rename (409 plan_name_taken when another plan has the name) */
+  renamePlan(id: string, name: string, signal?: AbortSignal): Promise<BackendPlan> {
+    return apiClient.request<BackendPlan>({
+      method: "POST",
+      path: `/super-admin/plans/${encodeURIComponent(id)}/rename`,
+      body: { name },
+      signal,
+    });
+  },
+
   /** POST /api/v1/super-admin/plans/:id/deactivate */
   deactivatePlan(id: string, signal?: AbortSignal): Promise<BackendPlan> {
     return apiClient.request<BackendPlan>({

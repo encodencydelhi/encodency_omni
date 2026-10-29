@@ -1,5 +1,6 @@
 "use client";
 
+import { ReasonDialog } from "./reason-dialog";
 import { RotateSecretDialog } from "./rotate-secret-dialog";
 import { MoreHorizontalIcon } from "lucide-react";
 import Link from "next/link";
@@ -322,19 +323,33 @@ function DeliveriesTab({ endpointId }: { endpointId: string }) {
 function SecurityTab({ endpointId }: { endpointId: string }) {
   const { snapshot, environment } = useWebhookData();
   const endpoint = snapshot.endpoints.find((item) => item.id === endpointId)!;
-  const rotate = useWebhookMutation(environment, (reason: string) => webhooksRepository.requestSecretRotationReview(environment, endpointId, reason));
+  const rotate = useWebhookMutation(environment, (input: { reason: string; keepOldHours: number }) => webhooksRepository.requestSecretRotationReview(environment, endpointId, input.reason, input.keepOldHours));
   const [rotateOpen, setRotateOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const markReviewed = useWebhookMutation(environment, (reason: string) => webhooksRepository.markSecurityReviewed(environment, endpointId, reason));
   const warnings = endpointSecurityWarnings(endpoint);
   const sg = endpoint.signing;
   return (
     <div className="space-y-2">
       <Notice tone="warning" title={isMockMode ? "No secret is shown, generated or rotated here" : "Rotating the secret ends the old one at once"}>{isMockMode ? "Signing keys belong in backend key management. This view shows references only." : "The new secret is shown once, right after you confirm. Update the system that receives these webhooks straight away, or its signature checks will fail until you do."}</Notice>
+      <ReasonDialog
+        open={reviewOpen}
+        onOpenChange={setReviewOpen}
+        title="Mark this endpoint as security reviewed?"
+        description="Say what you checked: the destination address, who runs the receiving system, and how it stores the signing secret. The review is due again after 90 days."
+        confirmLabel="Mark reviewed"
+        placeholder="What did you check?"
+        onConfirm={async (reason) => {
+          await markReviewed.mutateAsync(reason);
+          toast.success("Security review recorded");
+        }}
+      />
       <RotateSecretDialog
         open={rotateOpen}
         onOpenChange={setRotateOpen}
         subject="signing"
-        rotate={async (reason) => {
-          const result = await rotate.mutateAsync(reason);
+        rotate={async (reason, keepOldHours) => {
+          const result = await rotate.mutateAsync({ reason, keepOldHours });
           if (!result.oneTimeSecret) toast.success("Rotation review requested (demo)", { description: "No live signing key was changed." });
           return result.oneTimeSecret;
         }}
@@ -345,6 +360,7 @@ function SecurityTab({ endpointId }: { endpointId: string }) {
           { label: "Signing readiness", value: <State registry={SIGNING_STATE} status={sg.state} /> },
           { label: "Secret version reference", value: sg.secretVersionRef ? <Mono>{sg.secretVersionRef}</Mono> : "None" },
           { label: "Last rotation", value: <Timestamp iso={sg.lastRotationAt} /> },
+          ...(sg.previousSecretValidUntil ? [{ label: "Previous secret valid until", value: <Timestamp iso={sg.previousSecretValidUntil} /> }] : []),
           { label: "Security review", value: <State registry={SECURITY_REVIEW} status={sg.reviewStatus} /> },
           { label: "Payload schema version", value: endpoint.policy.schemaVersion },
         ]} />
@@ -358,7 +374,10 @@ function SecurityTab({ endpointId }: { endpointId: string }) {
         ]} />
       </div>
       <SectionCard title="Security Warnings" action={
-        <Button variant="outline" size="sm" disabled={rotate.isPending} onClick={() => setRotateOpen(true)}>Rotate Signing Secret</Button>
+        <div className="flex flex-wrap gap-1">
+          {isMockMode ? null : <Button variant="outline" size="sm" onClick={() => setReviewOpen(true)}>Mark Security Reviewed</Button>}
+          <Button variant="outline" size="sm" disabled={rotate.isPending} onClick={() => setRotateOpen(true)}>Rotate Signing Secret</Button>
+        </div>
       }>
         {warnings.length === 0 ? <p className="text-[0.8125rem] text-muted-foreground">{isMockMode ? "No frontend-detectable warnings. Backend SSRF, DNS and egress enforcement is still required." : "No warnings. The backend checks the destination address again on every delivery."}</p> : <ul className="list-disc space-y-1 pl-4 text-[0.8125rem]">{warnings.map((w) => <li key={w}>{w}</li>)}</ul>}
       </SectionCard>

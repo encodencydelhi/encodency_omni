@@ -38,10 +38,15 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useAuth } from "@/features/auth/components/auth-provider";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { useAdminContext } from "./admin-context";
+import { adminSearchApi, type AdminSearchHitKind } from "./admin-search-api";
+import { CHIP_CAPABILITY, isAllowed, splitScope, storageKey } from "./admin-search-access";
 import { useAssistant } from "@/features/assistant/assistant-provider";
 import type { Project } from "@/types/admin";
 
@@ -53,7 +58,8 @@ export type AdminSearchKind =
   | "seo"
   | "crm"
   | "workspace"
-  | "management";
+  | "management"
+  | AdminSearchHitKind;
 
 export interface AdminSearchResult {
   id: string;
@@ -73,6 +79,7 @@ export interface AdminSearchResult {
 const RECENTS_KEY = "admin-global-search-recents";
 const PINNED_KEY = "admin-global-search-pinned";
 const DEBOUNCE_MS = 150;
+const isMockMode = process.env.NEXT_PUBLIC_DATA_SOURCE === "mock";
 
 const iconByKind: Record<AdminSearchKind, LucideIcon> = {
   page: PanelsTopLeftIcon,
@@ -83,6 +90,13 @@ const iconByKind: Record<AdminSearchKind, LucideIcon> = {
   crm: TargetIcon,
   workspace: BarChart3Icon,
   management: SettingsIcon,
+  campaign: MegaphoneIcon,
+  draft: FileChartColumnIcon,
+  ticket: HeadsetIcon,
+  member: UsersRoundIcon,
+  invoice: WalletCardsIcon,
+  workflow: ListChecksIcon,
+  study: NetworkIcon,
 };
 
 const iconByGroup: Record<string, LucideIcon> = {
@@ -95,6 +109,13 @@ const iconByGroup: Record<string, LucideIcon> = {
   "Workspace": BotIcon,
   "Management": SettingsIcon,
   "Commands": CommandIcon,
+  "Campaigns": MegaphoneIcon,
+  "Content Drafts": FileChartColumnIcon,
+  "Automations": ListChecksIcon,
+  "Support Tickets": HeadsetIcon,
+  "Team": UsersRoundIcon,
+  "Invoices": WalletCardsIcon,
+  "Competitor Studies": NetworkIcon,
   "Pinned": StarIcon,
   "Recent": HistoryIcon,
 };
@@ -191,46 +212,35 @@ const SYNONYMS: Record<string, string[]> = {
   fb: ["meta", "facebook"],
 };
 
-function readRecents(): AdminSearchResult[] {
+function readList(key: string, max: number): AdminSearchResult[] {
   if (typeof window === "undefined") return [];
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(RECENTS_KEY) ?? "[]");
-    return Array.isArray(parsed) ? parsed.slice(0, 5) : [];
+    const parsed = JSON.parse(window.localStorage.getItem(key) ?? "[]");
+    return Array.isArray(parsed) ? parsed.slice(0, max) : [];
   } catch {
     return [];
   }
 }
 
-function saveRecent(item: AdminSearchResult) {
+function writeList(key: string, items: AdminSearchResult[], max: number) {
   if (typeof window === "undefined") return;
-  const current = readRecents();
-  const next = [item, ...current.filter((recent) => recent.id !== item.id)].slice(0, 5);
-  window.localStorage.setItem(RECENTS_KEY, JSON.stringify(next));
-}
-
-function readPinned(): AdminSearchResult[] {
-  if (typeof window === "undefined") return [];
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(PINNED_KEY) ?? "[]");
-    return Array.isArray(parsed) ? parsed.slice(0, 8) : [];
+    window.localStorage.setItem(key, JSON.stringify(items.slice(0, max)));
   } catch {
-    return [];
+    // Storage can be blocked (private window); recents and pins are a convenience only.
   }
 }
 
-function savePinned(items: AdminSearchResult[]) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(PINNED_KEY, JSON.stringify(items.slice(0, 8)));
-}
-
+/** Marks every typed word (not just the whole phrase). */
 function Highlight({ text, term }: { text: string; term: string }) {
-  if (!term) return <>{text}</>;
-  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const words = Array.from(new Set(term.toLowerCase().split(/\s+/).filter(Boolean))).sort((a, b) => b.length - a.length);
+  if (words.length === 0) return <>{text}</>;
+  const escaped = words.map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
   const parts = text.split(new RegExp(`(${escaped})`, "ig"));
   return (
     <>
       {parts.map((part, index) =>
-        part.toLowerCase() === term.toLowerCase() ? (
+        words.includes(part.toLowerCase()) ? (
           <mark key={`${part}-${index}`} className="rounded-sm bg-amber-100 px-0.5 text-amber-900 font-medium">
             {part}
           </mark>
@@ -326,6 +336,11 @@ export function AdminGlobalSearch() {
   const listRef = useRef<HTMLDivElement>(null);
   const { Clients, setSelectedProjectId } = useAdminContext();
   const { open: openAssistant } = useAssistant();
+  const { user } = useAuth();
+  const { companyId, isReady } = useTenancyContext();
+  const userId = user?.id;
+  const recentsKey = storageKey(RECENTS_KEY, userId, companyId);
+  const pinnedKey = storageKey(PINNED_KEY, userId, companyId);
 
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState("");
@@ -334,6 +349,20 @@ export function AdminGlobalSearch() {
   const [recents, setRecents] = useState<AdminSearchResult[]>([]);
   const [pinned, setPinned] = useState<AdminSearchResult[]>([]);
   const [previewFocused, setPreviewFocused] = useState(false);
+
+  // What this person is allowed to do in this Company (from the server). Until it is known, anything that needs a capability stays hidden.
+  const liveReady = !isMockMode && isReady && Boolean(companyId);
+  const accessQuery = useQuery({
+    queryKey: ["admin-search-access", companyId, userId],
+    queryFn: ({ signal }) => adminSearchApi.access(companyId, signal),
+    enabled: liveReady && open,
+    staleTime: 60_000,
+  });
+  const capabilities = useMemo(() => new Set(accessQuery.data?.capabilities ?? []), [accessQuery.data]);
+  const allowed = useCallback(
+    (item: Pick<AdminSearchResult, "id" | "kind">) => isMockMode || isAllowed(item, capabilities),
+    [capabilities],
+  );
 
   // Debounce input
   useEffect(() => {
@@ -356,15 +385,15 @@ export function AdminGlobalSearch() {
   // Sync recents & pinned on open
   useEffect(() => {
     if (open) {
-      setRecents(readRecents());
-      setPinned(readPinned());
+      setRecents(readList(recentsKey, 5));
+      setPinned(readList(pinnedKey, 8));
       window.setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [open]);
+  }, [open, recentsKey, pinnedKey]);
 
-  // Map dynamic Clients from workspace context into searchable items
+  // Demo data only: with live data the server returns the Clients this person may open (with the same permission checks as every other record).
   const clientResults = useMemo<AdminSearchResult[]>(() => {
-    if (!Clients || Clients.length === 0) return [];
+    if (!isMockMode || !Clients || Clients.length === 0) return [];
     return Clients.map((client: Project) => ({
       id: `client-${client.id}`,
       kind: "client",
@@ -390,24 +419,41 @@ export function AdminGlobalSearch() {
     return [...PAGE_RESULTS, ...COMMAND_RESULTS, ...clientResults];
   }, [clientResults]);
 
+  // Workspace records (clients, campaigns, drafts, leads, tickets, team, invoices ...). The server returns only what this person may open.
+  const { scoped, text: searchText } = splitScope(debounced);
+  const dataQuery = useQuery({
+    queryKey: ["admin-search", companyId, userId, debounced],
+    queryFn: ({ signal }) => adminSearchApi.search(companyId, debounced, 20, signal),
+    enabled: liveReady && open && accessQuery.isSuccess && debounced.length >= 2,
+    staleTime: 15_000,
+    placeholderData: keepPreviousData,
+    retry: 1,
+  });
+  const dataHits = useMemo<AdminSearchResult[]>(
+    () => (dataQuery.data?.items ?? []).filter((hit) => allowed(hit)),
+    [dataQuery.data, allowed],
+  );
+
   // Scoring algorithm matching superadmin intelligence
   const scoredResults = useMemo<AdminSearchResult[]>(() => {
-    const q = debounced.toLowerCase();
-    if (!q) {
+    const q = searchText.toLowerCase();
+    if (!debounced) {
       return [
-        ...pinned.map((item) => ({ ...item, group: "Pinned" })),
+        ...pinned.filter(allowed).map((item) => ({ ...item, group: "Pinned" })),
         ...recents
-          .filter((recent) => !pinned.some((item) => item.id === recent.id))
+          .filter((recent) => allowed(recent) && !pinned.some((item) => item.id === recent.id))
           .map((item) => ({ ...item, group: "Recent" })),
       ];
     }
 
+    // A "leads:" style prefix means "records of that kind only", so pages and shortcuts stay out of it.
+    const staticItems = scoped || !q ? [] : allItems.filter((item) => allowed(item));
     const parts = q.split(/\s+/).filter(Boolean);
     const expanded = Array.from(
       new Set([q, ...parts, ...parts.flatMap((p) => SYNONYMS[p] ?? [])]),
     );
 
-    return allItems
+    const matchedStatic = staticItems
       .map((item) => {
         let best = 0;
         const titleLower = item.title.toLowerCase();
@@ -419,20 +465,19 @@ export function AdminGlobalSearch() {
           if (!needle) return;
           if (titleLower === needle) best = Math.max(best, 600);
           else if (titleLower.startsWith(needle)) best = Math.max(best, 460);
-          else if (haystack.includes(needle)) best = Math.max(best, 260);
-          else {
-            // Check character match if query is 2+ chars
-            if (needle.length >= 2 && haystack.includes(needle.slice(0, 3))) {
-              best = Math.max(best, 90);
-            }
-          }
+          // One or two letters would match nearly every subtitle, so "anywhere in the text" needs 3+.
+          else if (needle.length >= 3 && haystack.includes(needle)) best = Math.max(best, 260);
+          else if (needle.length >= 4 && haystack.includes(needle.slice(0, 3))) best = Math.max(best, 90);
         });
 
         return { ...item, score: best };
       })
-      .filter((item) => item.score > 0)
-      .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
-  }, [debounced, allItems, pinned, recents]);
+      .filter((item) => item.score > 0);
+
+    // Records from the server (already limited to what this person may open) join the pages and shortcuts, best match first.
+    const known = new Set(matchedStatic.map((item) => item.id));
+    return [...matchedStatic, ...dataHits.filter((hit) => !known.has(hit.id))].sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
+  }, [debounced, searchText, scoped, allItems, allowed, pinned, recents, dataHits]);
 
   const isActive = debounced.length > 0;
   const results = scoredResults;
@@ -452,8 +497,9 @@ export function AdminGlobalSearch() {
   }, [activeIndex, results.length]);
 
   const handleSelect = (item: AdminSearchResult, newTab = false) => {
-    saveRecent(item);
-    setRecents(readRecents());
+    const nextRecents = [item, ...readList(recentsKey, 5).filter((recent) => recent.id !== item.id)].slice(0, 5);
+    writeList(recentsKey, nextRecents, 5);
+    setRecents(nextRecents);
     setOpen(false);
     setTerm("");
     setDebounced("");
@@ -481,7 +527,7 @@ export function AdminGlobalSearch() {
       ? pinned.filter((entry) => entry.id !== item.id)
       : [item, ...pinned].slice(0, 8);
     setPinned(next);
-    savePinned(next);
+    writeList(pinnedKey, next, 8);
   };
 
   return (
@@ -559,10 +605,13 @@ export function AdminGlobalSearch() {
                 <div className="px-4 py-8 text-center text-sm text-slate-500">
                   <p className="font-medium text-slate-700">Type to search across OmniPlatform</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    Jump directly to any page, execute quick actions, or switch clients.
+                    Jump to a page, run a quick action, or find clients, campaigns, drafts, leads and tickets. You only see what your role allows.
                   </p>
                   <div className="mt-5 flex flex-wrap justify-center gap-1.5">
-                    {SUGGESTED_CHIPS.map((chip) => (
+                    {SUGGESTED_CHIPS.filter((chip) => {
+                      const needed = CHIP_CAPABILITY[chip.query];
+                      return isMockMode || !needed || capabilities.has(needed);
+                    }).map((chip) => (
                       <button
                         key={chip.label}
                         type="button"
@@ -577,21 +626,29 @@ export function AdminGlobalSearch() {
               ) : null}
 
               {/* No results found state */}
-              {isActive && results.length === 0 ? (
+              {isActive && results.length === 0 && dataQuery.isFetching ? (
+                <p className="px-4 py-10 text-center text-xs text-slate-500">Searching your workspace…</p>
+              ) : null}
+
+              {isActive && results.length === 0 && !dataQuery.isFetching ? (
                 <div className="space-y-4 px-4 py-10 text-center">
                   <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                     <SearchIcon className="size-6" />
                   </div>
                   <div>
                     <p className="text-[14px] font-semibold text-slate-800">
-                      No results found for "{debounced}"
+                      {scoped && !searchText ? `Type what to look for after "${debounced}"` : `No results found for "${searchText || debounced}"`}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Try searching for pages, clients, channels, keywords, or quick commands.
+                      {dataQuery.isError
+                        ? "Workspace records could not be searched right now. Pages and shortcuts were still checked."
+                        : dataQuery.data?.searchable.length
+                          ? `Searched pages, shortcuts, ${dataQuery.data.searchable.join(", ").toLowerCase()}. You only see what your role allows.`
+                          : "Try searching for pages, clients, channels, keywords, or quick commands."}
                     </p>
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2 text-left pt-2">
-                    {PAGE_RESULTS.slice(0, 4).map((item) => (
+                    {PAGE_RESULTS.filter(allowed).slice(0, 4).map((item) => (
                       <button
                         key={item.id}
                         type="button"
@@ -643,7 +700,7 @@ export function AdminGlobalSearch() {
                                       item={item}
                                       active={absoluteIndex === activeIndex}
                                       pinned={pinned.some((p) => p.id === item.id)}
-                                      term={debounced}
+                                      term={isActive ? searchText : ""}
                                       onHover={() => setActiveIndex(absoluteIndex)}
                                       onSelect={() => handleSelect(item)}
                                       onTogglePin={() => togglePin(item)}
@@ -656,6 +713,11 @@ export function AdminGlobalSearch() {
                       </div>
                     );
                   })}
+                  {dataQuery.isFetching ? (
+                    <p className="px-3 py-2 text-[11px] text-slate-400">Searching your workspace…</p>
+                  ) : dataQuery.isError ? (
+                    <p className="px-3 py-2 text-[11px] text-amber-600">Workspace records could not be searched right now.</p>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -681,7 +743,7 @@ export function AdminGlobalSearch() {
                     </div>
                     <div className="flex items-center gap-2">
                       <p className="text-[15px] font-bold leading-tight text-slate-900">
-                        <Highlight text={selected.title} term={debounced} />
+                        <Highlight text={selected.title} term={isActive ? searchText : ""} />
                       </p>
                       {selected.badge && (
                         <Badge tone={selected.tone ?? "neutral"} className="text-2xs">
@@ -690,7 +752,7 @@ export function AdminGlobalSearch() {
                       )}
                     </div>
                     <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                      <Highlight text={selected.subtitle} term={debounced} />
+                      <Highlight text={selected.subtitle} term={isActive ? searchText : ""} />
                     </p>
                   </div>
 

@@ -3,7 +3,7 @@
 import { ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { NAV_ITEMS_BY_HREF } from "@/config/navigation";
 import { ROUTES } from "@/config/routes";
 
@@ -35,6 +35,22 @@ export function useBreadcrumbLabels(): BreadcrumbLabelContextValue {
   const context = useContext(BreadcrumbLabelContext);
   if (!context) throw new Error("useBreadcrumbLabels must be used inside a BreadcrumbLabelProvider");
   return context;
+}
+
+/** Like useBreadcrumbLabels, but null when no provider is mounted (the top breadcrumb works with or without names). */
+export function useOptionalBreadcrumbLabels(): BreadcrumbLabelContextValue | null {
+  return useContext(BreadcrumbLabelContext);
+}
+
+/**
+ * A detail page calls this with the id in its URL and the name behind it; the breadcrumb then reads "Plans > Growth" instead of
+ * "Plans > Details". It does nothing until the name has loaded.
+ */
+export function useBreadcrumbName(segment: string | undefined, label: string | null | undefined): void {
+  const setLabel = useOptionalBreadcrumbLabels()?.setLabel;
+  useEffect(() => {
+    if (setLabel && segment && label) setLabel(segment, label);
+  }, [setLabel, segment, label]);
 }
 
 interface Crumb {
