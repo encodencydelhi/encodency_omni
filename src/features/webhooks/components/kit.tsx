@@ -18,6 +18,7 @@ import { STAT_COLORS, statColorForLabel, statColorForTone } from "@/components/s
 import { formatDateTime, formatRelativeTime } from "@/lib/utils/format";
 import type { PaginationMeta } from "@/types/api";
 import type { StatusRegistry, Tone } from "@/types/common";
+import { isMockMode } from "@/config/env";
 import { DEMO_CLOCK_ANCHOR, JOBS_ROUTE_AVAILABLE } from "../data/config";
 import type { WebhookDirection } from "../data/types";
 
@@ -32,7 +33,7 @@ export function Timestamp({ iso, relative = true }: { iso: string | null | undef
   return (
     <span className="block whitespace-nowrap tabular text-[0.8125rem]" title={new Date(iso).toISOString()}>
       {formatDateTime(iso)}
-      {relative ? <span className="block text-2xs text-muted-foreground">{formatRelativeTime(iso, DEMO_NOW)}</span> : null}
+      {relative ? <span className="block text-2xs text-muted-foreground">{formatRelativeTime(iso, isMockMode ? DEMO_NOW : undefined)}</span> : null}
     </span>
   );
 }

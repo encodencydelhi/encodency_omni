@@ -215,6 +215,8 @@ export interface ApiSnapshot {
 }
 
 export interface ApiAccountsResponse {
+  scope?: "company" | "client";
+  assignments?: Record<string, string>;
   freshness?: ApiFreshness;
   integrationId: string;
   connectedAs: string | null;

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import {
   Area,
@@ -32,6 +31,7 @@ import {
 import { ChannelLogo } from "../../shared/channel-logo";
 import { ErrorState } from "@/components/shared/error-state";
 import { useReportsDashboard } from "../hooks/use-reports";
+import { WorkspaceReportsTab } from "./workspace-reports-tab";
 import { useAdminContext } from "../../shell/admin-context";
 import { cn } from "@/lib/utils/cn";
 import type { ReportKpi } from "@/types/domain/reports";
@@ -81,9 +81,11 @@ export function ReportsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
 
   const activeClientName =
-    Clients?.find((c: any) => c.id === selectedProjectId)?.name ||
+    Clients?.find((c: { id: string }) => c.id === selectedProjectId)?.name ||
     Clients?.[0]?.name ||
     "All clients";
+  // A file report belongs to one client: "all" (no client picked) means there is nothing to build it for yet.
+  const reportClientId = selectedProjectId && selectedProjectId !== "all" ? String(selectedProjectId) : null;
 
   const dateSubtext = (() => {
     const end = new Date();
@@ -186,7 +188,7 @@ export function ReportsPage() {
       {activeTab === "channels" && <ChannelsTab data={data} />}
       {activeTab === "campaigns" && <CampaignsTab data={data} />}
       {activeTab === "leads" && <LeadsTab data={data} />}
-      {activeTab === "reports" && <ReportsTab />}
+      {activeTab === "reports" && <WorkspaceReportsTab clientId={reportClientId} clientName={activeClientName} />}
     </div>
   );
 }
@@ -656,28 +658,6 @@ function LeadsTab({ data }: { data: NonNullable<ReturnType<typeof useReportsDash
         </div>
       </Panel>
     </>
-  );
-}
-
-/* ──────────────────── REPORTS TAB ──────────────────── */
-
-function ReportsTab() {
-  return (
-      <Panel title="Reports">
-        <div className="space-y-2 px-4 py-10 text-center">
-          <span className="mx-auto grid size-10 place-items-center rounded-sm bg-[#EAF2FF] text-[#3186F3]">
-            <FileText className="size-5" />
-          </span>
-          <p className="text-[13px] font-semibold text-[#172044]">Cross-channel reports are not available yet</p>
-          <p className="mx-auto max-w-md text-[12px] leading-5 text-[#5E6D89]">
-            Generating, scheduling and emailing PDF or CSV reports for the numbers on this page is not built. The Overview, Channels,
-            Campaigns and Leads tabs show live figures from your workspace. Website audits and their exports are in Website Intelligence.
-          </p>
-          <Link href="/admin/website" className="inline-block text-[12px] font-semibold text-[#EB0711] hover:underline">
-            Open Website Intelligence
-          </Link>
-        </div>
-      </Panel>
   );
 }
 

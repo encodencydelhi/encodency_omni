@@ -1,6 +1,7 @@
 
 "use client";
 
+import { isMockMode } from "@/config/env";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -18,6 +19,7 @@ import { CardGrid, Chip, CopyButton, EmptyRows, ExportButton, FilterBar, IdCell,
 import { MonitoringChip } from "./overview-page";
 import { useWebhookData, useWebhooks } from "./webhooks-context";
 import { useWebhooksIncomingEvents } from "../data/hooks";
+import { NewSourceDialog } from "./new-source-dialog";
 
 function IncomingNav({ view }: { view: "sources" | "events" }) {
   const router = useRouter();
@@ -42,7 +44,7 @@ function IncomingSummary() {
   const failed = events.filter((event) => event.verification.state === "verified" && event.processing.state === "failed").length;
   return (
     <CardGrid cols={4}>
-      <Kpi label="Registered Sources" value={snapshot.sources.length} hint={`${snapshot.sources.filter((s) => s.configurationState === "configured").length} configured. 0 receivers connected`} />
+      <Kpi label="Registered Sources" value={snapshot.sources.length} hint={isMockMode ? `${snapshot.sources.filter((s) => s.configurationState === "configured").length} configured. 0 receivers connected` : `${snapshot.sources.filter((s) => s.configurationState === "configured").length} enabled, each with its own signed receiver`} />
       <Kpi label="Incoming Events" value={events.length} hint="In the selected period" />
       <Kpi label="Verification Issues" value={verificationIssues} tone={verificationIssues ? "danger" : "default"} hint="Rejected or not verified" href={`${WEBHOOK_ROUTES.incomingEvents}?verification=rejected`} />
       <Kpi label="Processing Failures" value={failed} tone={failed ? "danger" : "default"} hint="Verified, processing failed" href={`${WEBHOOK_ROUTES.incomingEvents}?processing=failed`} />
@@ -104,6 +106,7 @@ export function IncomingSourcesPage() {
   }, [stats, filters.query, filters.values, snapshot.generatedAt]);
 
   const paged = usePaged(rows, 10);
+  const [newSourceOpen, setNewSourceOpen] = useState(false);
 
   const columns: Array<DataTableColumn<SourceStat>> = [
     { id: "source", header: "Source", cell: (row) => <IdCell id={row.source.name} sub={row.source.id} /> },
@@ -126,7 +129,12 @@ export function IncomingSourcesPage() {
       <TablePanel
         title="Sources & Receivers"
         description="Provider callback URLs are listed above. Registered generic sources have a separate source-specific receiver URL in their details."
-        action={<ExportButton filename="webhook-incoming-sources.csv" rows={rows.map((r) => ({ id: r.source.id, provider: r.source.providerName, receiverId: r.source.receiverId, configuration: r.source.configurationState, verificationMethod: r.source.verificationMethod, events: r.events, verificationFailures: r.verificationFailures }))} />}
+        action={
+          <div className="flex items-center gap-2">
+            {isMockMode ? null : <Button size="sm" onClick={() => setNewSourceOpen(true)}>New Source</Button>}
+            <ExportButton filename="webhook-incoming-sources.csv" rows={rows.map((r) => ({ id: r.source.id, provider: r.source.providerName, receiverId: r.source.receiverId, configuration: r.source.configurationState, verificationMethod: r.source.verificationMethod, events: r.events, verificationFailures: r.verificationFailures }))} />
+          </div>
+        }
         filters={
           <FilterBar>
             <FilterControls
@@ -157,6 +165,7 @@ export function IncomingSourcesPage() {
           emptyState={<EmptyRows title="No sources match" description="No registered source matches these filters in this environment." />}
         />
       </TablePanel>
+      {isMockMode ? null : <NewSourceDialog open={newSourceOpen} onOpenChange={setNewSourceOpen} />}
     </div>
   );
 }
@@ -268,7 +277,7 @@ export function IncomingEventPreview({ event, onClose }: { event: IncomingEvent 
                 <State registry={VERIFICATION_STATE} status={event.verification.state} />
                 <State registry={PROCESSING_STATE} status={event.processing.state} />
               </div>
-              {event.verification.state !== "verified" ? <Notice tone="warning" title="Not authentic">This event is not verified, so it cannot be processed by a retry. {event.verification.failureReason}</Notice> : <Notice tone="info">Verification shown is a demo record. No cryptographic check ran in this frontend.</Notice>}
+              {event.verification.state !== "verified" ? <Notice tone="warning" title="Not authentic">This event is not verified, so it cannot be processed by a retry. {event.verification.failureReason}</Notice> : <Notice tone="info">{isMockMode ? "Verification shown is a demo record. No cryptographic check ran in this frontend." : "The backend verified this event's signature before storing it."}</Notice>}
               <DefinitionList columns={1} items={[
                 { label: "Incoming event ID", value: <Mono>{event.id}</Mono> },
                 { label: "Provider event reference", value: <Mono>{event.providerEventRef}</Mono> },

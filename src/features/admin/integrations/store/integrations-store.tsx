@@ -88,7 +88,7 @@ const EMPTY_SNAPSHOT: IntegrationsSnapshot = {
   checkRuns: [],
   dependencies: [],
   activity: [],
-  settings: { autoRefresh: true, confirmBeforeDisconnect: true, blockDisconnectWithScheduledPosts: false },
+  settings: { autoRefresh: true, confirmBeforeDisconnect: true, blockDisconnectWithScheduledPosts: false, metaMaxDailyBudget: 100_000 },
   currentUser: { name: "", email: "", canManage: false },
 };
 

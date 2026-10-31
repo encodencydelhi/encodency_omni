@@ -18,7 +18,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/config/routes";
 import { cn } from "@/lib/utils/cn";
-import { formatCurrency, formatDate, formatNumber } from "@/lib/utils/format";
+import { COMPACT_MONEY_FROM, formatCurrency, formatDate, formatNumber } from "@/lib/utils/format";
 import { relativeTime } from "../data/clock";
 import { ATTENTION_KIND_META, HEALTH_METHOD, companySectionHref } from "../data/config";
 import type { CompanyAttentionItem, CompanySummary, PortfolioSummary } from "../data/types";
@@ -99,7 +99,7 @@ export function KpiStrip({ portfolio }: { portfolio: PortfolioSummary | undefine
         <StatCard
           compact
           label="MRR"
-          value={formatCurrency(portfolio.mrrMinor, portfolio.currency, { compact: true })}
+          value={formatCurrency(portfolio.mrrMinor, portfolio.currency, { compact: true, compactFrom: COMPACT_MONEY_FROM })}
           hint={`${portfolio.payingCompanies} paying`}
           icon={TrendingUpIcon}
           tone="brand"

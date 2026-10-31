@@ -247,7 +247,7 @@ export function ClientEditDrawer({ summary, onClose }: { summary: ClientSummary;
                       </SelectContent>
                     </Select>
                   </Field>
-                  {text("primaryWebsite", "Primary website", { hint: "Optional. Changing it updates the primary website only." })}
+                  {text("primaryWebsite", "Primary website", { hint: "Optional. This client's website, used for its website analysis. It can differ from the company website. Changing it updates the primary website only." })}
                 </div>
                 <Field label="Description" htmlFor="client-edit-description">
                   <Textarea id="client-edit-description" rows={2} maxLength={300} value={form.description} onChange={(event) => update({ description: event.target.value })} />

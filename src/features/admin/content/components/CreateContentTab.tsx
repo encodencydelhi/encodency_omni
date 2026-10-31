@@ -1,5 +1,7 @@
 "use client";
+import Link from "next/link";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Check, ChevronDown, ChevronRight, Download, Plus, Send, X,
   Loader2, AlertCircle, RefreshCw
@@ -7,11 +9,17 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils/cn";
 import { Card } from "./ui-card";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlatformBadge } from "./ui-platform";
-import { draftsApi } from "../live/drafts-api";
+import { useContentAccess } from "../live/use-content-access";
+import { draftsApi, type DraftRecord } from "../live/drafts-api";
 import { mediaApi } from "../live/media-api";
-import { schedulingApi } from "../live/scheduling-api";
-import { immediateScheduledFor } from "../live/schedule-datetime";
+import { schedulingApi, type PublishTarget } from "../live/scheduling-api";
+import { immediateScheduledFor, scheduleWindowError } from "../live/schedule-datetime";
+import { deliveryCaption, deliveryTiming } from "../live/composer-delivery";
+import { selectedPublishingTarget } from "../live/publishing-destination";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { env } from "@/config/env";
 import { useMetaOverview } from "@/features/admin/channels/live/meta-instagram-hooks";
@@ -49,13 +57,6 @@ const CHANNEL_TO_PLATFORM: Record<string, Platform> = {
   GOOGLE_BUSINESS_LOCATION: "google-business",
 };
 
-/** Composer platform → the backend draft-variant/schedule channel. */
-const PLATFORM_TO_CHANNEL: Partial<Record<Platform, string>> = {
-  instagram: "INSTAGRAM_ACCOUNT",
-  facebook: "FACEBOOK_PAGE",
-  linkedin: "LINKEDIN_ORGANIZATION",
-};
-
 function variantsToPlatformMap(
   variants: { id: string; channel: string }[],
 ): Partial<Record<Platform, string>> {
@@ -72,30 +73,49 @@ export interface CreateSeed {
   caption: string;
   hashtags: string[];
   cta?: string;
+  media?: MediaAsset[];
+  draft?: DraftRecord;
 }
 
-export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
+export function CreateContentTab({ seed, initialPlatforms = ["instagram", "facebook"], onAiAction }: { seed?: CreateSeed; initialPlatforms?: Platform[]; onAiAction?: (action: string, caption: string) => void } = {}) {
+  const queryClient = useQueryClient();
+  const {canWrite, canPublish} = useContentAccess();
   /* ── State ── */
-  const [channels, setChannels] = useState<Platform[]>(["instagram", "facebook", "linkedin"]);
+  const { companyId, clientId, setClientId } = useTenancyContext();
+  const overviewQuery = useMetaOverview(companyId, clientId, env.dataSource === "api" && Boolean(companyId && clientId));
+  const channelAvailabilityLoading = env.dataSource === "api" && overviewQuery.isLoading;
+  const channelAvailabilityError = env.dataSource === "api" ? overviewQuery.error : null;
+  const linkedinFeature = useFeature("channels.linkedin_publishing");
+  const linkedinOff = linkedinFeature.status === "disabled";
+  const connectedPlatforms = useMemo(() => {
+    const platforms = env.dataSource === "api"
+      ? getPublishablePlatforms(overviewQuery.data)
+      : ALL_PLATFORMS.filter(p => MOCK_CONNECTIONS[p].status === "connected");
+    return linkedinOff ? platforms.filter((platform) => platform !== "linkedin") : platforms;
+  }, [overviewQuery.data, linkedinOff]);
+
+  const [requestedChannels, setChannels] = useState<Platform[]>(seed?.draft ? seed.draft.variants.map(v => CHANNEL_TO_PLATFORM[v.channel]).filter((p): p is Platform => Boolean(p)) : initialPlatforms);
+  const draftingPlatforms: Platform[] = ["facebook", "instagram", "linkedin"];
+  const channels = useMemo(() => requestedChannels.filter(platform => ["facebook","instagram","linkedin"].includes(platform)), [requestedChannels]);
   /* Default channels start selected, so their content types must exist too —
      otherwise every channel fails validation before the user touches anything. */
   const [contentTypes, setContentTypes] = useState<Partial<Record<Platform, ContentType>>>(() => {
     const initial: Partial<Record<Platform, ContentType>> = {};
-    for (const platform of ["instagram", "facebook", "linkedin"] as Platform[]) {
+    for (const platform of [...new Set([...initialPlatforms, ...(seed?.draft?.variants.map(v => CHANNEL_TO_PLATFORM[v.channel]).filter((p): p is Platform => Boolean(p)) ?? [])])]) {
       const specs = PLATFORM_CONTENT_TYPES[platform];
-      if (specs?.length) initial[platform] = specs[0]!.id;
+      if (specs?.length) initial[platform] = platform === "instagram" && (seed?.media?.some(m => m.type === "video") || seed?.draft?.media.some(m => m.asset.kind === "VIDEO")) ? "reel" : specs[0]!.id;
     }
     return initial;
   });
   const [masterContent, setMasterContent] = useState<MasterContent>({
-    caption: seed?.caption ? plainTextToHtml(seed.caption) : "",
-    headline: "",
+    caption: seed?.draft ? (/<(p|div|br|strong|em)\b/i.test(seed.draft.content) ? seed.draft.content : plainTextToHtml(seed.draft.content)) : (seed?.caption ? plainTextToHtml(seed.caption) : ""),
+    headline: seed?.draft?.title ?? "",
     description: "",
-    cta: seed?.cta ?? "Learn More",
+    cta: seed?.cta ?? "",
     ctaUrl: "",
     hashtags: seed?.hashtags ?? [],
     mentions: [],
-    media: [],
+    media: seed?.media ?? seed?.draft?.media.map(({ asset }) => ({ id: asset.id, url: asset.url, type: asset.kind === "VIDEO" ? "video" as const : "image" as const, name: asset.id, width: asset.width ?? undefined, height: asset.height ?? undefined })) ?? [],
     link: "",
     location: "",
     altText: "",
@@ -103,7 +123,7 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
     language: "English",
     tone: "Positive",
   });
-  const [platformOverrides, setPlatformOverrides] = useState<Partial<Record<Platform, PlatformOverride>>>({});
+  const [platformOverrides, setPlatformOverrides] = useState<Partial<Record<Platform, PlatformOverride>>>(() => Object.fromEntries((seed?.draft?.variants ?? []).map(v => [CHANNEL_TO_PLATFORM[v.channel], {enabled: v.content !== null && htmlToPlainText(v.content) !== htmlToPlainText(seed?.draft?.content ?? ""), caption: v.content ?? undefined}]).filter(([p]) => Boolean(p))));
   const [masterRatio, setMasterRatio] = useState<MediaRatio>("4:5");
   const [platformRatios, setPlatformRatios] = useState<Partial<Record<Platform, string>>>({});
   const [selectedPlacement, setSelectedPlacement] = useState<Partial<Record<Platform, string>>>({});
@@ -120,18 +140,14 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
   const [globalUtm, setGlobalUtm] = useState<UTMConfig>({ source: "", medium: "", campaign: "", content: "", term: "" });
   const [platformUtms, setPlatformUtms] = useState<Partial<Record<Platform, UTMConfig>>>({});
   /* ── Tenancy & Live Draft State (TASK-11A) ── */
-  const { companyId, clientId, setClientId } = useTenancyContext();
-  const overviewQuery = useMetaOverview(companyId, clientId, env.dataSource === "api" && Boolean(companyId && clientId));
-  const channelAvailabilityLoading = env.dataSource === "api" && overviewQuery.isLoading;
-  const channelAvailabilityError = env.dataSource === "api" ? overviewQuery.error : null;
   const [clientOptions, setClientOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [previewPlatform, setPreviewPlatform] = useState<Platform>("instagram");
-  const [channelsOpen, setChannelsOpen] = useState(false);
+  const [channelsOpen, setChannelsOpen] = useState(true);
   const [mediaOpen, setMediaOpen] = useState(false);
 
-  const [savedDraftId, setSavedDraftId] = useState<string | null>(null);
-  const [currentRevision, setCurrentRevision] = useState<number | null>(null);
-  const [savedAssetIds, setSavedAssetIds] = useState<string[]>([]);
+  const [savedDraftId, setSavedDraftId] = useState<string | null>(seed?.draft?.id ?? null);
+  const [currentRevision, setCurrentRevision] = useState<number | null>(seed?.draft?.revision ?? null);
+  const [savedAssetIds, setSavedAssetIds] = useState<string[]>(seed?.draft?.media.map(m => m.asset.id) ?? []);
 
   useEffect(() => {
     if (!companyId) return;
@@ -145,7 +161,7 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
       .catch(() => {});
     return () => { cancelled = true; };
   }, [companyId]);
-  const [variantIds, setVariantIds] = useState<Partial<Record<Platform, string>>>({});
+  const [variantIds, setVariantIds] = useState<Partial<Record<Platform, string>>>(variantsToPlatformMap(seed?.draft?.variants ?? []));
   const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
   const [conflictNotice, setConflictNotice] = useState<string | null>(null);
 
@@ -187,11 +203,11 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
       const attached = current.some((m) => m.id === asset.id);
       return { ...prev, media: attached ? current.filter((m) => m.id !== asset.id) : [...current, asset] };
     });
-  }, []);
+  }, [setMasterContent]);
 
   const removeMedia = useCallback((id: string) => {
     setMasterContent((prev) => ({ ...prev, media: (prev.media ?? []).filter((m) => m.id !== id) }));
-  }, []);
+  }, [setMasterContent]);
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -224,7 +240,7 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
         setIsUploading(false);
       }
     },
-    [companyId, clientId],
+    [companyId, clientId, setMasterContent],
   );
 
   const reloadLatestDraft = useCallback(async () => {
@@ -236,43 +252,42 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
       setSavedAssetIds(latest.media.map((item) => item.asset.id));
       setMasterContent((prev) => ({
         ...prev,
-        caption: latest.content,
+        caption: /<(p|div|br|strong|em)\b/i.test(latest.content) ? latest.content : plainTextToHtml(latest.content),
+        hashtags: [],
+        link: "",
+        media: latest.media.map(({ asset }) => ({id:asset.id,url:asset.url,type:asset.kind === "VIDEO" ? "video" : "image",name:asset.id,width:asset.width ?? undefined,height:asset.height ?? undefined})),
         headline: latest.title || prev.headline,
       }));
+      setPlatformOverrides(Object.fromEntries(latest.variants.map(v => [CHANNEL_TO_PLATFORM[v.channel], {enabled:v.content !== null && htmlToPlainText(v.content) !== htmlToPlainText(latest.content),caption:v.content ?? undefined}])));
       setConflictNotice(null);
       toast.success(`Reloaded draft (Revision ${latest.revision})`);
     } catch {
       toast.error("Failed to reload draft.");
     }
-  }, [companyId, clientId, savedDraftId]);
+  }, [companyId, clientId, savedDraftId, setMasterContent, setPlatformOverrides]);
 
   const handleSaveDraft = useCallback(async (): Promise<{ draftId: string; revision: number; variantIds: Partial<Record<Platform, string>> } | null> => {
+    if (!canWrite) { toast.error("Your role cannot edit content in this company."); return null; }
     if (!companyId || !clientId) {
       toast.error("Verified Company and Client context are required.");
       return null;
     }
-    if (!masterContent.caption.trim()) {
+    if (!htmlToPlainText(masterContent.caption).trim()) {
       toast.error("Please enter a caption before saving draft.");
       return null;
     }
 
     // Map supported channels (FACEBOOK_PAGE, INSTAGRAM_ACCOUNT, LINKEDIN_ORGANIZATION)
     const variants: Record<string, { content?: string | null }> = {};
-    if (channels.includes("facebook")) {
-      variants.FACEBOOK_PAGE = {
-        content: platformOverrides.facebook?.caption || masterContent.caption,
-      };
+    for (const platform of ["facebook", "instagram", "linkedin"] as const) {
+      if (!channels.includes(platform)) continue;
+      let content: string;
+      try { content = deliveryCaption(masterContent, platformOverrides[platform], platformUtms[platform] ?? globalUtm); }
+      catch { toast.error("Enter a valid HTTP or HTTPS link before saving tracking settings."); return null; }
+      const key = platform === "facebook" ? "FACEBOOK_PAGE" : platform === "instagram" ? "INSTAGRAM_ACCOUNT" : "LINKEDIN_ORGANIZATION";
+      variants[key] = { content };
     }
-    if (channels.includes("instagram")) {
-      variants.INSTAGRAM_ACCOUNT = {
-        content: platformOverrides.instagram?.caption || masterContent.caption,
-      };
-    }
-    if (channels.includes("linkedin")) {
-      variants.LINKEDIN_ORGANIZATION = {
-        content: platformOverrides.linkedin?.caption || masterContent.caption,
-      };
-    }
+    if (!Object.keys(variants).length) {toast.error("Select at least one channel before saving a draft.");return null;}
     // NOTE: Google Business has no draft-variant support in the backend yet
     // (`drafts.service.ts` DRAFT_CHANNELS). Sending GOOGLE_BUSINESS_LOCATION
     // fails the whole save, so it is deliberately not emitted here.
@@ -295,7 +310,7 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
         const updated = await draftsApi.update(companyId, clientId, savedDraftId, {
           expectedRevision: currentRevision,
           title,
-          content: masterContent.caption,
+          content: deliveryCaption(masterContent),
           variants,
         });
 
@@ -317,7 +332,7 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
         // Create new draft
         const created = await draftsApi.create(companyId, clientId, {
           title,
-          content: masterContent.caption,
+          content: deliveryCaption(masterContent),
           assetIds: assetIds.length > 0 ? assetIds : undefined,
           variants,
         });
@@ -354,40 +369,25 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
     } finally {
       setIsSavingDraft(false);
     }
+    if (result) for (const key of ["content-drafts", "content-approvals", "content-approval-counts", "content-approval-detail"]) void queryClient.invalidateQueries({queryKey:[key,companyId,clientId]});
     return result;
-  }, [companyId, clientId, masterContent, channels, platformOverrides, savedDraftId, currentRevision, savedAssetIds]);
+  }, [canWrite, queryClient, companyId, clientId, masterContent, channels, platformOverrides, platformUtms, globalUtm, savedDraftId, currentRevision, savedAssetIds]);
 
   /** Saves the draft, then asks an owner or admin to review it (the draft review flow; an approver is decided by role, not chosen here). */
   const handleSendForReview = useCallback(async () => {
     const saved = await handleSaveDraft();
     if (!saved || !companyId || !clientId) return;
     try {
-      await draftsApi.submitReview(companyId, clientId, saved.draftId, saved.revision);
+      const reviewed = await draftsApi.submitReview(companyId, clientId, saved.draftId, saved.revision);
+      setCurrentRevision(reviewed.revision);
+      for (const key of ["content-drafts", "content-approvals", "content-approval-counts", "content-approval-detail"]) void queryClient.invalidateQueries({queryKey:[key,companyId,clientId]});
       toast.success("Sent for review", { description: "An owner or admin can approve it under Approvals." });
     } catch (err) {
       toast.error(ApiError.isApiError(err) ? err.message : "The draft could not be sent for review.");
     }
-  }, [handleSaveDraft, companyId, clientId]);
+  }, [handleSaveDraft, companyId, clientId, queryClient]);
 
   /* ── Derived ── */
-  const linkedinFeature = useFeature("channels.linkedin_publishing");
-  const linkedinOff = linkedinFeature.status === "disabled";
-  const connectedPlatforms = useMemo(() => {
-    const platforms = env.dataSource === "api"
-      ? getPublishablePlatforms(overviewQuery.data)
-      : ALL_PLATFORMS.filter(p => MOCK_CONNECTIONS[p].status === "connected");
-    return linkedinOff ? platforms.filter((platform) => platform !== "linkedin") : platforms;
-  }, [overviewQuery.data, linkedinOff]);
-
-  useEffect(() => {
-    if (channelAvailabilityLoading) return;
-    setChannels((current) => {
-      const stillPublishable = current.filter((platform) => connectedPlatforms.includes(platform));
-      if (stillPublishable.length > 0) return stillPublishable;
-      return connectedPlatforms.includes("instagram") ? ["instagram"] : connectedPlatforms.slice(0, 1);
-    });
-  }, [channelAvailabilityLoading, connectedPlatforms]);
-
   const changeClient = (nextClientId: string) => {
     if (nextClientId === clientId) return;
     setClientId(nextClientId);
@@ -417,6 +417,7 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
   const validations: PlatformValidation[] = useMemo(() => {
     return channels.map(p => {
       const items: PlatformValidation["items"] = [];
+      if (!connectedPlatforms.includes(p)) items.push({field:"connection",level:"error",message:"Link this channel to the selected client before publishing. You can still save a draft."});
       const ct = contentTypes[p];
       const specs = PLATFORM_CONTENT_TYPES[p] ?? [];
       const spec = specs.find(s => s.id === ct);
@@ -425,11 +426,14 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
         items.push({ field: "contentType", level: "error", message: "Content type not selected" });
       }
 
-      const caption = platformOverrides[p]?.caption || masterContent.caption;
+      const override = platformOverrides[p];
+      let caption: string;
+      try { caption = deliveryCaption(masterContent, override, platformUtms[p] ?? globalUtm); }
+      catch { caption = ""; items.push({field:"link", level:"error", message:"Enter a valid HTTP or HTTPS link for tracking."}); }
       const maxChars = PLATFORM_CHAR_LIMITS[p];
       const mediaCount = (masterContent.media ?? []).length;
 
-      if (!masterContent.caption && spec?.fields.includes("caption")) {
+      if (!caption && spec?.fields.includes("caption")) {
         items.push({ field: "caption", level: "error", message: "Caption is required" });
       } else if (maxChars && caption.length > maxChars) {
         items.push({ field: "caption", level: "error", message: `Caption exceeds ${maxChars} characters for ${PLATFORM_META[p].label}` });
@@ -451,115 +455,138 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
       if (p === "instagram") {
         const instagramError = instagramPublishError(ct, (masterContent.media ?? []).filter(m => m.type === "image" || m.type === "video").map((media) => media.type as InstagramMediaKind));
         if (instagramError) items.push({ field: "media", level: "error", message: instagramError });
+        const image = masterContent.media.find(media => media.type === "image");
+        if (image?.width && image.height && (image.width < 320 || image.width > 1440 || image.width / image.height < 0.8 || image.width / image.height > 1.91)) {
+          items.push({ field: "media", level: "error", message: "Instagram requires an image 320?1440 px wide with an aspect ratio between 4:5 and 1.91:1. Upload a compatible image; preview framing does not resize it." });
+        }
       } else if (mediaCount > 0 && !MEDIA_CAPABLE_PLATFORMS.includes(p)) {
-        items.push({ field: "media", level: "warning", message: `${PLATFORM_META[p].label} is text-only here — scheduling with media is refused` });
+        items.push({ field: "media", level: "error", message: `${PLATFORM_META[p].label} is text-only here — scheduling with media is refused` });
       }
 
       if (p === "google-business") {
-        items.push({ field: "channel", level: "warning", message: "Google Business draft variants are not supported by the backend yet — it cannot be scheduled" });
+        items.push({ field: "channel", level: "error", message: "Google Business draft variants are not supported by the backend yet — it cannot be scheduled" });
       }
 
       const level = items.some(i => i.level === "error") ? "error" : items.some(i => i.level === "warning") ? "warning" : "ready";
       return { platform: p, level, items };
     });
-  }, [channels, contentTypes, masterContent, platformOverrides]);
+  }, [channels, contentTypes, masterContent, platformOverrides, platformUtms, globalUtm, connectedPlatforms]);
 
-  const errorCount = validations.filter(v => v.level === "error").length;
+  const errorCount = validations.filter(v => v.level === "error" && schedules.find(item => item.platform === v.platform)?.schedule !== "draft").length;
 
-  /* Publish now: save the draft, then queue one scheduled post per selected
-     channel at a target the backend reports as publishable. */
+  // Save a revision snapshot, then explicitly review destinations before enqueueing.
   const [isPublishing, setIsPublishing] = useState(false);
+  const [publishReview, setPublishReview] = useState<{
+    companyId: string; clientId: string; draftId: string; revision: number;
+    destinations: Array<{ platform: Platform; variantId: string; targets: PublishTarget[]; scheduledFor: string; immediate: boolean }>;
+  } | null>(null);
+  const [publishTargets, setPublishTargets] = useState<Partial<Record<Platform, string>>>({});
+  const [queuedPlatforms, setQueuedPlatforms] = useState<Platform[]>([]);
   const handlePublishNow = useCallback(async () => {
+    if (!canPublish) return toast.error("An owner or admin can publish this post.");
     if (isPublishing || isSavingDraft) return;
     if (errorCount > 0) return toast.error("Fix the flagged channels before publishing.");
-    if (!companyId || !clientId) return toast.error("Verified Company and Client context are required.");
-    if (channels.length === 0) return toast.error("Select at least one channel.");
-
+    if (!companyId || !clientId || channels.length === 0) return;
     setIsPublishing(true);
     try {
       const saved = await handleSaveDraft();
       if (!saved) return;
-
-      const scheduledFor = immediateScheduledFor();
-      const published: string[] = [];
-      const failed: string[] = [];
-
-      for (const platform of channels) {
-        const channel = PLATFORM_TO_CHANNEL[platform];
+      const deliveryChannels = channels.filter(platform => schedules.find(item => item.platform === platform)?.schedule !== "draft");
+      if (!deliveryChannels.length) { toast.success("Draft saved. All selected channels are set to Draft."); return; }
+      const destinations = await Promise.all(deliveryChannels.map(async platform => {
+        const choice = schedules.find(item => item.platform === platform);
+        const timing = deliveryTiming(choice);
+        if ("draft" in timing) throw new Error("Draft channels cannot be queued.");
+        if ("error" in timing) throw new Error(`${PLATFORM_META[platform].label}: ${timing.error}`);
         const variantId = saved.variantIds[platform];
-        if (!channel) continue; // e.g. Google Business — no backend draft channel
-        if (!variantId) {
-          failed.push(`${PLATFORM_META[platform]?.label ?? platform}: draft variant missing`);
-          continue;
-        }
-        try {
-          const { items } = await schedulingApi.targets(companyId, clientId, saved.draftId, variantId);
-          const target = items.find((t) => t.publishable);
-          if (!target) {
-            failed.push(`${PLATFORM_META[platform]?.label ?? platform}: ${items[0]?.reason ?? "no mapped publishing target"}`);
-            continue;
-          }
-          await schedulingApi.schedule(companyId, clientId, saved.draftId, variantId, {
-            resourceMappingId: target.resourceMappingId,
-            scheduledFor,
-            expectedDraftRevision: saved.revision,
-          });
-          published.push(PLATFORM_META[platform]?.label ?? platform);
-        } catch (error) {
-          failed.push(`${PLATFORM_META[platform]?.label ?? platform}: ${ApiError.isApiError(error) ? error.message : error instanceof Error ? error.message : "unknown error"}`);
-        }
-      }
+        if (!variantId) throw new Error(`Save a supported variant for ${PLATFORM_META[platform]?.label ?? platform}.`);
+        const { items } = await schedulingApi.targets(companyId, clientId, saved.draftId, variantId);
+        const targets = items.filter(target => target.publishable);
+        if (targets.length === 0) throw new Error(`No publishable account is linked for ${PLATFORM_META[platform]?.label ?? platform}.`);
+        return { platform, variantId, targets, scheduledFor: timing.scheduledFor, immediate: choice?.schedule !== "later" };
+      }));
+      setPublishTargets({});
+      setQueuedPlatforms([]);
+      setPublishReview({ companyId, clientId, draftId: saved.draftId, revision: saved.revision, destinations });
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Publishing accounts could not be loaded."); }
+    finally { setIsPublishing(false); }
+  }, [canPublish, isPublishing, isSavingDraft, errorCount, companyId, clientId, channels, schedules, handleSaveDraft, setPublishTargets, setPublishReview]);
 
-      if (published.length > 0) {
-        toast.success(`Publishing queued for ${published.join(", ")}`, {
-          description: "The worker picks it up within seconds — see Scheduled posts for the outcome.",
-          duration: 8000,
-        });
-      }
-      if (failed.length > 0) {
-        toast.error("Some channels were not queued", { description: failed.join(" | "), duration: 10_000 });
-      }
-    } finally {
-      setIsPublishing(false);
+  const confirmPublish = async () => {
+    if (!publishReview || isPublishing) return;
+    if (publishReview.companyId !== companyId || publishReview.clientId !== clientId) {
+      setPublishReview(null);
+      toast.error("The selected workspace changed. Review the post again.");
+      return;
     }
-  }, [isPublishing, isSavingDraft, errorCount, companyId, clientId, channels, handleSaveDraft]);
+    const pending = publishReview.destinations.filter(item => !queuedPlatforms.includes(item.platform));
+    if (pending.some(item => !selectedPublishingTarget(item.targets, publishTargets[item.platform]))) return;
+    setIsPublishing(true);
+    const done = [...queuedPlatforms];
+    try {
+      // Validate every fixed slot before queueing the first destination.
+      for (const item of pending) {
+        const timingError = !item.immediate && scheduleWindowError(new Date(item.scheduledFor));
+        if (timingError) throw new Error(`${PLATFORM_META[item.platform].label}: ${timingError}`);
+      }
+      for (const item of pending) {
+        const scheduledFor = item.immediate ? immediateScheduledFor() : item.scheduledFor;
+        await schedulingApi.schedule(publishReview.companyId, publishReview.clientId, publishReview.draftId, item.variantId, {
+          resourceMappingId: publishTargets[item.platform]!, scheduledFor, expectedDraftRevision: publishReview.revision,
+        });
+        done.push(item.platform);
+        setQueuedPlatforms([...done]);
+        void queryClient.invalidateQueries({ queryKey: ["content", "scheduled-posts"] });
+        void queryClient.invalidateQueries({ queryKey: ["meta-hub"] });
+      }
+      setPublishReview(null);
+      toast.success("Posts queued", { description: "Queued for the reviewed times. Check final delivery status in Scheduled posts.", duration: 10000 });
+    } catch (error) {
+      toast.error("Some posts were not queued", { description: `${done.length} queued. ${error instanceof Error ? error.message : "Try again for the remaining destinations."}`, duration: 10000 });
+    } finally { setIsPublishing(false); }
+  };
+
+  const effectivePreviewPlatform = channels.includes(previewPlatform) ? previewPlatform : channels[0] ?? previewPlatform;
 
   return (
-    <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_320px_320px]">
+    <>
+    <div className="grid min-w-0 grid-cols-1 items-start gap-1 xl:grid-cols-[minmax(0,1fr)_360px]">
       {/* ─── LEFT: Editor ─── */}
-      <div className="space-y-2.5 min-w-0">
+      <div className="space-y-1 min-w-0">
+
+        <div className="flex items-center gap-3 rounded-sm border border-[#E2E8F0] bg-white px-3.5 py-2 shadow-xs"><span id="composer-client-label" className="text-[0.8125rem] font-medium text-[#172044]">Client <span className="text-danger">*</span></span><Select value={clientId} onValueChange={changeClient} disabled={!clientOptions.length}><SelectTrigger size="sm" aria-labelledby="composer-client-label" className="ml-auto min-w-0 flex-1 sm:max-w-xs"><SelectValue placeholder={clientOptions.length ? "Select a client" : "Loading clients..."} /></SelectTrigger><SelectContent>{clientOptions.map(client=><SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>)}</SelectContent></Select></div>
 
         {/* Channels & Content Types */}
-        <section className="overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+        <section className="overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-xs">
           <button
             onClick={() => setChannelsOpen(!channelsOpen)}
-            className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
+            className="flex w-full items-center justify-between gap-2 min-h-[40px] border-b border-[#EDF1F5] px-3.5 py-2 text-left transition hover:bg-slate-50"
           >
             <div className="min-w-0">
-              <h3 className="truncate text-[13.5px] font-semibold text-[#172044]">Channels & Content Types</h3>
+              <h3 className="truncate text-[13px] font-semibold text-[#172044]">Channels & Content Types</h3>
               <p className="mt-0.5 text-[11.5px] text-[#7A87A0]">Select platforms and their content types</p>
             </div>
             {channelsOpen ? <ChevronDown className="size-4 text-[#7A87A0]" /> : <ChevronRight className="size-4 text-[#7A87A0]" />}
           </button>
 
           {channelsOpen && (
-            <div className="p-3">
-              <div className="space-y-0.5">
+            <div className="p-3.5">
+              <div className="grid gap-1 sm:grid-cols-2">
                 {channelAvailabilityLoading ? (
-                  <p className="px-2 py-3 text-[11px] text-[#7A87A0]">Checking this Client's mapped publishing accounts…</p>
-                ) : connectedPlatforms.length === 0 ? (
+                  <p className="px-2 py-3 text-[11px] text-[#7A87A0]">Checking this Client&apos;s mapped publishing accounts…</p>
+                ) : draftingPlatforms.length === 0 ? (
                   <div className="px-2 py-3 text-[11px] text-[#7A87A0]">
                     {channelAvailabilityError instanceof Error
                       ? channelAvailabilityError.message
                       : "No publishable accounts are mapped to this Client. Connect and map an account in Integrations."}
                   </div>
-                ) : connectedPlatforms.map((p) => {
+                ) : draftingPlatforms.map((p) => {
                   const backendProvider = overviewProviderForPlatform(p);
                   const providerOverview = backendProvider
                     ? overviewQuery.data?.providers.find((item) => item.provider === backendProvider)
                     : undefined;
                   const conn = env.dataSource === "api"
-                    ? { status: "connected" as const, account: providerOverview?.resources[0]?.externalResourceId ?? "Mapped account" }
+                    ? { status: connectedPlatforms.includes(p) ? "connected" as const : "disconnected" as const, account: connectedPlatforms.includes(p) ? providerOverview?.resources[0]?.externalResourceId ?? "Mapped account" : "Drafts available" }
                     : MOCK_CONNECTIONS[p];
                   const on = channels.includes(p);
                   const meta = PLATFORM_META[p];
@@ -568,10 +595,10 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
                     <div key={p}>
                       <button
                         onClick={() => toggleChannel(p)}
-                        disabled={conn.status === "disconnected"}
+                        disabled={!canWrite}
                         className={cn(
-                          "flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left transition",
-                          conn.status === "disconnected" ? "opacity-50 cursor-not-allowed" : on ? "bg-[#F0F6FF]" : "hover:bg-slate-50"
+                          "flex w-full flex-wrap items-center gap-2 rounded-sm px-2 py-1.5 text-left transition",
+                          on ? "bg-[#F0F6FF]" : "hover:bg-slate-50"
                         )}
                       >
                         <span className={cn("grid h-3.5 w-3.5 shrink-0 place-items-center rounded border transition", on ? "border-[#1769DF] bg-[#1769DF] text-white" : "border-[#CBD5E1] text-transparent")}>
@@ -579,15 +606,16 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
                         </span>
                         <PlatformBadge platform={p} size="sm" />
                         <span className="flex-1 text-[11.5px] font-semibold text-[#33445F]">{meta.label}</span>
-                        <span className="text-[9.5px] text-[#7A87A0]">{conn.account}</span>
+                        <span className="max-w-[120px] truncate text-[9.5px] text-[#7A87A0]">{conn.account}</span>
                         {conn.status === "connected" && <span className="rounded bg-emerald-50 px-1 py-0.5 text-[9px] font-semibold text-emerald-600">Connected</span>}
-                        {conn.status === "disconnected" && <span className="rounded bg-red-50 px-1 py-0.5 text-[9px] font-semibold text-red-500">Reconnect</span>}
+                        {conn.status === "disconnected" && <span className="rounded bg-red-50 px-1 py-0.5 text-[9px] font-semibold text-red-500">Link to publish</span>}
                       </button>
                     </div>
                   );
                 })}
               </div>
 
+              {channels.some(platform => !connectedPlatforms.includes(platform)) && <p className="mt-2 text-[11px] text-slate-500">Draft now, connect before publishing. <Link href="/admin/integrations" className="font-semibold text-blue-600 hover:underline">Manage channel connections</Link></p>}
               {/* Content types for selected platforms */}
               {channels.length > 0 && (
                 <div className="mt-3 border-t border-[#EDF1F5] pt-3">
@@ -602,47 +630,24 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
           )}
         </section>
 
-        {/* Client selection */}
-        <Card>
-          <div className="mb-2.5 border-b border-[#EDF1F5] pb-2.5">
-            <span className="text-[12.5px] font-semibold text-[#172044]">Post Details</span>
-            <p className="text-[10.5px] text-[#7A87A0]">Create a standalone post for the selected client.</p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-2.5">
-            <label className="min-w-0 flex-1">
-              <span className="mb-1 block text-[11.5px] font-semibold text-[#4B5B76]">Client <span className="text-red-500">*</span></span>
-              <select
-                value={clientId}
-                onChange={(event) => changeClient(event.target.value)}
-                disabled={clientOptions.length === 0}
-                className="h-9 w-full rounded-sm border border-[#D9E1EC] bg-white px-2.5 text-[12.5px] font-medium text-[#24365A] outline-none focus:border-[#1769DF] disabled:bg-slate-50"
-              >
-                {clientOptions.length === 0 && <option value="">Loading Clients…</option>}
-                {clientOptions.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}
-              </select>
-            </label>
-          </div>
-        </Card>
-
         {/* Master Content */}
-        <MasterContentEditor content={masterContent} onChange={setMasterContent} />
+        <MasterContentEditor onAiAction={onAiAction ? action => onAiAction(action, htmlToPlainText(masterContent.caption)) : undefined} content={masterContent} onChange={setMasterContent} />
 
         {/* Media */}
-        <section className="overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+        <section className="overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-xs">
           <button
             onClick={() => setMediaOpen(!mediaOpen)}
-            className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
+            className="flex w-full items-center justify-between gap-2 min-h-[40px] border-b border-[#EDF1F5] px-3.5 py-2 text-left transition hover:bg-slate-50"
           >
             <div className="min-w-0">
-              <h3 className="truncate text-[13.5px] font-semibold text-[#172044]">Media</h3>
+              <h3 className="truncate text-[13px] font-semibold text-[#172044]">Media</h3>
               <p className="mt-0.5 text-[11.5px] text-[#7A87A0]">JPG, PNG, WebP up to 8 MB · MP4/MOV up to 50 MB</p>
             </div>
             {mediaOpen ? <ChevronDown className="size-4 text-[#7A87A0]" /> : <ChevronRight className="size-4 text-[#7A87A0]" />}
           </button>
 
           {mediaOpen && (
-            <div className="p-3">
+            <div className="p-3.5">
               <input
                 ref={uploadInputRef}
                 type="file"
@@ -654,7 +659,7 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
                   if (file) void handleUpload(file);
                 }}
               />
-              <div className="rounded-sm border-2 border-dashed border-[#B9CFF2] bg-[#F7FAFF] py-4 text-center transition hover:border-[#1769DF] hover:bg-[#F0F6FF]">
+              <div className="rounded-sm border-2 border-dashed border-[#B9CFF2] bg-[#F7FAFF] py-3 text-center transition hover:border-[#1769DF] hover:bg-[#F0F6FF]">
                 <p className="text-[12px] font-semibold text-[#24365A]">Upload a file from your device</p>
                 <button
                   onClick={() => uploadInputRef.current?.click()}
@@ -674,7 +679,7 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
                 <div className="grid grid-cols-5 gap-1">
                   {(masterContent.media ?? []).map((m, i) => (
                     <div key={m.id} className="relative overflow-hidden rounded-sm border border-[#1769DF]">
-                      <img src={m.url} alt={m.alt ?? m.name} className="h-14 w-full object-cover" />
+                      {m.type === "video" ? <video src={m.url} muted preload="metadata" className="h-14 w-full object-cover" aria-label={m.name} /> : <img src={m.url} alt={m.alt ?? m.name} className="h-14 w-full object-cover" />}
                       <span className="absolute left-0.5 top-0.5 grid size-3.5 place-items-center rounded bg-[#1769DF] text-[8px] font-semibold text-white">{i + 1}</span>
                       <button
                         onClick={() => removeMedia(m.id)}
@@ -716,7 +721,7 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
                           attached ? "border-[#1769DF] ring-1 ring-[#1769DF]" : "border-[#E2E8F0] hover:border-[#9DBBEA]"
                         )}
                       >
-                        <img src={m.url} alt={m.alt ?? m.name} className="h-14 w-full object-cover" />
+                        {m.type === "video" ? <video src={m.url} muted preload="metadata" className="h-14 w-full object-cover" aria-label={m.name} /> : <img src={m.url} alt={m.alt ?? m.name} className="h-14 w-full object-cover" />}
                         {attached && (
                           <span className="absolute right-0.5 top-0.5 grid size-3.5 place-items-center rounded bg-[#1769DF] text-white">
                             <Check className="size-2.5" />
@@ -772,7 +777,20 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
       </div>
 
       {/* ─── CENTER: Schedule + Approval ─── */}
-      <div className="space-y-2.5 xl:sticky xl:top-4">
+      <div className="min-w-0 space-y-1">
+        <ContentPreviewPanel
+          platform={effectivePreviewPlatform}
+          setPlatform={setPreviewPlatform}
+          channels={channels}
+          caption={deliveryCaption(masterContent, platformOverrides[effectivePreviewPlatform])}
+          hashtags={[]}
+          mediaType={masterContent.media[0]?.type}
+          ratio={platformRatios[effectivePreviewPlatform] || masterRatio}
+          image={masterContent.media[0]?.url ?? null}
+          accountName={clientOptions.find((client) => client.id === clientId)?.name}
+        />
+
+
         {/* Schedule */}
         <ScheduleBuilder
           platforms={channels}
@@ -798,48 +816,48 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
         )}
 
         {/* Publishing targets, schedule creation, scheduled-post list (TASK-11B) */}
-        <ScheduledPostsPanel
-          draftId={savedDraftId}
-          revision={currentRevision}
-          channels={channels}
-          schedules={schedules}
-          variantIds={variantIds}
-          onReloadDraft={() => void reloadLatestDraft()}
-        />
+
 
         {/* Approval */}
         <Card>
-          <div className="mt-1.5 flex gap-1">
-            <button
+          <div className="grid grid-cols-2 gap-1">
+            <Button
+              size="sm"
+              variant="outline"
               onClick={handleSaveDraft}
-              disabled={isSavingDraft}
-              className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm border border-[#E2E8F0] text-[10.5px] font-semibold text-[#687797] hover:bg-slate-50 disabled:opacity-50"
+              disabled={isSavingDraft || !canWrite}
             >
-              {isSavingDraft ? <Loader2 className="size-3 animate-spin" /> : null}
+              {isSavingDraft ? <Loader2 className="size-3.5 animate-spin" /> : null}
               {savedDraftId && currentRevision !== null ? `Save Draft (r${currentRevision})` : "Save Draft"}
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-primary/40 text-primary hover:bg-primary-subtle"
               onClick={() => void handleSendForReview()}
-              disabled={isSavingDraft}
-              className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm bg-[#1769DF] text-[10.5px] font-semibold text-white hover:bg-[#1259BD] disabled:opacity-60"
+              disabled={isSavingDraft || !canWrite}
             >
               Send for Review
-            </button>
+            </Button>
+            <Button size="sm" variant="outline" className="col-span-2" onClick={() => {
+              const blob = new Blob([JSON.stringify({ caption: htmlToPlainText(masterContent.caption), hashtags: masterContent.hashtags, channels, platformOverrides, schedules, media: masterContent.media }, null, 2)], { type: "application/json" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a"); link.href = url; link.download = "content-draft.json"; link.click(); URL.revokeObjectURL(url);
+            }}>
+              <Download className="size-3.5" /> Export
+            </Button>
+            <Button
+              size="sm"
+              className="col-span-2"
+              onClick={() => void handlePublishNow()}
+              title={!canPublish ? "An owner or admin can publish content" : undefined}
+              disabled={!canPublish || errorCount > 0 || isPublishing || isSavingDraft || channelAvailabilityLoading || channels.length === 0}
+            >
+              {(isPublishing || isSavingDraft) ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+              {errorCount > 0 ? `${errorCount} channel${errorCount > 1 ? "s" : ""} need attention` : isPublishing ? "Publishing..." : "Review & publish"}
+            </Button>
           </div>
         </Card>
-      </div>
-
-      {/* ─── RIGHT: Preview + Validation + Checklist ─── */}
-      <div className="space-y-2.5 xl:sticky xl:top-4">
-        <ContentPreviewPanel
-          platform={previewPlatform}
-          setPlatform={setPreviewPlatform}
-          channels={channels}
-          caption={htmlToPlainText(platformOverrides[previewPlatform]?.caption || masterContent.caption || "")}
-          hashtags={masterContent.hashtags}
-          image={(masterContent.media ?? []).find((asset) => asset.type === "image")?.url ?? null}
-          accountName={clientOptions.find((client) => client.id === clientId)?.name}
-        />
 
         {/* Validation */}
         <PlatformValidationPanel
@@ -849,35 +867,49 @@ export function CreateContentTab({ seed }: { seed?: CreateSeed } = {}) {
 
         <ContentChecklist
           checks={[
-            { label: "Client selected", done: Boolean(clientId) },
-            { label: "Standalone Post (No Campaign)", done: true },
-            { label: "Platforms selected", done: channels.length > 0 },
-            { label: "Content types set", done: channels.every(p => !!contentTypes[p]) },
-            { label: "Caption added", done: masterContent.caption.length > 0 },
-            { label: "Media added", done: (masterContent.media ?? []).length > 0 },
-            { label: "Ratio configured", done: !!masterRatio },
-            { label: "Platform overrides reviewed", done: true },
-            { label: "Tracking configured", done: !!globalUtm.source },
-            { label: "Schedule configured", done: schedules.length > 0 },
+            {label:"Client selected",done:Boolean(clientId)},
+            {label:"Channels selected",done:channels.length>0},
+            {label:"Caption added",done:Boolean(htmlToPlainText(masterContent.caption).trim())},
+            {label:"Channel requirements",done:channels.length>0&&errorCount===0},
+            {label:"Draft saved",done:Boolean(savedDraftId)},
+            {label:"Media attached (optional)",done:masterContent.media.length>0},
           ]}
         />
 
-        <div className="flex gap-1">
-          <button className="flex h-8 flex-1 items-center justify-center gap-1 rounded-sm border border-[#E2E8F0] text-[10.5px] font-semibold text-[#687797] hover:bg-slate-50">
-            <Download className="size-3" /> Export
-          </button>
-          <button className={cn(
-            "flex h-8 flex-1 items-center justify-center gap-1 rounded-sm text-[10.5px] font-semibold text-white shadow-sm transition",
-            errorCount > 0 || isPublishing || isSavingDraft || channelAvailabilityLoading || channels.length === 0 ? "bg-gray-400 cursor-not-allowed" : "bg-[#EB0711] hover:bg-[#D60811]"
-          )}
-            onClick={() => void handlePublishNow()}
-            disabled={errorCount > 0 || isPublishing || isSavingDraft || channelAvailabilityLoading || channels.length === 0}
-          >
-            {(isPublishing || isSavingDraft) ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}
-            {errorCount > 0 ? `${errorCount} channel${errorCount > 1 ? "s" : ""} need attention` : isPublishing ? "Publishing…" : "Publish"}
-          </button>
-        </div>
+
       </div>
     </div>
+    <div className="mt-1">        <ScheduledPostsPanel
+          draftId={savedDraftId}
+          revision={currentRevision}
+          channels={channels}
+          schedules={schedules}
+          variantIds={variantIds}
+          onReloadDraft={() => void reloadLatestDraft()}
+        />
+    </div>
+    <AlertDialog open={publishReview !== null} onOpenChange={open => { if (!open && !isPublishing) setPublishReview(null); }}>
+      <AlertDialogContent className="max-h-[85vh] max-w-[calc(100%-2rem)] overflow-y-auto rounded-xl sm:max-w-lg" onEscapeKeyDown={event => { if (isPublishing) event.preventDefault(); }}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Review publishing destinations</AlertDialogTitle>
+          <AlertDialogDescription>Select the exact account and check the time for every channel. Now queues about 3 minutes ahead. Draft channels are excluded. Media processing can take longer.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="space-y-3">
+          {publishReview?.destinations.map(item => <label key={item.platform} className="block space-y-1 text-xs font-semibold">
+            <span>{PLATFORM_META[item.platform]?.label ?? item.platform}{queuedPlatforms.includes(item.platform) ? " - already queued" : ""}</span>
+            <span className="block text-[11px] font-normal text-slate-500">{item.immediate ? "Now ? queues about 3 minutes after confirmation" : new Date(item.scheduledFor).toLocaleString()}</span>
+            <select className="h-10 w-full rounded-lg border border-slate-300 bg-white px-2 text-xs" value={publishTargets[item.platform] ?? ""} disabled={isPublishing || queuedPlatforms.includes(item.platform)} onChange={event => setPublishTargets(previous => ({ ...previous, [item.platform]: event.target.value }))}>
+              <option value="">Select a publishing account</option>
+              {item.targets.map(target => <option key={target.resourceMappingId} value={target.resourceMappingId}>{target.resourceName ?? target.externalResourceId} ({target.externalResourceId})</option>)}
+            </select>
+          </label>)}
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPublishing}>Cancel</AlertDialogCancel>
+          <Button onClick={() => void confirmPublish()} disabled={isPublishing || !publishReview || publishReview.destinations.some(item => !queuedPlatforms.includes(item.platform) && !publishTargets[item.platform])}>{isPublishing ? "Queueing..." : "Confirm & queue posts"}</Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

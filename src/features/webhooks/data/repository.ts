@@ -1,16 +1,12 @@
-/**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
- * Repository seam.
- *
- * Live mode reads and writes /api/v1/super-admin/webhooks and surfaces failures. The in-memory
- * demo store is used only when the app runs in mock mode.
- */
-
 import { isMockMode } from "@/config/env";
 import * as store from "./mock/store";
 import { superAdminWebhooksApi } from "../live/super-admin-webhooks-api";
 import type {
   CreateEndpointInput,
+  CreateSourceInput,
+  Delivery,
+  IncomingEvent,
+  IncomingSource,
   CreateRecoveryInput,
   EndpointState,
   EventSubscription,
@@ -29,9 +25,9 @@ export interface WebhooksRepository {
   /** `hours` limits deliveries and incoming events to the selected period; configuration always loads in full. */
   getSnapshot(environment: WebhookEnvironment, hours?: number): Promise<WebhooksSnapshot>;
   getEndpoints(environment: WebhookEnvironment): Promise<OutgoingEndpoint[]>;
-  getDeliveries(environment: WebhookEnvironment): Promise<any[]>;
+  getDeliveries(environment: WebhookEnvironment): Promise<Delivery[]>;
   getSubscriptions(environment: WebhookEnvironment): Promise<EventSubscription[]>;
-  getIncomingEvents(environment: WebhookEnvironment): Promise<any[]>;
+  getIncomingEvents(environment: WebhookEnvironment): Promise<IncomingEvent[]>;
   getRecoveryRequests(environment: WebhookEnvironment): Promise<RecoveryRequest[]>;
   getActivity(environment: WebhookEnvironment): Promise<WebhookActivity[]>;
   getSettings(environment: WebhookEnvironment): Promise<WebhookSettings>;
@@ -42,6 +38,10 @@ export interface WebhooksRepository {
   requestSecretRotationReview(environment: WebhookEnvironment, endpointId: string, reason?: string, keepOldHours?: number): Promise<MutationResult<WebhookActivity>>;
   /** Records that a Super Admin reviewed the endpoint's destination and signing set-up (live workspace only). */
   markSecurityReviewed(environment: WebhookEnvironment, endpointId: string, reason: string): Promise<MutationResult<OutgoingEndpoint>>;
+  /** Incoming sources exist in the live workspace only; the signing secret is returned once. */
+  createSource(environment: WebhookEnvironment, input: CreateSourceInput): Promise<MutationResult<{ source: IncomingSource; secret: string }>>;
+  setSourceState(environment: WebhookEnvironment, sourceId: string, enabled: boolean, reason: string): Promise<MutationResult<IncomingSource>>;
+  rotateSourceSecret(environment: WebhookEnvironment, sourceId: string, reason: string, keepOldHours: number): Promise<MutationResult<{ source: IncomingSource; secret: string }>>;
   createRecoveryRequest(environment: WebhookEnvironment, input: CreateRecoveryInput): Promise<MutationResult<RecoveryRequest>>;
   updateRecoveryRequest(environment: WebhookEnvironment, requestId: string, state: RecoveryState): Promise<MutationResult<RecoveryRequest>>;
   updateSettings(environment: WebhookEnvironment, settings: WebhookSettings): Promise<MutationResult<WebhookSettings>>;
@@ -55,11 +55,6 @@ function toMutationResult<T>(res: unknown): MutationResult<T> {
   }
   return { ok: true, data: res as T };
 }
-
-/**
- * Live mode talks to the backend and nothing else. A failed request surfaces as an error in the UI;
- * it is never replaced with the bundled demo records.
- */
 const liveWebhooksRepository: WebhooksRepository = {
   getSnapshot: (environment, hours) => superAdminWebhooksApi.getSnapshot(environment, hours),
   getEndpoints: (environment) => superAdminWebhooksApi.getEndpoints(environment),
@@ -79,6 +74,9 @@ const liveWebhooksRepository: WebhooksRepository = {
     toMutationResult(await superAdminWebhooksApi.requestSecretRotationReview(environment, id, reason ?? "", keepOldHours ?? 0)),
   markSecurityReviewed: async (environment, id, reason) =>
     toMutationResult(await superAdminWebhooksApi.markSecurityReviewed(environment, id, reason)),
+  createSource: async (environment, input) => toMutationResult(await superAdminWebhooksApi.createSource({ ...input, environment })),
+  setSourceState: async (environment, id, enabled, reason) => toMutationResult(await superAdminWebhooksApi.setSourceState(environment, id, enabled, reason)),
+  rotateSourceSecret: async (environment, id, reason, keepOldHours) => toMutationResult(await superAdminWebhooksApi.rotateSourceSecret(environment, id, reason, keepOldHours)),
   createRecoveryRequest: async (environment, input) =>
     toMutationResult(await superAdminWebhooksApi.createRecoveryRequest(environment, input)),
   updateRecoveryRequest: async (environment, id, state) =>
@@ -105,6 +103,9 @@ const mockWebhooksRepository: WebhooksRepository = {
   saveSubscriptions: async (environment, id, keys, reason) => store.saveSubscriptions(environment, id, keys, reason),
   requestSecretRotationReview: async (environment, id) => store.requestSecretRotationReview(environment, id),
   markSecurityReviewed: async () => ({ ok: false, error: "Security reviews are recorded in the live workspace only." }),
+  createSource: async () => ({ ok: false, error: "Incoming sources are created in the live workspace only." }),
+  setSourceState: async () => ({ ok: false, error: "Incoming sources are managed in the live workspace only." }),
+  rotateSourceSecret: async () => ({ ok: false, error: "Incoming sources are managed in the live workspace only." }),
   createRecoveryRequest: async (environment, input) => store.createRecoveryRequest(environment, input),
   updateRecoveryRequest: async (environment, id, state) => store.updateRecoveryRequest(environment, id, state),
   updateSettings: async (environment, settings) => store.updateSettings(environment, settings),

@@ -105,7 +105,7 @@ export function WebsiteRankTrackingPage() {
 
   const columns = useMemo<Column<RankRow>[]>(
     () => [
-      { key: "keyword", header: "Keyword", primary: true, sortValue: (row) => row.keyword, cell: (row) => <span className="font-semibold capitalize text-[#1F2A44]">{row.keyword}</span> },
+      { key: "keyword", header: "Keyword", primary: true, sortValue: (row) => row.keyword, cell: (row) => <span className="block max-w-[28rem] truncate font-semibold capitalize text-[#1F2A44]" title={row.keyword}>{row.keyword}</span> },
       { key: "current", header: "Current avg position", align: "right", sortValue: (row) => row.currentPosition, cell: (row) => formatPosition(row.currentPosition) },
       { key: "previous", header: "Previous avg position", align: "right", sortValue: (row) => row.previousPosition ?? 999, cell: (row) => formatPosition(row.previousPosition) },
       {

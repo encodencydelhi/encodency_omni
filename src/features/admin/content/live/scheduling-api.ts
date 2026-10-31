@@ -44,6 +44,7 @@ export const QUEUE_RECOVERY_WARNING = "queue_delayed_recovery_pending";
 export const TOKEN_EXPIRY_WARNING = "token_expires_before_publish";
 
 export interface PublishTarget {
+  resourceName?: string | null;
   resourceMappingId: string;
   resourceType: PublishChannel;
   externalResourceId: string;

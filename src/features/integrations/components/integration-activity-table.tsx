@@ -131,7 +131,7 @@ export function IntegrationActivityTable({
 
           <Select
             value={resultFilter}
-            onValueChange={(val: any) => setResultFilter(val)}
+            onValueChange={(val) => setResultFilter(val as typeof resultFilter)}
           >
             <SelectTrigger className="w-[130px] text-xs h-9 bg-white">
               <SelectValue placeholder="Result" />

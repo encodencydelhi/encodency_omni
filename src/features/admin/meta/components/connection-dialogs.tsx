@@ -123,8 +123,8 @@ export function MapResourceDialog({ open, onOpenChange, kind }: { open: boolean;
         }
         onOpenChange(next);
       }}
-      title={`Link a ${copy.noun} to this Client`}
-      description="Only accounts this Meta login manages are listed. Linking lets this Client publish and report on it."
+      title={`Link ${kind === "INSTAGRAM_ACCOUNT" ? "an" : "a"} ${copy.noun} to this Client`}
+      description="This Client can link both Facebook Pages and Instagram accounts. Select an account below; link the other platform separately. Only accounts managed by this Meta login are listed."
       footer={
         <>
           <button type="button" className={btn} onClick={() => onOpenChange(false)}>

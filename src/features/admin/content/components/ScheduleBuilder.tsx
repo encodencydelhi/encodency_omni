@@ -38,25 +38,25 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
     onChange(updated);
   };
 
-  const applyBulk = () => {
+  const applyBulk = (value: ScheduleOption) => {
     onChange(platforms.map(p => ({
       platform: p,
-      schedule: bulkSchedule,
-      date: bulkSchedule === "later" ? defaultDate : undefined,
-      time: bulkSchedule === "later" ? defaultTime : undefined,
+      schedule: value,
+      date: value === "later" ? defaultDate : undefined,
+      time: value === "later" ? defaultTime : undefined,
     })));
   };
 
   return (
     <Card
       title="Schedule"
-      subtitle="Per-platform scheduling"
+      subtitle={`Times in ${Intl.DateTimeFormat().resolvedOptions().timeZone}`}
       action={
         <div className="flex gap-0.5">
           {(["now", "later", "draft"] as const).map((val) => (
             <button
               key={val}
-              onClick={() => { setBulkSchedule(val); if (val !== "later") applyBulk(); }}
+              onClick={() => { setBulkSchedule(val); applyBulk(val); }}
               className={cn(
                 "rounded-sm px-2 py-1 text-[10px] font-semibold transition",
                 bulkSchedule === val ? "bg-[#F0F6FF] text-[#1769DF]" : "text-[#7A87A0] hover:bg-slate-50"
@@ -138,7 +138,7 @@ export function ScheduleBuilder({ platforms, schedules, onChange }: Props) {
                   {sched.schedule === "now" && (
                     <div className="mt-1.5 flex items-start gap-1.5 rounded-sm bg-emerald-50 p-2 ring-1 ring-emerald-100">
                       <Zap className="mt-px size-3 shrink-0 text-emerald-600" />
-                      <p className="text-[10px] leading-4 text-emerald-800">Will publish immediately after approval</p>
+                      <p className="text-[10px] leading-4 text-emerald-800">Queues about 3 minutes after destination confirmation. Check final publishing status.</p>
                     </div>
                   )}
                 </div>

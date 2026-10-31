@@ -127,12 +127,10 @@ export const ENVIRONMENT_LABEL: Record<WebhookEnvironment, string> = {
 
 export const VERIFICATION_STATE: StatusRegistry<VerificationState> = {
   pending: { label: "Pending", tone: "info", description: "Verification has not completed." },
-  verified: {
-    label: "Verified (Demo Record)",
-    tone: "neutral",
-    description: "A demo fixture. No cryptographic verification occurred in this frontend.",
-  },
-  rejected: { label: "Rejected", tone: "danger", description: "The demo record says verification failed." },
+  verified: isMockMode
+    ? { label: "Verified (Demo Record)", tone: "neutral", description: "A demo fixture. No cryptographic verification occurred in this frontend." }
+    : { label: "Verified", tone: "success", description: "The backend checked this event's signature before storing it." },
+  rejected: { label: "Rejected", tone: "danger", description: isMockMode ? "The demo record says verification failed." : "The signature check failed." },
   unavailable: { label: "Not Verified", tone: "warning", description: "Verification was unavailable or not defined." },
 };
 
@@ -263,7 +261,7 @@ export const RESOURCE_UPDATE: StatusRegistry<ResourceUpdateResult> = {
 };
 
 export const CHECK_RESULT: StatusRegistry<CheckResult> = {
-  passed: { label: "Passed (Demo Record)", tone: "neutral" },
+  passed: { label: isMockMode ? "Passed (Demo Record)" : "Passed", tone: isMockMode ? "neutral" : "success" },
   failed: { label: "Failed", tone: "danger" },
   not_applicable: { label: "Not Applicable", tone: "neutral" },
   not_recorded: { label: "Not Recorded", tone: "neutral" },

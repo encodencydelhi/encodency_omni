@@ -1,7 +1,7 @@
-import { formatCurrency } from "@/lib/utils/format";
+import { COMPACT_MONEY_FROM, formatCurrency } from "@/lib/utils/format";
 
 /** Compact money ("₹1.2L") only from one lakh up. Below that the exact amount is shown: a plan at ₹4,999 must not read as "₹5K". */
-export const COMPACT_FROM = 100_000;
+export const COMPACT_FROM = COMPACT_MONEY_FROM;
 
 /** Whole-currency minor units formatted for display; zero reads as a dash. */
 export function money(minor: number, currency: string, compact = false): string {

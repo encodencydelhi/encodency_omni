@@ -227,7 +227,7 @@ function IdentityStep({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Primary website" htmlFor="create-website" error={errors.website} hint="Optional. E.g. https://example.com">
+        <Field label="Primary website" htmlFor="create-website" error={errors.website} hint="Optional. This client's website, used for its website analysis. It can differ from the company website.">
           <Input id="create-website" value={draft.website} onChange={(event) => update({ website: event.target.value })} placeholder="https://example.com" aria-invalid={Boolean(errors.website)} />
         </Field>
         <Field label="Contact email" htmlFor="create-email" error={errors.contactEmail}>

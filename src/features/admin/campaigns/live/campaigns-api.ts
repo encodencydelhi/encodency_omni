@@ -2,7 +2,8 @@ import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
 import { ApiError } from "@/types/api";
 
-export type CampaignStatus = "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED" | "ARCHIVED";
+/** Mirrors the backend CampaignStatus enum; the API rejects any other value (there is no ARCHIVED). */
+export type CampaignStatus = "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED";
 
 export interface BudgetInput {
   /** Decimal string, e.g. "12400.50" (at most 12 integer digits). */

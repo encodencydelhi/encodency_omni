@@ -56,7 +56,7 @@ function Shell({ children }: { children: ReactNode }) {
         <AdminTopbar />
         <AdminBreadcrumb />
         <PublicAnnouncementBanner audience="all_companies" className="px-4 pt-3 sm:px-5 xl:px-6" />
-        <main key={preferencesVersion} className="w-full flex-1 min-w-0 max-w-full px-4 py-5 sm:px-5 xl:px-6 pb-16">{children}</main>
+        <main key={preferencesVersion} className="w-full flex-1 min-w-0 max-w-full px-4 py-5 sm:px-5 xl:px-6 pb-36">{children}</main>
         <AdminFooter />
       </div>
       <AiAssistantFloatingBot />

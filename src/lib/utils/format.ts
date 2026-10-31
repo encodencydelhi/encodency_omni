@@ -69,6 +69,9 @@ export function formatCompactNumber(value: number): string {
   return preferences ? new Intl.NumberFormat(numberLocale(), { notation: "compact", maximumFractionDigits: 1 }).format(value) : compactNumber.format(value);
 }
 
+/** Money is abbreviated ("₹1.2L") only from one lakh up; below that the exact amount is shown, so a plan at ₹4,999 never reads as "₹5K". */
+export const COMPACT_MONEY_FROM = 100_000;
+
 export function formatCurrency(
   amountInMinorUnits: number,
   currency = "INR",

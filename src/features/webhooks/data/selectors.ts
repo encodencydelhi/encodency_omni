@@ -3,6 +3,7 @@
  * Pure derivations over a snapshot. No state, no I/O, safe to unit test.
  */
 
+import { isMockMode } from "@/config/env";
 import { FAILURE_CLASS, RANGE_OPTIONS, WEBHOOK_ROUTES } from "./config";
 import type {
   Delivery,
@@ -17,10 +18,6 @@ import type {
   WebhookTimeRange,
   WebhooksSnapshot,
 } from "./types";
-
-/* ------------------------------------------------------------------ */
-/* Time windows                                                        */
-/* ------------------------------------------------------------------ */
 
 export interface TimeWindow {
   fromMs: number;
@@ -462,21 +459,32 @@ export function evaluateIncomingReprocess(event: IncomingEvent, source: Incoming
             : "Authenticity could not be established. Unverified events cannot be processed.",
   });
   const ps = event.processing.state;
+  // A processed event's stored body is deleted once the work is done (live mode), so only the demo data can replay one.
+  const processedStatus: EligibilityFactor["status"] = isMockMode ? "warn" : "block";
   factors.push({
-    id: "state", label: "Current processing state", status: ps === "failed" ? "pass" : ps === "processed" ? "warn" : ps === "ignored_duplicate" ? "block" : ps === "rejected" ? "block" : "block",
+    id: "state", label: "Current processing state", status: ps === "failed" ? "pass" : ps === "processed" ? processedStatus : "block",
     detail:
       ps === "failed" ? "Processing failed after its automatic attempts."
-        : ps === "processed" ? "The event already processed. Reprocessing may repeat business side effects."
+        : ps === "processed" ? (isMockMode ? "The event already processed. Reprocessing may repeat business side effects." : "The event already processed, and its body is no longer stored, so it cannot run again.")
           : ps === "ignored_duplicate" ? "This was ignored as a duplicate HTTP delivery. Reprocess the original event instead."
             : ps === "rejected" ? "The event was rejected."
               : "Processing is still in progress or has not started.",
   });
   const code = event.processing.errorCode;
+  const NEVER_WORKS: Record<string, string> = {
+    unsupported_event_type: "The event type is unsupported. Reprocessing cannot succeed until the receiver supports it.",
+    payload_not_kept: "This event arrived before incoming processing existed and its body was not stored, so it cannot be processed.",
+    payload_unreadable: "The stored body could not be read, so the event cannot be processed.",
+    invalid_payload: "The body this sender posted is not valid for this event type. Reprocessing re-runs the same stored body, so it would fail the same way. Ask the sender to post a corrected event.",
+  };
+  const FIX_FIRST: Record<string, string> = {
+    account_mapping_missing: "Fix the account mapping first (the source must be tied to a company), otherwise reprocessing will fail again.",
+    source_disabled: "Enable the source first, otherwise reprocessing will be refused again.",
+    client_not_found: "The client in the body does not belong to the source's company. Reprocessing only helps once that client exists in the company.",
+  };
   factors.push({
-    id: "error", label: "Failure classification", status: code === "unsupported_event_type" ? "block" : code === "account_mapping_missing" ? "warn" : code ? "pass" : "info",
-    detail: code === "unsupported_event_type" ? "The event type is unsupported. Reprocessing cannot succeed until the receiver supports it."
-      : code === "account_mapping_missing" ? "Fix the account mapping in Integrations first, otherwise reprocessing will fail again."
-        : code ? "The failure looks transient (dependency timeout)." : "No processing error is recorded.",
+    id: "error", label: "Failure classification", status: code && NEVER_WORKS[code] ? "block" : code && FIX_FIRST[code] ? "warn" : code ? "pass" : "info",
+    detail: code && NEVER_WORKS[code] ? NEVER_WORKS[code]! : code && FIX_FIRST[code] ? FIX_FIRST[code]! : code ? "The failure looks transient (dependency timeout)." : "No processing error is recorded.",
   });
   factors.push({ id: "mapping", label: "Company / account mapping", status: event.accountMapping === "mapped" ? "pass" : "warn", detail: event.accountMapping === "mapped" ? "The provider account maps to a connected company account." : "The company could not be established from a trusted mapping. Company identity is never taken from the payload alone." });
   factors.push({ id: "source", label: "Source configuration", status: source?.verificationConfigured ? "pass" : "block", detail: source?.verificationConfigured ? "The source has a verification policy defined." : "The source has no verification policy defined." });

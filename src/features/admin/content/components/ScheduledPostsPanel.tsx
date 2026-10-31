@@ -18,6 +18,7 @@ import {
   type ScheduledPost,
 } from "../live/scheduling-api";
 import { composeScheduledFor } from "../live/schedule-datetime";
+import { selectedPublishingTarget } from "../live/publishing-destination";
 import { SCHEDULED_POST_STATUS_META, describeScheduleErrorCode } from "../live/scheduling-status";
 import { PLATFORM_META } from "../config/platform-config";
 import type { Platform, PlatformSchedule } from "../types/content.types";
@@ -109,6 +110,7 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
     queryKey: [...POSTS_KEY, companyId, clientId],
     enabled: hasScope,
     queryFn: ({ signal }) => schedulingApi.list(companyId!, clientId!, { limit: 25 }, signal),
+    refetchInterval: query => query.state.data?.items.some(post => post.status === "SCHEDULED" || post.status === "PUBLISHING") ? 10000 : false,
   });
 
   const posts = postsQuery.data?.items ?? [];
@@ -140,20 +142,21 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
     const { platform, scheduledFor } = pendingConfirm;
     const channel = PLATFORM_TO_CHANNEL[platform];
     const variantId = variantIds[platform];
-    const targetId = selectedTarget[platform] ?? targets[platform]?.find((t) => t.publishable)?.resourceMappingId;
+    const targetId = selectedTarget[platform];
 
     setPendingConfirm(null);
     if (!companyId || !clientId) return toast.error("Verified Company and Client context are required.");
     if (!draftId || !variantId) return toast.error("Save the draft before scheduling.");
     if (revision === null) return toast.error("Save the draft to capture its revision first.");
     if (!channel) return toast.error("This channel cannot be scheduled yet.");
-    if (!targetId) return toast.error("Pick a publishing target first.");
+    const target = selectedPublishingTarget(targets[platform] ?? [], targetId);
+    if (!target) return toast.error("Pick an available publishing target first.");
 
     setScheduling(true);
     setConflictNotice(null);
     try {
       const created = await schedulingApi.schedule(companyId, clientId, draftId, variantId, {
-        resourceMappingId: targetId,
+        resourceMappingId: target.resourceMappingId,
         scheduledFor,
         expectedDraftRevision: revision,
       });
@@ -231,7 +234,7 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
   return (
     <Card
       title="Scheduled Posts"
-      subtitle="TASK-11B publishing queue"
+      subtitle="Track publishing status for this client"
       action={
         <button
           onClick={refreshPosts}
@@ -290,7 +293,7 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
           {scheduledPlatforms.map((platform) => {
             const sched = schedules.find((s) => s.platform === platform);
             const items = targets[platform] ?? [];
-            const selected = selectedTarget[platform] ?? items.find((t) => t.publishable)?.resourceMappingId;
+            const selected = selectedTarget[platform];
             const unsupported = items.length === 0 && !targetsPending;
             const composed = composeScheduledFor(sched?.date, sched?.time);
 
@@ -322,9 +325,10 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
                       onChange={(e) => setSelectedTarget((prev) => ({ ...prev, [platform]: e.target.value }))}
                       className="h-7 min-w-0 flex-1 appearance-none rounded-sm border border-[#D9E1EC] bg-white px-2 text-[10.5px] font-medium text-[#24365A] outline-none hover:border-[#1769DF] focus:border-[#1769DF]"
                     >
+                      <option value="">Select a publishing account</option>
                       {items.map((t) => (
                         <option key={t.resourceMappingId} value={t.resourceMappingId} disabled={!t.publishable}>
-                          {t.externalResourceId} · {t.provider}
+                          {t.resourceName ?? t.externalResourceId} · {t.externalResourceId}
                           {t.publishable
                             ? ""
                             : t.reason === "integration_reconnect_required"
@@ -374,7 +378,7 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
             {posts.map((post) => {
               const meta = SCHEDULED_POST_STATUS_META[post.status];
               const isOpen = expandedId === post.id;
-              const shown = isOpen && detail?.id === post.id ? detail : post;
+              const shown = isOpen && detail?.id === post.id && detail.updatedAt >= post.updatedAt ? detail : post;
               const errorCode = shown.failureCode ?? shown.lastErrorCode;
               const errorCopy = describeScheduleErrorCode(shown.failureCode ?? shown.lastErrorCode);
               const cancellable = shown.status === "SCHEDULED" || shown.status === "CANCELLED";
@@ -525,6 +529,10 @@ export function ScheduledPostsPanel({ draftId, revision, channels, schedules, va
               This will publish to{" "}
               <b>{PLATFORM_META[pendingConfirm.platform]?.label ?? pendingConfirm.platform}</b> at{" "}
               <b>{new Date(pendingConfirm.scheduledFor).toLocaleString()}</b>. This is a real, network-visible action.
+            </p>
+            <p className="mt-2 break-words text-xs font-semibold text-slate-800">
+              Destination: {targets[pendingConfirm.platform]?.find(target => target.resourceMappingId === selectedTarget[pendingConfirm.platform])?.resourceName ?? selectedTarget[pendingConfirm.platform]}
+              {" "}({targets[pendingConfirm.platform]?.find(target => target.resourceMappingId === selectedTarget[pendingConfirm.platform])?.externalResourceId})
             </p>
             <div className="mt-3 flex justify-end gap-1.5">
               <button

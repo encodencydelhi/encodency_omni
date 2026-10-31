@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { describeScheduleErrorCode } from "@/features/admin/content/live/scheduling-status";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -35,7 +36,6 @@ const ALL_STATUSES = "All statuses";
 const ALL_CHANNELS = "All channels";
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }) : "—");
-const humanize = (code: string | null) => (code ? code.replace(/_/g, " ") : "—");
 
 function ChannelMark({ channel }: { channel: PublishChannel }) {
   return channel === "INSTAGRAM_ACCOUNT" ? <FaInstagram className="size-3.5 text-[#d946ef]" aria-label="Instagram" /> : <FaFacebookF className="size-3.5 text-[#1877f2]" aria-label="Facebook" />;
@@ -224,7 +224,7 @@ export function ScheduledPostsTable({ channel, targetId, pageSize = 8 }: { chann
               <KeyValue label="Published at">{when(open.publishedAt)}</KeyValue>
               {open.cancelledAt && <KeyValue label="Cancelled at">{when(open.cancelledAt)}</KeyValue>}
               <KeyValue label="Attempts">{open.attemptCount}</KeyValue>
-              {(open.failureCode || open.lastErrorCode) && <KeyValue label="Problem">{humanize(open.failureCode ?? open.lastErrorCode)}</KeyValue>}
+                {(open.failureCode || open.lastErrorCode) && <KeyValue label="Problem">{describeScheduleErrorCode(open.failureCode ?? open.lastErrorCode)}</KeyValue>}
               {open.externalPostId && <KeyValue label="Meta post ID">{open.externalPostId}</KeyValue>}
               {open.draftChangedSinceScheduled && <KeyValue label="Draft">Edited after scheduling — this row keeps the text that will be posted.</KeyValue>}
             </dl>

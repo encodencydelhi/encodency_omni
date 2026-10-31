@@ -15,6 +15,7 @@ import {
   Globe2Icon,
   HashIcon,
   HeadsetIcon,
+  BookmarkIcon,
   HistoryIcon,
   ImageIcon,
   LandmarkIcon,
@@ -35,11 +36,12 @@ import {
   UsersRoundIcon,
   VideoIcon,
   WalletCardsIcon,
+  XIcon,
   type LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuth } from "@/features/auth/components/auth-provider";
@@ -76,6 +78,18 @@ export interface AdminSearchResult {
   isAiAction?: boolean;
 }
 
+/** The words that limit a search to one group of records (the same ones people can type, such as `leads:`). */
+const GROUP_PREFIX: Record<string, string> = {
+  Clients: "clients",
+  Campaigns: "campaigns",
+  "Content Drafts": "drafts",
+  CRM: "crm",
+  Automations: "automation",
+  "Support Tickets": "tickets",
+  Team: "team",
+  Invoices: "invoices",
+  "Competitor Studies": "studies",
+};
 const RECENTS_KEY = "admin-global-search-recents";
 const PINNED_KEY = "admin-global-search-pinned";
 const DEBOUNCE_MS = 150;
@@ -349,6 +363,7 @@ export function AdminGlobalSearch() {
   const [recents, setRecents] = useState<AdminSearchResult[]>([]);
   const [pinned, setPinned] = useState<AdminSearchResult[]>([]);
   const [previewFocused, setPreviewFocused] = useState(false);
+  const queryClient = useQueryClient();
 
   // What this person is allowed to do in this Company (from the server). Until it is known, anything that needs a capability stays hidden.
   const liveReady = !isMockMode && isReady && Boolean(companyId);
@@ -429,6 +444,26 @@ export function AdminGlobalSearch() {
     placeholderData: keepPreviousData,
     retry: 1,
   });
+  // This person's own saved searches (only the words; every run searches again with their current access).
+  const savedKey = ["admin-search-saved", companyId, userId];
+  const savedQuery = useQuery({
+    queryKey: savedKey,
+    queryFn: ({ signal }) => adminSearchApi.saved(companyId, signal),
+    enabled: liveReady && open,
+    staleTime: 30_000,
+  });
+  const saveMutation = useMutation({
+    mutationFn: (query: string) => adminSearchApi.saveSearch(companyId, query),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: savedKey }),
+  });
+  const removeSavedMutation = useMutation({
+    mutationFn: (id: string) => adminSearchApi.deleteSaved(companyId, id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: savedKey }),
+  });
+  const savedSearches = savedQuery.data?.items ?? [];
+  const typedQuery = debounced.trim();
+  const canSaveSearch = liveReady && Boolean(searchText) && typedQuery.length >= 2;
+  const alreadySaved = savedSearches.some((entry) => entry.query === typedQuery);
   const dataHits = useMemo<AdminSearchResult[]>(
     () => (dataQuery.data?.items ?? []).filter((hit) => allowed(hit)),
     [dataQuery.data, allowed],
@@ -550,7 +585,7 @@ export function AdminGlobalSearch() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-4xl gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0 shadow-2xl">
           {/* Header Input Area */}
-          <div className="flex items-center border-b border-slate-100 px-4 bg-slate-50/50">
+          <div className="flex items-center border-b border-slate-100 pl-4 pr-12 bg-slate-50/50">
             <SearchIcon className="size-5 text-slate-400 shrink-0" />
             <input
               ref={inputRef}
@@ -582,6 +617,18 @@ export function AdminGlobalSearch() {
                 }
               }}
             />
+            {canSaveSearch && (
+              <button
+                type="button"
+                disabled={alreadySaved || saveMutation.isPending}
+                onClick={() => saveMutation.mutate(typedQuery)}
+                title={alreadySaved ? "This search is already saved" : "Save this search to run it again later"}
+                className="mr-1 inline-flex items-center gap-1 rounded-md p-1.5 text-xs text-slate-500 hover:bg-slate-200 hover:text-slate-700 disabled:opacity-60 transition-colors"
+              >
+                <BookmarkIcon className="size-3.5" />
+                {alreadySaved ? "Saved" : "Save"}
+              </button>
+            )}
             {term && (
               <button
                 type="button"
@@ -600,6 +647,65 @@ export function AdminGlobalSearch() {
               ref={listRef}
               className="overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-200"
             >
+              {/* Narrow the same search to one kind of record (the same as typing `leads:` first) */}
+              {isActive && liveReady && searchText && (dataQuery.data?.searchable ?? []).some((group) => GROUP_PREFIX[group]) ? (
+                <div className="flex flex-wrap items-center gap-1 px-2 pb-2" role="group" aria-label="Show only">
+                  <button
+                    type="button"
+                    onClick={() => setTerm(searchText)}
+                    className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${!scoped ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}
+                  >
+                    Everything
+                  </button>
+                  {(dataQuery.data?.searchable ?? []).filter((group) => GROUP_PREFIX[group]).map((group) => {
+                    const prefix = GROUP_PREFIX[group]!;
+                    const on = scoped && debounced.toLowerCase().startsWith(`${prefix}:`);
+                    return (
+                      <button
+                        key={group}
+                        type="button"
+                        onClick={() => setTerm(`${prefix}: ${searchText}`)}
+                        className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${on ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"}`}
+                      >
+                        {group}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+              {isActive && dataQuery.data?.didYouMean ? (
+                <p className="px-3 pb-2 text-[11px] text-slate-500">
+                  Showing results for <span className="font-semibold text-slate-700">{dataQuery.data.didYouMean}</span>. Nothing matched exactly what you typed.
+                </p>
+              ) : null}
+
+              {/* Saved searches, shown before anything is typed */}
+              {!isActive && liveReady && savedSearches.length > 0 ? (
+                <div className="px-2 pb-2">
+                  <div className="flex items-center gap-1.5 px-1 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <BookmarkIcon className="size-3 text-slate-400" />
+                    <span>Saved searches</span>
+                  </div>
+                  <ul className="space-y-0.5">
+                    {savedSearches.map((entry) => (
+                      <li key={entry.id} className="group flex items-center gap-1 rounded-md hover:bg-slate-50">
+                        <button type="button" onClick={() => setTerm(entry.query)} className="min-w-0 flex-1 truncate px-2 py-1.5 text-left text-[13px] text-slate-700">
+                          {entry.name}
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`Remove saved search ${entry.name}`}
+                          onClick={() => removeSavedMutation.mutate(entry.id)}
+                          className="mr-1 rounded p-1 text-slate-300 hover:bg-slate-200 hover:text-slate-600"
+                        >
+                          <XIcon className="size-3" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
               {/* Empty state with helpful filter tags */}
               {!isActive && recents.length === 0 && pinned.length === 0 ? (
                 <div className="px-4 py-8 text-center text-sm text-slate-500">

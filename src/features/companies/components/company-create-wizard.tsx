@@ -563,7 +563,7 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
 
                       <div className="sm:col-span-2">{input("name", "Company name", { required: true, placeholder: "Acme Foods Pvt Ltd", maxLength: 80 })}</div>
                       {input("legalName", "Legal name", { placeholder: "As registered" })}
-                      {input("website", "Website", { placeholder: "acme.com" })}
+                      {input("website", "Company website", { placeholder: "acme.com", hint: "The company's own website. Its clients can have different websites." })}
                       {select("industry", "Industry", INDUSTRIES)}
                       {select("country", "Country", COUNTRIES, { required: true })}
                       {select("companySize", "Company size", COMPANY_SIZES, { allowEmpty: true })}
@@ -775,7 +775,7 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
                         {form.createClient ? (
                           <div className="grid gap-3 sm:grid-cols-2">
                             {input("clientName", "Client name", { required: true })}
-                            {input("clientWebsite", "Client website (optional)", { placeholder: "brand.com" })}
+                            {input("clientWebsite", "Client website (optional)", { placeholder: "brand.com", hint: "This client's website, used for its website analysis. It can differ from the company website." })}
                           </div>
                         ) : null}
                       </div>

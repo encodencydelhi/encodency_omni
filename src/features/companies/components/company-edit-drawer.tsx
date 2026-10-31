@@ -213,8 +213,8 @@ export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummar
     setCustomTag("");
   };
 
-  const text = (id: keyof EditForm, label: string, opts: { required?: boolean; type?: string } = {}) => (
-    <Field label={label} htmlFor={`edit-${id}`} required={opts.required} error={shown[id]}>
+  const text = (id: keyof EditForm, label: string, opts: { required?: boolean; type?: string; hint?: string } = {}) => (
+    <Field label={label} htmlFor={`edit-${id}`} required={opts.required} hint={opts.hint} error={shown[id]}>
       <Input
         id={`edit-${id}`}
         type={id === "contactPhone" ? "tel" : (opts.type ?? "text")}
@@ -263,7 +263,7 @@ export function CompanyEditDrawer({ summary, onClose }: { summary: CompanySummar
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="sm:col-span-2">{text("name", "Company name", { required: true })}</div>
                 {text("legalName", "Legal name")}
-                {text("website", "Website")}
+                {text("website", "Company website", { hint: "The company's own website. Its clients can have different websites." })}
                 <div className="sm:col-span-2 pt-2 border-t border-border/50">
                   <Label className="text-xs font-medium text-muted-foreground block mb-2">Company logo</Label>
                   <div className="flex items-center gap-4">

@@ -29,6 +29,8 @@ export function AdminBreadcrumb() {
 
   const pathSegments = pathname.split("/").filter(Boolean);
   const lastSegment = pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : "";
+  // A record id in the URL is not a readable name, so the crumb says "Details" instead of the raw UUID.
+  const lastLabel = !lastSegment ? "" : /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lastSegment) ? "Details" : lastSegment.replace(/-/g, " ");
 
   return (
     <TooltipProvider delayDuration={120}>
@@ -83,7 +85,7 @@ export function AdminBreadcrumb() {
                 <div className="flex items-center min-w-0">
                   <ChevronRight className="size-3.5 mx-0.5 text-slate-300 shrink-0" />
                   <span className="rounded px-2 py-0.5 text-slate-800 font-semibold capitalize bg-slate-100/90 border border-slate-200/70 truncate text-[11.5px]">
-                    {lastSegment.replace(/-/g, " ")}
+                    {lastLabel}
                   </span>
                 </div>
               </li>
@@ -96,7 +98,7 @@ export function AdminBreadcrumb() {
                     <ChevronRight className="size-3.5 mx-0.5 text-slate-300 shrink-0" />
                   )}
                   <span className="rounded px-2 py-0.5 text-slate-800 font-semibold capitalize bg-slate-100/90 border border-slate-200/70 truncate text-[11.5px]">
-                    {lastSegment.replace(/-/g, " ")}
+                    {lastLabel}
                   </span>
                 </div>
               </li>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BellRing, Database, Download, Lock, RefreshCw, Save, ShieldCheck } from "lucide-react";
+import { BellRing, Database, Download, Lock, Megaphone, RefreshCw, Save, ShieldCheck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils/cn";
 import { useUnsavedChanges } from "../integrations-data/hooks";
@@ -14,6 +14,7 @@ import { Button, Card, CardHeader, SettingRow, x } from "../components/ui";
 const SECTIONS = [
   { id: "upkeep", label: "Connection upkeep", icon: RefreshCw },
   { id: "safety", label: "Disconnect safety", icon: ShieldCheck },
+  { id: "ads", label: "Ad budget safety", icon: Megaphone },
   { id: "alerts", label: "Alerts", icon: BellRing },
   { id: "data", label: "Your data", icon: Database },
 ];
@@ -48,6 +49,7 @@ function Settings() {
     const parts: string[] = [];
     if (draft.autoRefresh !== saved.autoRefresh) parts.push("automatic renewal");
     if (draft.confirmBeforeDisconnect !== saved.confirmBeforeDisconnect || draft.blockDisconnectWithScheduledPosts !== saved.blockDisconnectWithScheduledPosts) parts.push("disconnect safety");
+    if (draft.metaMaxDailyBudget !== saved.metaMaxDailyBudget) parts.push("ad budget limit");
     return `Updated ${parts.join(" and ") || "integration settings"}`;
   };
 
@@ -135,6 +137,30 @@ function Settings() {
             title="Block disconnecting while posts are scheduled"
             description="The server refuses to disconnect an integration until the posts waiting to go out through it are cancelled or moved. Without this, disconnecting is allowed after you confirm and those posts fail."
             control={<Switch checked={draft.blockDisconnectWithScheduledPosts} disabled={!canEdit} onCheckedChange={(blockDisconnectWithScheduledPosts) => update({ blockDisconnectWithScheduledPosts })} aria-label="Block disconnecting while posts are scheduled" />}
+          />
+        </Section>
+
+        <Section id="ads" title="Ad budget safety" description="A ceiling that protects against a budget typed with an extra zero" icon={Megaphone}>
+          <SettingRow
+            title="Largest daily budget for one Meta campaign or ad set"
+            description="Creating, editing or switching on a Meta campaign or ad set with a bigger daily budget is refused by the server. The amount is in whole units of the ad account's own currency (for example rupees, not paise). Enter 0 for no limit."
+            control={
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={10_000_000}
+                step={1}
+                value={draft.metaMaxDailyBudget}
+                disabled={!canEdit}
+                aria-label="Largest daily budget for one Meta campaign or ad set"
+                onChange={(event) => {
+                  const next = Math.trunc(Number(event.target.value));
+                  if (Number.isFinite(next)) update({ metaMaxDailyBudget: Math.min(10_000_000, Math.max(0, next)) });
+                }}
+                className="h-8 w-36 rounded-sm border border-[#DDE4ED] bg-white px-2 text-right text-[12px] tabular-nums text-[#172044] disabled:opacity-60"
+              />
+            }
           />
         </Section>
 

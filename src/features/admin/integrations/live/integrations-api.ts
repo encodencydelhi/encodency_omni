@@ -251,6 +251,7 @@ export interface HubSettings {
   autoRefresh: boolean;
   confirmBeforeDisconnect: boolean;
   blockDisconnectWithScheduledPosts: boolean;
+  metaMaxDailyBudget: number;
 }
 
 export interface HubDisconnectResult {

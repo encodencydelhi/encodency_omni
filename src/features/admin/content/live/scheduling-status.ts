@@ -48,6 +48,12 @@ export const SCHEDULED_POST_STATUS_META: Record<ScheduledPostStatus, StatusMeta>
 export function describeScheduleErrorCode(code: string | null): string | null {
   if (!code) return null;
   switch (code) {
+    case "provider_media_processing":
+      return "Instagram is processing the media. The saved upload will be checked again automatically; do not submit the post again.";
+    case "provider_media_processing_failed":
+      return "Instagram could not process this media. Check the format and upload a compatible file.";
+    case "provider_media_invalid":
+      return "The media format, dimensions or size is not supported by Instagram.";
     case "integration_reconnect_required":
       return "The connection must be reconnected before this can publish.";
     case "missed_window":

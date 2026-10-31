@@ -1,4 +1,4 @@
-import { formatCompactNumber, formatCurrency, formatNumber } from "@/lib/utils/format";
+import { COMPACT_MONEY_FROM, formatCompactNumber, formatCurrency, formatNumber } from "@/lib/utils/format";
 import { USAGE_RESOURCE_BY_KEY } from "../data/config";
 import type { UsageResource } from "../data/types";
 
@@ -17,7 +17,7 @@ export function formatPercent1(value: number | null): string {
 }
 
 export function formatMrr(minor: number, currency: string, compact = false): string {
-  return minor === 0 ? "-" : formatCurrency(minor, currency, { compact });
+  return minor === 0 ? "-" : formatCurrency(minor, currency, { compact, compactFrom: COMPACT_MONEY_FROM });
 }
 
 export function formatIsoDate(iso: string): string {

@@ -291,6 +291,7 @@ export function useMetaScheduledPosts(companyId: string, clientId: string, enabl
     enabled: enabled && Boolean(companyId && clientId),
     queryFn: ({ signal }) => schedulingApi.list(companyId, clientId, { limit: 100 }, signal),
     staleTime: 15_000,
+    refetchInterval: query => query.state.data?.items.some(post => post.status === "SCHEDULED" || post.status === "PUBLISHING") ? 10000 : false,
     refetchOnWindowFocus: false,
   });
   const items: ScheduledPost[] = useMemo(() => (query.data?.items ?? []).filter((post) => post.channel === "FACEBOOK_PAGE" || post.channel === "INSTAGRAM_ACCOUNT"), [query.data]);

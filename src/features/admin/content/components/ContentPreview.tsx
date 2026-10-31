@@ -29,6 +29,8 @@ export function ContentPreviewPanel({
   image,
   isLoadingImage,
   accountName,
+  mediaType = "image",
+  ratio = "4:5",
 }: {
   platform: Platform;
   setPlatform: (p: Platform) => void;
@@ -39,6 +41,8 @@ export function ContentPreviewPanel({
   isLoadingImage?: boolean;
   /** The Client the post is for. */
   accountName?: string;
+  mediaType?: string;
+  ratio?: string;
 }) {
   const meta = getPlatformMeta(platform);
   const resolvedImage = image || null;
@@ -82,20 +86,20 @@ export function ContentPreviewPanel({
         </div>
         <div className="relative">
           {isLoadingImage ? (
-            <div className="grid aspect-[4/3.4] w-full place-items-center border-b border-[#EDF1F5] bg-gradient-to-br from-purple-50 via-slate-50 to-indigo-50 text-center p-4">
+            <div className="grid min-h-[112px] w-full place-items-center border-b border-[#EDF1F5] bg-gradient-to-br from-purple-50 via-slate-50 to-indigo-50 text-center p-4">
               <div className="flex flex-col items-center">
                 <Sparkles className="size-6 text-[#7C3AED] animate-spin" />
-                <p className="mt-2 text-[12px] font-semibold text-[#172044]">Generating AI Image with OpenAI…</p>
+                <p className="mt-2 text-[12px] font-semibold text-[#172044]">Generating your visual…</p>
                 <p className="mt-0.5 text-[10px] text-[#64748B]">Synthesizing photorealistic visual directly from your prompt</p>
               </div>
             </div>
           ) : resolvedImage ? (
-            <img src={resolvedImage} alt="" className="aspect-[4/3.4] w-full object-cover" />
+            mediaType === "video" ? <video src={resolvedImage} controls preload="metadata" className="max-h-64 w-full object-contain bg-slate-100" style={{aspectRatio: ratio.replace(":", "/")}} /> : <img src={resolvedImage} alt="Selected post media" className="max-h-64 w-full object-cover" style={{aspectRatio: ratio.replace(":", "/")}} />
           ) : (
-            <div className="grid aspect-[4/3.4] w-full place-items-center border-b border-[#EDF1F5] bg-[#F8FAFD] text-center p-4">
+            <div className="grid min-h-[112px] w-full place-items-center border-b border-[#EDF1F5] bg-[#F8FAFD] text-center p-4">
               <div>
                 <p className="text-[12px] font-semibold text-[#64748B]">No image selected</p>
-                <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Click 'Generate' to create a visual with OpenAI.</p>
+                <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Generate a visual in AI Assistant or upload your own media.</p>
               </div>
             </div>
           )}

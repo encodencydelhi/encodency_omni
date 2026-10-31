@@ -11,12 +11,16 @@ import {
   CHECK_RESULT, DEDUP_RESULT, ACCOUNT_MAPPING, ENVIRONMENT_LABEL, MODULE_LINKS, PROCESSING_STATE, READINESS,
   RECEIVER_STATUS, RESOURCE_UPDATE, SOURCE_CONFIGURATION_STATE, VERIFICATION_METHOD_LABEL, VERIFICATION_STATE, WEBHOOK_ROUTES,
 } from "../data/config";
+import { useWebhookMutation } from "../data/hooks";
+import { webhooksRepository } from "../data/repository";
 import { evaluateIncomingReprocess, recoveryRequestsFor } from "../data/selectors";
 import type { IncomingEvent } from "../data/types";
 import { OpenLink, TablePanel, CompanyCell, SectionCard } from "./cells";
 import { DetailHeader, InfoCard, TabBar, TechnicalContext, useUrlTab, type TabItem } from "./detail";
 import { CardGrid, Chip, CopyButton, EmptyRows, IdCell, JobReference, Kpi, Mono, NotFoundPanel, Notice, State, Timestamp, humanize } from "./kit";
+import { ReasonDialog } from "./reason-dialog";
 import { EligibilityBadge, EligibilityFactors, RecoverySheet } from "./recovery-sheet";
+import { RotateSecretDialog } from "./rotate-secret-dialog";
 import { useWebhookData } from "./webhooks-context";
 
 /* ------------------------------------------------------------------ */
@@ -24,8 +28,12 @@ import { useWebhookData } from "./webhooks-context";
 /* ------------------------------------------------------------------ */
 
 export function IncomingSourceDetailPage({ sourceId }: { sourceId: string }) {
-  const { snapshot } = useWebhookData();
+  const { snapshot, environment } = useWebhookData();
   const source = snapshot.sources.find((item) => item.id === sourceId);
+  const [stateOpen, setStateOpen] = useState(false);
+  const [rotateOpen, setRotateOpen] = useState(false);
+  const setState = useWebhookMutation(environment, (input: { enabled: boolean; reason: string }) => webhooksRepository.setSourceState(environment, sourceId, input.enabled, input.reason));
+  const rotate = useWebhookMutation(environment, (input: { reason: string; keepOldHours: number }) => webhooksRepository.rotateSourceSecret(environment, sourceId, input.reason, input.keepOldHours));
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
   const callbackUrl = source?.receiverPath && origin ? new URL(source.receiverPath, origin).toString() : "";
@@ -52,8 +60,14 @@ export function IncomingSourceDetailPage({ sourceId }: { sourceId: string }) {
         badges={<><State registry={SOURCE_CONFIGURATION_STATE} status={source.configurationState} /><State registry={RECEIVER_STATUS} status={source.receiverStatus} /><State registry={READINESS} status={source.readiness} /></>}
         actions={
           <>
+            {isMockMode ? null : (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setStateOpen(true)}>{source.configurationState === "disabled" ? "Enable Source" : "Pause Source"}</Button>
+                <Button variant="outline" size="sm" onClick={() => setRotateOpen(true)}>Rotate Secret</Button>
+              </>
+            )}
             <Button asChild variant="outline" size="sm"><Link href={`${WEBHOOK_ROUTES.incomingEvents}?source=${source.id}`}>View Incoming Events</Link></Button>
-            <Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.provider(source.providerId)}>Open Integration</Link></Button>
+            {isMockMode ? <Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.provider(source.providerId)}>Open Integration</Link></Button> : null}
             <Button asChild variant="outline" size="sm"><Link href={`${WEBHOOK_ROUTES.security}#incoming-verification`}>View Verification Policy</Link></Button>
             <Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.apiRequests}>Open API Monitoring</Link></Button>
           </>
@@ -64,7 +78,7 @@ export function IncomingSourceDetailPage({ sourceId }: { sourceId: string }) {
         <Kpi label="Recorded Events" value={events.length} hint={isMockMode ? "All recorded demo events for this source" : "All recorded events for this source"} />
         <Kpi label="Verification Problems" value={failures.length} tone={failures.length ? "danger" : "default"} hint="Rejected or not verified" />
         <Kpi label="Supported Event Types" value={source.supportedEventTypes.length} hint="Registered for this source" />
-        <Kpi label="Receiver" value="Not connected" hint="No live receiver exists yet" />
+        <Kpi label="Receiver" value={isMockMode ? "Not connected" : RECEIVER_STATUS[source.receiverStatus].label} hint={isMockMode ? "No live receiver exists yet" : "Checks the HMAC signature, then stores the event"} />
       </CardGrid>
 
       {!source.verificationConfigured ? <Notice tone="warning" title="No verification policy defined">Events from this source cannot be treated as authentic and are never processed.</Notice> : null}
@@ -115,9 +129,29 @@ export function IncomingSourceDetailPage({ sourceId }: { sourceId: string }) {
         </SectionCard>
       </div>
 
-      <SectionCard title="Related Integration" description="Provider authorization, connected accounts and approval state are owned by Integrations.">
-        <Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.provider(source.providerId)}>Open {source.providerName} in Integrations</Link></Button>
-      </SectionCard>
+      {isMockMode ? (
+        <SectionCard title="Related Integration" description="Provider authorization, connected accounts and approval state are owned by Integrations.">
+          <Button asChild variant="outline" size="sm"><Link href={MODULE_LINKS.provider(source.providerId)}>Open {source.providerName} in Integrations</Link></Button>
+        </SectionCard>
+      ) : (
+        <>
+          <ReasonDialog
+            open={stateOpen}
+            onOpenChange={setStateOpen}
+            title={source.configurationState === "disabled" ? "Enable this source?" : "Pause this source?"}
+            description={source.configurationState === "disabled" ? "It starts accepting events again. Events that arrived while it was paused are not processed." : "It stops accepting events right away (the sender gets a 404), and events already stored but not yet processed fail as source_disabled."}
+            confirmLabel={source.configurationState === "disabled" ? "Enable source" : "Pause source"}
+            placeholder="Why is this source being changed?"
+            onConfirm={async (reason) => { await setState.mutateAsync({ enabled: source.configurationState === "disabled", reason }); }}
+          />
+          <RotateSecretDialog
+            open={rotateOpen}
+            onOpenChange={setRotateOpen}
+            subject="source signing"
+            rotate={async (reason, keepOldHours) => (await rotate.mutateAsync({ reason, keepOldHours })).secret}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -213,6 +247,7 @@ export function IncomingEventDetailPage({ eventId }: { eventId: string }) {
               { label: "Started", value: <Timestamp iso={p.startedAt} /> },
               { label: "Completed", value: <Timestamp iso={p.completedAt} /> },
               { label: "Related resource update", value: <State registry={RESOURCE_UPDATE} status={p.resourceUpdate} /> },
+              { label: "Error code", value: p.errorCode ? <Mono>{p.errorCode}</Mono> : "None" },
               { label: "Sanitized error summary", value: <span className="whitespace-normal">{p.errorSummary ?? "None"}</span> },
             ]} />
             <InfoCard title="Duplicate Handling" description="A duplicate HTTP delivery differs from a new event with a similar payload." items={[

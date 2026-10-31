@@ -169,6 +169,19 @@ describe("retry, redelivery and replay eligibility", () => {
     assert.equal(evaluateIncomingReprocess(unverified, snapshot.sources.find((s) => s.id === unverified.sourceId)).level, "not_eligible");
   });
 
+  it("reads the real processing error codes: a body that can never work blocks, a fixable cause asks for review, a transient failure is eligible", () => {
+    const base = snapshot.incomingEvents.find((e) => e.verification.state === "verified" && e.dedup.result === "unique" && e.processing.state === "failed")!;
+    const source = snapshot.sources.find((s) => s.id === base.sourceId);
+    const withCode = (errorCode: string | null) => ({ ...base, accountMapping: "mapped" as const, processing: { ...base.processing, state: "failed" as const, errorCode } });
+    for (const code of ["unsupported_event_type", "payload_not_kept", "payload_unreadable", "invalid_payload"]) {
+      assert.equal(evaluateIncomingReprocess(withCode(code), source).level, "not_eligible", code);
+    }
+    for (const code of ["client_not_found", "source_disabled", "account_mapping_missing"]) {
+      assert.equal(evaluateIncomingReprocess(withCode(code), source).level, "review_required", code);
+    }
+    assert.equal(evaluateIncomingReprocess(withCode("attempts_exhausted"), source).level, "eligible");
+  });
+
   it("does not allow reprocessing an ignored duplicate delivery", () => {
     const duplicate = snapshot.incomingEvents.find((e) => e.dedup.result === "duplicate_http_delivery")!;
     assert.equal(evaluateIncomingReprocess(duplicate, snapshot.sources.find((s) => s.id === duplicate.sourceId)).level, "not_eligible");

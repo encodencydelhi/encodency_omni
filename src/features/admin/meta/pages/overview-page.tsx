@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { MapResourceDialog } from "../components/connection-dialogs";
+import { useAdminContext } from "@/features/admin/shell/admin-context";
 import { accountDisplayName } from "@/features/admin/meta-ads/account-name";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
@@ -21,6 +24,7 @@ import { ConnectionGate, DetailDialog, InlineNotice, KeyValue, META_ROOT, MetaSh
 
 const ACCOUNT_TONE: Record<string, "green" | "amber" | "red" | "slate"> = { ACTIVE: "green", CLOSED: "slate", DISABLED: "red", UNSETTLED: "amber", PENDING_RISK_REVIEW: "amber", PENDING_SETTLEMENT: "amber", IN_GRACE_PERIOD: "amber" };
 const titleCase = (value: string) => value.toLowerCase().replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+const MetaComposer = dynamic(() => import("@/features/admin/content/components/CreateContentTab").then(module => module.CreateContentTab), { loading: () => <p className="p-4 text-xs text-slate-500">Loading post editor...</p> });
 
 export function formatMoney(amount: number | null | undefined, currency: string | null | undefined): string {
   if (amount === null || amount === undefined) return "—";
@@ -46,10 +50,15 @@ export function MetaOverviewPage() {
 
 function Overview() {
   const meta = useMeta();
+  const { Clients } = useAdminContext();
+  const clientName = Clients.find(client => client.id === meta.clientId)?.name ?? "selected client";
+  const [mapKind, setMapKind] = useState<"FACEBOOK_PAGE" | "INSTAGRAM_ACCOUNT" | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
   const router = useRouter();
   const live = meta.state === "connected";
   const accounts = useAdAccounts(meta.companyId, live);
   const accountList = useMemo(() => accounts.data?.items ?? [], [accounts.data]);
+  const companyView = accounts.data?.scope === "company";
   const current = defaultAdAccount(meta.companyId, accountList);
   const totalsQuery = useAdsOverview(meta.companyId, live);
   // The heavy snapshot is NOT loaded here: only what the Ads workspace already fetched is reused (for the issue count).
@@ -64,8 +73,10 @@ function Overview() {
   const overviewById = useMemo(() => new Map((totalsQuery.data?.accounts ?? []).map((account) => [account.id, account] as const)), [totalsQuery.data]);
   const pages = social.data?.pages ?? [];
   const instagramAccounts = pages.filter((page) => page.instagram);
-  const mappedPages = meta.meta?.mappedResourceCount ?? 0;
-  const mappedInstagram = meta.instagram?.mappedResourceCount ?? 0;
+  const resources = [...(meta.meta?.resources ?? []), ...(meta.instagram?.resources ?? [])];
+  const mappedPages = new Set(resources.filter(resource => resource.resourceType === "FACEBOOK_PAGE").map(resource => resource.externalResourceId)).size;
+  const mappedInstagram = new Set(resources.filter(resource => resource.resourceType === "INSTAGRAM_ACCOUNT").map(resource => resource.externalResourceId)).size;
+  const linkedAdAccounts = companyView ? Object.values(accounts.data?.assignments ?? {}).filter(clientId => clientId === meta.clientId).length : accountList.length;
   const activeAccounts = accountList.filter((account) => account.status === "ACTIVE").length;
 
   const attention: Attention[] = [];
@@ -85,8 +96,8 @@ function Overview() {
     attention.push({
       id: "no-pages",
       tone: "amber",
-      title: "This Meta login manages no Facebook Page",
-      detail: unmanaged.length > 0 ? `Meta shows ${unmanaged.map((page) => page.name).join(", ")} through your ad accounts, but this login has no role on ${unmanaged.length === 1 ? "it" : "them"}, so posts and Instagram cannot be read.` : "Give this login access to a Page in Meta Business Settings, then reconnect and tick the Page.",
+      title: companyView ? "This Meta login manages no Facebook Page" : "No Facebook Page is linked to this Client",
+      detail: !companyView ? "Ask a company owner or admin to link the correct Page to this Client in Meta Settings." : unmanaged.length > 0 ? `Meta shows ${unmanaged.map((page) => page.name).join(", ")} through your ad accounts, but this login has no role on ${unmanaged.length === 1 ? "it" : "them"}, so posts and Instagram cannot be read.` : "Give this login access to a Page in Meta Business Settings, then reconnect and tick the Page.",
       action: { label: "How to fix", href: `${META_ROOT}/settings#pages` },
     });
   }
@@ -106,13 +117,23 @@ function Overview() {
   return (
     <div className="space-y-1">
       <div className="grid grid-cols-2 gap-1 md:grid-cols-3 xl:grid-cols-6">
-        <Stat label="Ad accounts" value={accounts.isLoading ? "…" : accountList.length} sub={`${activeAccounts} active`} icon={FaMeta} />
+        <Stat label="Ad accounts" value={accounts.isLoading ? "…" : accountList.length} sub={`${activeAccounts} active · ${linkedAdAccounts} linked to this Client`} icon={FaMeta} />
         <Stat label="Total spend" value={totalsQuery.isLoading ? "…" : (spend ?? "—")} sub={throttledAccounts > 0 ? `${throttledAccounts} account(s) limited by Meta, totals may be low` : "All time, every ad account"} icon={CircleDollarSign} tone={throttledAccounts > 0 ? "amber" : undefined} />
         <Stat label="Total leads" value={totalsQuery.isLoading ? "…" : (totals?.leads ?? 0).toLocaleString("en-IN")} sub="All time, from instant forms" icon={UsersRound} />
         <Stat label="Active campaigns" value={totalsQuery.isLoading ? "…" : (totals?.activeCampaigns ?? 0)} sub={`${totals?.campaigns ?? 0} campaigns in total`} icon={Megaphone} />
         <Stat label="Facebook Pages" value={social.isLoading ? "…" : pages.length} sub={`${mappedPages} linked to this Client`} icon={FaFacebookF} tone={social.isSuccess && pages.length === 0 ? "amber" : undefined} />
         <Stat label="Instagram accounts" value={social.isLoading ? "…" : instagramAccounts.length} sub={`${mappedInstagram} linked to this Client`} icon={FaInstagram} tone={social.isSuccess && instagramAccounts.length === 0 ? "amber" : undefined} />
       </div>
+
+      <Section title={`Publishing for ${clientName}`} description="Ad accounts, Facebook Pages and Instagram accounts are linked separately. Choose this client's publishing accounts below." action={<button type="button" className={btnPrimary} onClick={() => setComposerOpen(true)} disabled={mappedPages + mappedInstagram === 0}>Create post</button>}>
+        <div className="flex flex-wrap items-center gap-2 p-3">
+          <button type="button" className={btn} onClick={() => setMapKind("FACEBOOK_PAGE")}><FaFacebookF className="size-3.5 text-blue-600" />Link Facebook Page ({mappedPages})</button>
+          <button type="button" className={btn} onClick={() => setMapKind("INSTAGRAM_ACCOUNT")}><FaInstagram className="size-3.5 text-pink-600" />Link Instagram ({mappedInstagram})</button>
+          {mappedPages + mappedInstagram === 0 && <p className="text-xs text-slate-500">Link a Page or Instagram account to create and schedule posts here.</p>}
+        </div>
+      </Section>
+      {composerOpen && <Section title="Create & schedule a post" description={`Publishing accounts belong to ${clientName}.`}><div className="p-3"><MetaComposer key={`${meta.companyId}:${meta.clientId}`} initialPlatforms={[...(mappedPages ? ["facebook" as const] : []), ...(mappedInstagram ? ["instagram" as const] : [])]} /></div></Section>}
+      <MapResourceDialog key={mapKind ?? "closed"} open={mapKind !== null} onOpenChange={open => { if (!open) setMapKind(null); }} kind={mapKind ?? "FACEBOOK_PAGE"} />
 
       <div className="grid gap-1 lg:grid-cols-3">
         <ProductCard

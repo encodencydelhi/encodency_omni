@@ -160,11 +160,11 @@ export function RecoverySheet({
       <SheetContent className="max-w-xl sm:max-w-xl">
         <SheetHeader>
           <SheetTitle>Recovery Review</SheetTitle>
-          <SheetDescription>{context.kind === "outgoing" ? "Retry or redelivery of an outgoing event" : "Reprocess a received incoming event"}. Frontend demo request only.</SheetDescription>
+          <SheetDescription>{context.kind === "outgoing" ? "Retry or redelivery of an outgoing event" : "Reprocess a received incoming event"}. {isMockMode ? "Frontend demo request only." : "Saved as a request; a different Super Admin approves it."}</SheetDescription>
         </SheetHeader>
         <SheetBody className="space-y-4">
-          <Notice tone="warning" title="Nothing is sent or executed here">
-            {NOT_LIVE_NOTICE} A successful attempt is never added to the history by this form.
+          <Notice tone="warning" title={isMockMode ? "Nothing is sent or executed here" : "Saved for review, not run yet"}>
+            {NOT_LIVE_NOTICE} {isMockMode ? "A successful attempt is never added to the history by this form." : "The history only changes once the approved request has really run."}
           </Notice>
 
           <DefinitionList items={items} columns={2} />
@@ -226,12 +226,12 @@ export function RecoverySheet({
           ) : null}
           {ackError ? <p className="text-2xs text-danger">{ackError}</p> : null}
 
-          <p className="text-2xs text-muted-foreground">Required permission: Super Admin webhook recovery capability. Approval: a reviewer must approve. The frontend cannot approve or execute requests.</p>
+          <p className="text-2xs text-muted-foreground">Required permission: Super Admin webhook recovery capability. Approval: {isMockMode ? "a reviewer must approve. The frontend cannot approve or execute requests." : "a different Super Admin must approve it on the Recovery Requests list; approving queues the work and the history then shows the real result."}</p>
         </SheetBody>
         <SheetFooter>
           <Button variant="ghost" onClick={() => close(false)}>Cancel</Button>
           <Button variant="outline" disabled={notEligible || create.isPending} onClick={() => void submit(false)}>Save Recovery Draft</Button>
-          <Button disabled={notEligible || create.isPending} onClick={() => void submit(true)}>Submit Demo Recovery Request</Button>
+          <Button disabled={notEligible || create.isPending} onClick={() => void submit(true)}>{isMockMode ? "Submit Demo Recovery Request" : "Submit For Review"}</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

@@ -262,6 +262,8 @@ export interface IntegrationSettings {
   confirmBeforeDisconnect: boolean;
   /** The server refuses to disconnect while posts are still waiting to go out through it. */
   blockDisconnectWithScheduledPosts: boolean;
+  /** The most one Meta campaign or ad set may be given per day, in whole units of the ad account's currency. 0 = no limit. */
+  metaMaxDailyBudget: number;
 }
 
 /* ------------------------------------------------------------------ */

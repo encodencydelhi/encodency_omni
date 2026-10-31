@@ -96,7 +96,7 @@ export function WebsiteKeywordResearchPage() {
         header: "Keyword",
         primary: true,
         sortValue: (row) => row.query,
-        cell: (row) => <span className="font-semibold capitalize text-[#1F2A44]">{row.query}</span>,
+        cell: (row) => <span className="block max-w-[28rem] truncate font-semibold capitalize text-[#1F2A44]" title={row.query}>{row.query}</span>,
       },
       { key: "intent", header: "Intent", cell: (row) => <Chip tone={intentTone(row.intent)}><span className="capitalize">{row.intent}</span></Chip> },
       { key: "clicks", header: "Clicks", align: "right", sortValue: (row) => row.clicks, cell: (row) => formatNumber(row.clicks) },

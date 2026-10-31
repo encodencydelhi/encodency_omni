@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { AlertCircle, ArrowLeft, Loader2, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { ApiError } from "@/types/api";
+import type { Tone } from "@/types/common";
 import { crmApi } from "@/features/admin/crm/data/crm-api";
+import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
+import { ChannelTag, Section } from "./campaign-ui";
 import { campaignsApi, type CampaignRecord } from "./live/campaigns-api";
 
 /**
@@ -13,13 +18,7 @@ import { campaignsApi, type CampaignRecord } from "./live/campaigns-api";
  * Delivery results (spend, reach, clicks, conversions) are not tracked per campaign yet, so they are not shown.
  */
 
-const STATUS_STYLE: Record<string, string> = {
-  DRAFT: "bg-slate-100 text-slate-700",
-  ACTIVE: "bg-emerald-50 text-emerald-700",
-  PAUSED: "bg-amber-50 text-amber-700",
-  COMPLETED: "bg-blue-50 text-blue-700",
-  ARCHIVED: "bg-slate-100 text-slate-500",
-};
+const STATUS_TONE: Record<string, Tone> = { DRAFT: "neutral", ACTIVE: "success", PAUSED: "warning", COMPLETED: "info" };
 
 function label(value: string | null | undefined): string {
   if (!value) return "—";
@@ -36,15 +35,6 @@ function formatBudget(campaign: CampaignRecord): string {
   if (!campaign.budget) return "No budget set";
   const amount = Number(campaign.budget.amount);
   return `${campaign.budget.currency} ${Number.isFinite(amount) ? amount.toLocaleString("en-IN", { maximumFractionDigits: 2 }) : campaign.budget.amount}`;
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="rounded-sm border border-[#E2E8F0] bg-white shadow-xs">
-      <h2 className="border-b border-[#EDF1F5] px-3.5 py-2.5 text-[13px] font-semibold text-[#172044]">{title}</h2>
-      <div className="p-3.5">{children}</div>
-    </section>
-  );
 }
 
 function Field({ name, value }: { name: string; value: ReactNode }) {
@@ -201,19 +191,16 @@ function CampaignPage({ id }: { id?: string }) {
   const setTargets = targets.filter(([, value]) => value !== undefined);
 
   return (
-    <div className="space-y-3 text-[#24365d]">
-      <div>
-        <Link href="/admin/campaigns" className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#687797] hover:text-[#172044]">
-          <ArrowLeft className="size-3.5" /> All campaigns
-        </Link>
-        <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
-          <h1 className="text-[22px] font-semibold tracking-tight text-[#111B43]">{campaign.name}</h1>
-          <span className={`rounded px-2 py-0.5 text-[11px] font-semibold ${STATUS_STYLE[campaign.status] ?? STATUS_STYLE.DRAFT}`}>{label(campaign.status)}</span>
-        </div>
-        {campaign.description ? <p className="mt-1 max-w-3xl text-[12.5px] leading-5 text-[#5E6D89]">{campaign.description}</p> : null}
-      </div>
+    <div className="space-y-1 text-[#24365d]">
+      <AdminPageTitle
+        eyebrow="Marketing / Campaigns"
+        title={campaign.name}
+        description={campaign.description || "Campaign plan, channels, audience and targets."}
+        badge={<Badge tone={STATUS_TONE[campaign.status] ?? "neutral"}>{label(campaign.status)}</Badge>}
+        action={<Button asChild variant="outline" size="sm"><Link href="/admin/campaigns"><ArrowLeft className="size-3.5" /> All Campaigns</Link></Button>}
+      />
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-1 lg:grid-cols-2">
         <Section title="Plan">
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
             <Field name="Objective" value={label(campaign.objective)} />
@@ -229,7 +216,7 @@ function CampaignPage({ id }: { id?: string }) {
 
         <Section title="Channels and tags">
           <dl className="space-y-3">
-            <Field name="Channels" value={<Chips items={campaign.channels} />} />
+            <Field name="Channels" value={campaign.channels?.length ? <span className="flex flex-wrap gap-1">{campaign.channels.map((channel) => <ChannelTag key={channel} channel={channel} />)}</span> : <span className="text-[#7A87A0]">—</span>} />
             <Field name="Tags" value={<Chips items={campaign.tags} />} />
           </dl>
         </Section>

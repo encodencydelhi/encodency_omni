@@ -16,6 +16,7 @@ import {
   SettingsIcon,
   ShieldAlertIcon,
   XCircleIcon,
+  type LucideIcon,
 } from "lucide-react";
 import type {
   ExternalApiAccess,
@@ -160,7 +161,7 @@ export const EXTERNAL_API_ACCESS_META: Record<
 
 export const OPERATIONAL_HEALTH_META: Record<
   OperationalHealth,
-  { label: string; tone: "success" | "warning" | "danger" | "neutral"; icon: any; description: string }
+  { label: string; tone: "success" | "warning" | "danger" | "neutral"; icon: LucideIcon; description: string }
 > = {
   operational: {
     label: "Operational",
@@ -232,7 +233,7 @@ export const CONNECTION_HEALTH_META: Record<
 
 export const ISSUE_SEVERITY_META: Record<
   IssueSeverity,
-  { label: string; tone: "danger" | "warning" | "info"; icon: any }
+  { label: string; tone: "danger" | "warning" | "info"; icon: LucideIcon }
 > = {
   critical: {
     label: "Critical",

@@ -448,6 +448,8 @@ export interface WebhooksSnapshot {
   settings: WebhookSettings;
   /** Which environment the connected server delivers for, and whether its delivery worker runs. Absent in the demo workspace. */
   runtime?: { environment: WebhookEnvironment; deliveryWorkerEnabled: boolean };
+  /** The incoming event types the platform can really process (live workspace only). */
+  inbox?: { processedEventTypes: string[] };
   /** How many records were loaded versus how many exist (the page loads the latest ones only). Absent in the demo workspace. */
   limits?: { deliveries: { shown: number; total: number }; incomingEvents: { shown: number; total: number } };
 }
@@ -455,6 +457,14 @@ export interface WebhooksSnapshot {
 /* ------------------------------------------------------------------ */
 /* Mutation inputs                                                     */
 /* ------------------------------------------------------------------ */
+
+/** A new incoming source. The signing secret comes back once, in the response. */
+export interface CreateSourceInput {
+  name: string;
+  providerId: string;
+  companyId: string | null;
+  supportedEventTypes: string[];
+}
 
 export interface CreateEndpointInput {
   name: string;

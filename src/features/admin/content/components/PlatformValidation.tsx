@@ -23,13 +23,13 @@ const LEVEL_STYLE: Record<ValidationLevel, string> = {
 };
 
 export function PlatformValidationPanel({ validations, totalPlatforms }: Props) {
-  const readyCount = validations.filter(v => v.level === "ready").length;
+  const readyCount = validations.filter(v => v.level !== "error").length;
   const warningCount = validations.filter(v => v.level === "warning").length;
   const errorCount = validations.filter(v => v.level === "error").length;
   const allReady = errorCount === 0 && warningCount === 0;
 
   return (
-    <div className="rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)] overflow-hidden">
+    <div className="rounded-sm border border-[#E2E8F0] bg-white shadow-xs overflow-hidden">
       <header className="px-3 py-2.5 border-b border-[#EDF1F5]">
         <div className="flex items-center justify-between">
           <h3 className="text-[13.5px] font-semibold text-[#172044]">Channel Status</h3>

@@ -11,13 +11,14 @@ const AI_ACTIONS = ["Improve", "Rewrite", "Shorten", "Expand", "Change Tone", "T
 type Props = {
   content: MasterContent;
   onChange: (content: MasterContent) => void;
+  onAiAction?: (action: string) => void;
 };
 
 type Tab = "Caption" | "Headline" | "Description" | "CTA" | "Hashtags" | "Mentions" | "Media" | "Link" | "Location" | "Alt Text" | "First Comment" | "AI";
 
 const TABS: { id: Tab; icon: React.ReactNode; label: string }[] = [
   { id: "Caption", icon: <Type className="size-2.5" />, label: "Caption" },
-  { id: "Headline", icon: <FileText className="size-2.5" />, label: "Headline" },
+  { id: "Headline", icon: <FileText className="size-2.5" />, label: "Post title" },
   { id: "Description", icon: <FileText className="size-2.5" />, label: "Description" },
   { id: "CTA", icon: <Link2 className="size-2.5" />, label: "CTA" },
   { id: "Hashtags", icon: <Hash className="size-2.5" />, label: "Hashtags" },
@@ -30,11 +31,11 @@ const TABS: { id: Tab; icon: React.ReactNode; label: string }[] = [
   { id: "AI", icon: <Sparkles className="size-2.5 text-purple-500" />, label: "AI" },
 ];
 
-export function MasterContentEditor({ content, onChange }: Props) {
+export function MasterContentEditor({ content, onChange, onAiAction }: Props) {
   const [tab, setTab] = useState<Tab>("Caption");
   const [newHashtag, setNewHashtag] = useState("");
   const [newMention, setNewMention] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   const update = <K extends keyof MasterContent>(key: K, value: MasterContent[K]) => {
     onChange({ ...content, [key]: value });
@@ -55,28 +56,28 @@ export function MasterContentEditor({ content, onChange }: Props) {
   };
 
   return (
-    <section className="overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgb(31_50_81/0.05)]">
+    <section className="overflow-hidden rounded-sm border border-[#E2E8F0] bg-white shadow-xs">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between gap-2 border-b border-[#EDF1F5] px-3 py-2.5 text-left transition hover:bg-slate-50"
+        className="flex w-full items-center justify-between gap-2 min-h-[40px] border-b border-[#EDF1F5] px-3.5 py-2 text-left transition hover:bg-slate-50"
       >
         <div className="min-w-0">
-          <h3 className="truncate text-[13.5px] font-semibold text-[#172044]">Master Content</h3>
+          <h3 className="truncate text-[13.5px] font-semibold text-[#172044]">Write your post</h3>
           <p className="mt-0.5 text-[11.5px] text-[#7A87A0]">Create once, adapt across platforms</p>
         </div>
         {isOpen ? <ChevronDown className="size-4 text-[#7A87A0]" /> : <ChevronRight className="size-4 text-[#7A87A0]" />}
       </button>
 
       {isOpen && (
-        <div className="p-3">
+        <div className="p-3.5">
           {/* Tabs */}
           <div className="mb-2 flex flex-wrap gap-1">
-            {TABS.map((t) => (
+            {TABS.filter(t => ["Caption","Headline","CTA","Hashtags","Link","AI"].includes(t.id)).map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  "flex items-center gap-1 h-6 rounded-sm border px-2 text-[10.5px] font-semibold transition",
+                  "flex items-center gap-1 h-8 rounded-lg border px-2.5 text-xs font-semibold transition",
                   tab === t.id ? "border-red-200 bg-red-50 text-red-600" : "border-[#E2E8F0] text-[#687797] hover:bg-slate-50"
                 )}
               >
@@ -93,13 +94,13 @@ export function MasterContentEditor({ content, onChange }: Props) {
                 value={content.caption}
                 onChange={(val) => update("caption", val)}
                 placeholder="Write your caption here..."
-                minHeight="100px"
+                minHeight="140px"
               />
-              <div className="flex items-center justify-between border-t border-slate-100 bg-[#F8FAFD] px-2.5 py-1 text-[10.5px] text-[#7A87A0] rounded-b-lg">
+              <div className="flex flex-wrap gap-1 items-center justify-between border-t border-slate-100 bg-[#F8FAFD] px-2.5 py-1 text-[10.5px] text-[#7A87A0] rounded-b-lg">
                 <span>{content.caption.replace(/<[^>]*>/g, "").length} / 2,200</span>
                 <div className="flex items-center gap-0.5">
                   {AI_ACTIONS.slice(0, 4).map((a) => (
-                    <button key={a} className="rounded px-1.5 py-0.5 font-semibold text-[#1769DF] hover:bg-blue-50">{a}</button>
+                    <button key={a} onClick={() => onAiAction?.(a)} disabled={!onAiAction} className="rounded px-1.5 py-0.5 font-semibold text-[#1769DF] hover:bg-blue-50">{a}</button>
                   ))}
                 </div>
               </div>
@@ -227,7 +228,7 @@ export function MasterContentEditor({ content, onChange }: Props) {
           {tab === "Media" && (
             <div className="rounded-sm border-2 border-dashed border-[#B9CFF2] bg-[#F7FAFF] py-4 text-center">
               <p className="text-[12px] font-semibold text-[#24365A]">Drag & drop files here, or click to browse</p>
-              <button className="mt-1.5 h-7 rounded-sm bg-[#1769DF] px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-[#1259BD]">Upload from device</button>
+              <button onClick={() => onAiAction?.("Generate platform variations")} disabled={!onAiAction} className="mt-1.5 h-7 rounded-sm bg-[#1769DF] px-3 text-[11px] font-semibold text-white shadow-sm transition hover:bg-[#1259BD]">Upload from device</button>
               <p className="mt-1 text-[10px] text-[#7A87A0]">Images, Videos, GIFs, Documents up to 100MB</p>
             </div>
           )}
@@ -299,7 +300,7 @@ export function MasterContentEditor({ content, onChange }: Props) {
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {AI_ACTIONS.map((a) => (
-                    <button key={a} className="flex items-center gap-1 rounded-sm border border-purple-200 bg-white px-2 py-1 text-[10.5px] font-semibold text-purple-700 transition hover:bg-purple-50">
+                    <button key={a} onClick={() => onAiAction?.(a)} disabled={!onAiAction} className="flex items-center gap-1 rounded-sm border border-purple-200 bg-white px-2 py-1 text-[10.5px] font-semibold text-purple-700 transition hover:bg-purple-50">
                       <Sparkles className="size-2.5" />
                       {a}
                     </button>
@@ -309,7 +310,7 @@ export function MasterContentEditor({ content, onChange }: Props) {
               <div className="rounded-sm border border-blue-200 bg-blue-50/50 p-2.5">
                 <p className="text-[11px] font-semibold text-blue-700">Generate Platform Variations</p>
                 <p className="mt-0.5 text-[10px] text-blue-600/70">AI will rewrite your master content for each selected platform</p>
-                <button className="mt-1.5 h-7 rounded-sm bg-[#1769DF] px-3 text-[11px] font-semibold text-white hover:bg-[#1259BD]">Generate All Variations</button>
+                <button onClick={() => onAiAction?.("Generate platform variations")} disabled={!onAiAction} className="mt-1.5 h-7 rounded-sm bg-[#1769DF] px-3 text-[11px] font-semibold text-white hover:bg-[#1259BD]">Generate All Variations</button>
               </div>
             </div>
           )}

@@ -1,1189 +1,1163 @@
 "use client";
-
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Sparkles, Camera, Grid2X2, Video, BookOpen, Zap, Tag, AlignLeft, Loader2, Check, Copy, AlertTriangle, ImageIcon, RefreshCw, Wand2 } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
-import { Card } from "./ui-card";
-import { SelectField } from "./ui-fields";
-import { ContentPreviewPanel } from "./ContentPreview";
-import { useTenancyContext } from "@/lib/api/tenancy-context";
-import { aiApi, type GeneratedAiResult, type AiProvider } from "../live/ai-api";
-import { draftsApi } from "../live/drafts-api";
-import { mediaApi } from "../live/media-api";
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Sparkles,
+  ImageIcon,
+  PenLine,
+  ArrowRight,
+  Upload,
+  Download,
+  Loader2,
+  RefreshCw,
+  History,
+  Check,
+  X,
+  Copy,
+} from "lucide-react";
 import { toast } from "sonner";
-import { ApiError } from "@/types/api";
-import type { Platform } from "../types/content.types";
-import { PLATFORM_CHAR_LIMITS, PLATFORM_HASHTAG_LIMITS, PLATFORM_META } from "../config/platform-config";
-import { fetchDynamicAiVisual, type AiGeneratedVisual, PRESET_STYLE_LABELS } from "../services/ai-image.service";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { useAdminContext } from "@/features/admin/shell/admin-context";
+import { useContentAccess } from "../live/use-content-access";
+import { aiApi, type GeneratedAiResult } from "../live/ai-api";
+import { draftsApi, type DraftRecord } from "../live/drafts-api";
+import { mediaApi } from "../live/media-api";
+import {
+  fetchDynamicAiVisual,
+  generatedImageFile,
+  type ImageGenerationOptions,
+} from "../services/ai-image.service";
+import {
+  creativeRefinements,
+  imageCreativeBrief,
+} from "../lib/ai-creative-brief";
+import { deliveryCaption } from "../live/composer-delivery";
+import {
+  CANVAS_GROUPS,
+  CANVAS_PRESETS,
+  DEFAULT_CANVAS_ID,
+  canvasPixels,
+  canvasPreset,
+} from "../config/canvas-presets";
+import type { CreateSeed } from "./CreateContentTab";
+import type { MediaAsset } from "../types/content.types";
+import { Card } from "./ui-card";
+import { cn } from "@/lib/utils/cn";
 
-/** Mirrors `AiContextDto.topic` @MaxLength(1000) — anything longer is a 400 from the API. */
-const TOPIC_MAX_CHARS = 1000;
-
-const PROVIDER_LABEL: Record<AiProvider, string> = {
-  GEMINI: "Gemini",
-  OPENAI: "OpenAI",
-  LOCAL: "Encodency AI",
-};
-
-const AI_TYPES = [
-  { id: "Social Post", desc: "Engaging posts with images", icon: <Sparkles className="size-4" /> },
-  { id: "Carousel", desc: "Multi-slide content", icon: <Grid2X2 className="size-4" /> },
-  { id: "Reel Script", desc: "Script for short videos", icon: <Video className="size-4" /> },
-  { id: "Story", desc: "Quick engaging stories", icon: <Camera className="size-4" /> },
-  { id: "Blog", desc: "Long-form content", icon: <BookOpen className="size-4" /> },
-  { id: "Ad Copy", desc: "Conversion focused", icon: <Zap className="size-4" /> },
-  { id: "Hashtags", desc: "Trending hashtags", icon: <Tag className="size-4" /> },
-  { id: "Variations", desc: "Multiple options", icon: <AlignLeft className="size-4" /> },
+const input =
+  "mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100";
+const button =
+  "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+const formats = [
+  "Social Post",
+  "Ad Copy",
+  "Carousel",
+  "Reel Script",
+  "Story",
+  "Blog",
+  "Hashtags",
+  "Variations",
 ];
-
-const AUDIENCE_OPTIONS = ["General Public", "Small Business Owners", "Tech Professionals", "Gen Z / Youth", "B2B Decision Makers"];
-const TONE_OPTIONS = ["Positive", "Professional", "Casual & Friendly", "Bold & Authoritative", "Urgent / Promotional", "Humorous"];
-const LANGUAGE_OPTIONS = ["English", "Hindi", "Spanish", "French", "German"];
-
-const PROMPT_HINTS: Record<string, string> = {
-  "Social Post": "Create an Instagram post about Clean Ganga awareness with a motivating, eco-friendly tone.",
-  "Carousel": "Create a 5-slide educational carousel on the 5 daily habits for a cleaner environment.",
-  "Reel Script": "Write a 30-second viral reel script demonstrating river cleanup efforts and youth participation.",
-  "Story": "Create a 3-part interactive Instagram story with a poll asking followers about eco-friendly habits.",
-  "Blog": "Write a comprehensive article exploring the history, challenges, and future of river conservation.",
-  "Ad Copy": "Write a high-converting conversion ad copy for our weekend community volunteering drive.",
-  "Hashtags": "Generate a curated set of trending, high-reach, and niche community hashtags for river conservation.",
-  "Variations": "Provide 3 different creative angles for our upcoming riverbank tree plantation campaign.",
+const empty: GeneratedAiResult = {
+  caption: "",
+  headline: "",
+  hashtags: [],
+  callToAction: "",
 };
+type Visual = {
+  id: string;
+  url: string;
+  prompt: string;
+  ratio: string;
+  asset?: MediaAsset;
+};
+type CopyVersion = { id: string; result: GeneratedAiResult };
 
 export function AIAssistantTab({
   initialPrompt,
   initialType,
+  onUsePost,
 }: {
   initialPrompt?: string;
   initialType?: string;
+  onUsePost?: (seed: CreateSeed) => void;
 } = {}) {
   const { companyId, clientId } = useTenancyContext();
-  const [selected, setSelected] = useState(initialType || "Social Post");
-  const [prompt, setPrompt] = useState(
-    initialPrompt || "Create an Instagram post about Clean Ganga awareness with a motivating, eco-friendly tone."
-  );
-  const [customInstructions, setCustomInstructions] = useState("");
-  const [audience, setAudience] = useState("General Public");
-  const [isCustomAudience, setIsCustomAudience] = useState(false);
-  const [tone, setTone] = useState("Positive");
-  const [isCustomTone, setIsCustomTone] = useState(false);
+  const { Clients } = useAdminContext();
+  const { canWrite } = useContentAccess();
+  const client = Clients.find((item) => item.id === clientId);
+  const cache = useQueryClient();
+  const [mode, setMode] = useState<"copy" | "image">("copy");
+  const [brief, setBrief] = useState(initialPrompt ?? "");
+  const [format, setFormat] = useState(initialType ?? "Social Post");
+  const [goal, setGoal] = useState("");
+  const [audience, setAudience] = useState("");
+  const [tone, setTone] = useState("Natural and clear");
   const [language, setLanguage] = useState("English");
-  const [imageStyleIdx, setImageStyleIdx] = useState(0);
-
-  // initialPrompt / initialType are applied through `key` on the parent, so a
-  // fresh prompt remounts this tab instead of syncing state in an effect.
-
-  const [generated, setGenerated] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const [result, setResult] = useState<GeneratedAiResult>({ caption: "", hashtags: [], headline: "", callToAction: "" });
-
-  const [tokensUsed, setTokensUsed] = useState<number | null>(null);
-  const [remainingTokens, setRemainingTokens] = useState<number | null>(null);
-  const [quotaLimit, setQuotaLimit] = useState<number | null>(null);
-  const [usageLoaded, setUsageLoaded] = useState(false);
-  const [usageError, setUsageError] = useState(false);
-  const [provider, setProvider] = useState<AiProvider | null>(null);
-
-  /* Per-type prompt drafts: switching Content Type never destroys what was typed. */
-  const [promptDrafts, setPromptDrafts] = useState<Record<string, string>>({});
-
-  /* Result presentation: raw text (editable) or rendered preview. */
-  const [resultView, setResultView] = useState<"edit" | "preview">("edit");
-
-  /* Preview platform drives every limit shown next to the result. */
-  const [previewPlatform, setPreviewPlatform] = useState<Platform>("instagram");
-
-  /* Image: pure AI visual generated via OpenAI, user upload, or deliberately removed. */
-  const [customImage, setCustomImage] = useState<{ url: string; assetId?: string; local?: boolean } | null>(null);
-  const [aiVisual, setAiVisual] = useState<AiGeneratedVisual | null>(null);
-  const [visualVariation, setVisualVariation] = useState(0);
-  const [imagePrompt, setImagePrompt] = useState("");
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [imageRemoved, setImageRemoved] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  /* One in-flight generation at a time; unmount aborts it. */
-  const abortRef = useRef<AbortController | null>(null);
-  const usageAbortRef = useRef<AbortController | null>(null);
-
-  const refreshUsage = useCallback(() => {
-    usageAbortRef.current?.abort();
-    const controller = new AbortController();
-    usageAbortRef.current = controller;
-    if (!companyId) return;
-
-    aiApi
-      .getUsage(companyId, controller.signal)
-      .then((data) => {
-        if (controller.signal.aborted) return;
-        setRemainingTokens(data.limits.remainingAiTokens ?? 10000);
-        setQuotaLimit(data.limits.maxAiTokens ?? 10000);
-        setUsageLoaded(true);
-        setUsageError(false);
-      })
-      .catch(() => {
-        if (controller.signal.aborted) return;
-        setQuotaLimit(10000);
-        setRemainingTokens(10000);
-        setUsageLoaded(true);
-        setUsageError(false);
-      });
-  }, [companyId]);
-
-  // Load existing AI token usage summary
+  const [instructions, setInstructions] = useState("");
+  const [includeClient, setIncludeClient] = useState(true);
+  const [channels, setChannels] = useState(["Facebook", "Instagram"]);
+  const [result, setResult] = useState<GeneratedAiResult>(empty);
+  const [copyHistory, setCopyHistory] = useState<CopyVersion[]>([]);
+  const [change, setChange] = useState("");
+  const [copyError, setCopyError] = useState<string | null>(null);
+  const [copyBusy, setCopyBusy] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [style, setStyle] = useState("");
+  const [composition, setComposition] = useState("");
+  const [palette, setPalette] = useState("");
+  const [imageText, setImageText] = useState("");
+  const [avoid, setAvoid] = useState("");
+  const [imageChange, setImageChange] = useState("");
+  const [canvasId, setCanvasId] = useState(DEFAULT_CANVAS_ID);
+  const canvas = canvasPreset(canvasId);
+  const [quality, setQuality] =
+    useState<NonNullable<ImageGenerationOptions["quality"]>>("medium");
+  const [visual, setVisual] = useState<Visual | null>(null);
+  const [visualHistory, setVisualHistory] = useState<Visual[]>([]);
+  const [imageBusy, setImageBusy] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState<DraftRecord | null>(null);
+  const copyRequest = useRef<AbortController | null>(null),
+    imageRequest = useRef<AbortController | null>(null);
+  const uploadInput = useRef<HTMLInputElement | null>(null);
+  const savedAssets = useRef(new Map<string, MediaAsset>());
+  const saveLock = useRef(false),
+    mounted = useRef(true);
   useEffect(() => {
-    refreshUsage();
-  }, [refreshUsage]);
-
-  // A generation that is still in flight when the tab unmounts must not setState.
-  useEffect(
-    () => () => {
-      abortRef.current?.abort();
-      usageAbortRef.current?.abort();
-    },
-    [],
-  );
-
-  /* ── Derived limits (shown live next to every field) ── */
-  const promptLength = prompt.length;
-  const promptOverLimit = promptLength > TOPIC_MAX_CHARS;
-  const captionLength = result.caption.length;
-  const captionLimit = PLATFORM_CHAR_LIMITS[previewPlatform] ?? null;
-  const captionOverLimit = captionLimit !== null && captionLength > captionLimit;
-  const captionNearLimit = captionLimit !== null && !captionOverLimit && captionLength > captionLimit * 0.8;
-  const hashtagCount = result.hashtags.length;
-  const hashtagLimit = PLATFORM_HASHTAG_LIMITS[previewPlatform] ?? null;
-  const hashtagsOverLimit = hashtagLimit !== null && hashtagCount > hashtagLimit;
-  const effectiveLimit = quotaLimit ?? 10000;
-  const effectiveRemaining = remainingTokens ?? 10000;
-  const usedTokens = Math.max(0, effectiveLimit - effectiveRemaining);
-  const quotaPercent = Math.min(100, Math.round((usedTokens / effectiveLimit) * 100));
-  const quotaLow = effectiveRemaining <= effectiveLimit * 0.1;
-
-  const selectedImage: string | null = imageRemoved
-    ? null
-    : (customImage?.url ?? aiVisual?.url ?? null);
-
-  /* ── Content Type switch: keep each type's own prompt, fall back to its hint ── */
-  const handleTypeSelect = (typeId: string) => {
-    if (typeId === selected) return;
-    setPromptDrafts((prev) => ({ ...prev, [selected]: prompt }));
-    setSelected(typeId);
-    const saved = promptDrafts[typeId];
-    setPrompt(saved && saved.trim() ? saved : (PROMPT_HINTS[typeId] ?? ""));
-    setResultView("edit");
-  };
-
-  /* ── Image: pick a style, generate with AI, upload your own, or remove it entirely ── */
-  const handlePickPreset = (index: number) => {
-    setImageStyleIdx(index);
-    setCustomImage(null);
-    setImageRemoved(false);
-    const style = PRESET_STYLE_LABELS[index] || "Realistic";
-    const currentTopic = imagePrompt.trim() || prompt;
-    if (!currentTopic) return;
-    setIsGeneratingImage(true);
-    fetchDynamicAiVisual(currentTopic, style, visualVariation, imagePrompt, companyId)
-      .then((resolved) => {
-        if (resolved) {
-          setAiVisual(resolved);
-          toast.success(`✨ Generated AI image in ${style} style!`);
-        }
-      })
-      .catch((err) => {
-        toast.error(`Image generation failed: ${err.message || "Unknown error"}`);
-      })
-      .finally(() => {
-        setIsGeneratingImage(false);
-      });
-  };
-
-  const handleGenerateAiImage = async (nextStyleIdx?: number, explicitPrompt?: string) => {
-    const targetIdx = typeof nextStyleIdx === "number" ? nextStyleIdx : imageStyleIdx;
-    const nextVar = visualVariation + 1;
-    setVisualVariation(nextVar);
-    const targetPrompt = typeof explicitPrompt === "string" ? explicitPrompt : imagePrompt;
-    const style = PRESET_STYLE_LABELS[targetIdx] || "Realistic";
-    const currentTopic = targetPrompt.trim() || prompt;
-
-    if (!currentTopic) {
-      toast.error("Please enter a topic or image description to generate an AI image.");
-      return;
-    }
-
-    setIsGeneratingImage(true);
-    try {
-      const visual = await fetchDynamicAiVisual(currentTopic, style, nextVar, targetPrompt, companyId);
-      if (visual) {
-        setAiVisual(visual);
-        setCustomImage(null);
-        setImageRemoved(false);
-        const queryLabel = targetPrompt.trim() || prompt.slice(0, 30);
-        toast.success(`✨ AI visual generated for "${queryLabel.slice(0, 35)}..." in ${style} style!`);
-      } else {
-        toast.error("Could not generate image. Please try again.");
-      }
-    } catch (err: any) {
-      toast.error(`Image generation failed: ${err?.message || "Unknown error"}`);
-    } finally {
-      setIsGeneratingImage(false);
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setCustomImage(null);
-    setImageRemoved(true);
-  };
-
-  const handleAddImage = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please choose an image file.");
-      return;
-    }
-    if (companyId && clientId) {
-      setIsUploadingImage(true);
-      try {
-        const record = await mediaApi.upload(companyId, clientId, file);
-        setCustomImage({ url: record.url, assetId: record.id });
-        setImageRemoved(false);
-        toast.success("Image added!", { description: "Saved to your client media library." });
-        return;
-      } catch (err) {
-        toast.error(ApiError.isApiError(err) ? err.message : "Upload failed — showing a local preview instead.");
-      } finally {
-        setIsUploadingImage(false);
-      }
-    }
-    // No client selected: preview locally so the flow is never blocked.
-    setCustomImage({ url: URL.createObjectURL(file), local: true });
-    setImageRemoved(false);
-    toast.info("Using a local preview.", { description: "Select a Client to save the image to your library." });
-  };
-
-  const handleGenerate = async (refinements: string[] = []) => {
-    if (!prompt.trim()) {
-      toast.error("Please enter a topic or prompt first.");
-      return;
-    }
-
-    if (promptOverLimit) {
-      toast.error(`Prompt is too long (${promptLength.toLocaleString()} characters).`, {
-        description: `The backend accepts a maximum of ${TOPIC_MAX_CHARS.toLocaleString()} characters.`,
-      });
-      return;
-    }
-
-    if (!companyId) {
-      toast.error("Company context required to generate AI content.");
-      return;
-    }
-
-    abortRef.current?.abort();
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      copyRequest.current?.abort();
+      imageRequest.current?.abort();
+    };
+  }, []);
+  const usage = useQuery({
+    queryKey: ["ai-studio-usage", companyId],
+    enabled: Boolean(companyId),
+    queryFn: ({ signal }) => aiApi.getUsage(companyId, signal),
+  });
+  const remaining = usage.data?.limits.remainingAiTokens;
+  const busy = copyBusy || imageBusy || saving;
+  function refreshLists() {
+    for (const key of [
+      "content-drafts",
+      "content-approvals",
+      "content-approval-counts",
+      "content-approval-detail",
+    ])
+      void cache.invalidateQueries({ queryKey: [key, companyId, clientId] });
+  }
+  async function generateCopy(refinement?: string) {
+    if (copyRequest.current || !canWrite || !companyId) return;
+    if (!brief.trim() || brief.length > 1000)
+      return setCopyError(
+        "Add a brief of up to 1,000 characters. Use the extra instructions for more detail.",
+      );
     const controller = new AbortController();
-    abortRef.current = controller;
-
-    setIsGenerating(true);
-
-    const combinedRefinements = [...refinements];
-    if (customInstructions.trim()) {
-      combinedRefinements.push(`Specific instructions: ${customInstructions.trim()}`);
-    }
-
+    copyRequest.current = controller;
+    setCopyBusy(true);
+    setCopyError(null);
     try {
       const response = await aiApi.generate(
         companyId,
         {
-          promptType: selected,
+          promptType: format,
           context: {
-            topic: prompt,
+            topic: brief.trim(),
             tone,
-            targetAudience: audience,
+            targetAudience: audience || undefined,
             language,
-            imageStyle: PRESET_STYLE_LABELS[imageStyleIdx],
-            refinements: combinedRefinements,
+            refinements: creativeRefinements(
+              {
+                clientName: client?.name,
+                website: client?.website,
+                goal,
+                channels,
+                instructions,
+                includeClient,
+              },
+              refinement ? result : undefined,
+              refinement,
+            ),
           },
         },
         controller.signal,
       );
       if (controller.signal.aborted) return;
-
+      setCopyHistory((previous) =>
+        [
+          { id: crypto.randomUUID(), result: response.generatedContent },
+          ...(result.caption ? [{ id: crypto.randomUUID(), result }] : []),
+          ...previous,
+        ].slice(0, 6),
+      );
       setResult(response.generatedContent);
-      setGenerated(true);
-
-      // Synthesize matching AI visual strictly with OpenAI if user hasn't uploaded or removed image
-      if (!customImage && !imageRemoved) {
-        const style = PRESET_STYLE_LABELS[imageStyleIdx] || "Realistic";
-        const nextVar = visualVariation + 1;
-        setVisualVariation(nextVar);
-        const currentTopic = imagePrompt.trim() || prompt;
-        if (currentTopic) {
-          setIsGeneratingImage(true);
-          fetchDynamicAiVisual(currentTopic, style, nextVar, imagePrompt, companyId)
-            .then((resolved) => {
-              if (resolved) setAiVisual(resolved);
-            })
-            .catch((err) => {
-              console.error("AI image generation error:", err);
-            })
-            .finally(() => {
-              setIsGeneratingImage(false);
-            });
-        }
-      }
-
-      setTokensUsed(response.tokensConsumed);
-      setRemainingTokens(response.usage.remainingAiTokens);
-      setQuotaLimit(response.usage.maxAiTokens);
-      setUsageLoaded(true);
-      setUsageError(false);
-      setProvider(response.provider ?? null);
-      setResultView("edit");
-
-      const label = response.provider ? PROVIDER_LABEL[response.provider] : "AI";
-      toast.success("AI content generated successfully!", {
-        description: `${response.tokensConsumed} tokens consumed with ${label}` + (response.usage.remainingAiTokens !== null ? ` • ${response.usage.remainingAiTokens.toLocaleString()} tokens left` : ""),
-      });
-    } catch (err: unknown) {
-      if (ApiError.isApiError(err) && err.status === 402) {
-        // Sync the quota pill with the numbers the API returned instead of guessing.
-        const limit = err.detail<number>("limit");
-        const current = err.detail<number>("current");
-        if (typeof limit === "number") {
-          setQuotaLimit(limit);
-          setRemainingTokens(typeof current === "number" ? Math.max(0, limit - current) : 0);
-          setUsageLoaded(true);
-        }
-        toast.error("Monthly AI Token quota exhausted!", {
-          description: "Please upgrade your subscription plan in Billing to get more AI tokens.",
-          duration: 7000,
-        });
-      } else if (ApiError.isApiError(err) && err.status === 0) {
-        toast.error("Unable to reach the platform API.", { description: "Check your connection and try again." });
-      } else {
-        toast.error(ApiError.isApiError(err) ? err.message : "Failed to generate AI content. Please try again.");
-      }
+      setChange("");
+      void usage.refetch();
+      toast.success(refinement ? "Draft refined" : "Draft generated");
+    } catch (error) {
+      if (!controller.signal.aborted)
+        setCopyError(
+          error instanceof Error
+            ? error.message
+            : "Unable to generate a draft. Your previous content was kept.",
+        );
     } finally {
-      if (abortRef.current === controller) abortRef.current = null;
-      setIsGenerating(false);
+      if (copyRequest.current === controller) copyRequest.current = null;
+      if (mounted.current) setCopyBusy(false);
     }
-  };
-
-  const handleSaveDraft = async () => {
-    if (!companyId || !clientId) {
-      toast.info("Draft saved locally!", { description: "Select a Client to persist drafts to the cloud." });
-      return;
-    }
-
-    setIsSavingDraft(true);
+  }
+  async function generateVisual(variation = false) {
+    if (imageRequest.current || !canWrite || !companyId) return;
+    let prompt: string;
     try {
-      const fullText = result.caption + (result.hashtags.length > 0 ? `\n\n${result.hashtags.join(" ")}` : "");
-      await draftsApi.create(companyId, clientId, {
-        title: result.headline || `${selected} - ${prompt.slice(0, 30)}`,
-        content: fullText,
-        variants: {
-          INSTAGRAM_ACCOUNT: { content: fullText },
-          FACEBOOK_PAGE: { content: fullText },
-        },
-        // Attach the uploaded image so the draft keeps its media.
-        ...(customImage?.assetId ? { assetIds: [customImage.assetId] } : {}),
-      });
-      toast.success("Draft saved to Content Studio!", { description: "Your customized copy was saved to Saved Drafts." });
-    } catch (err: unknown) {
-      toast.error(ApiError.isApiError(err) ? err.message : "Could not save draft.");
-    } finally {
-      setIsSavingDraft(false);
+      prompt =
+        variation && visual
+          ? [visual.prompt, `New variation directions: ${imageChange}`].join(
+              "\n",
+            )
+          : imageCreativeBrief(subject, {
+              composition,
+              palette,
+              text: imageText,
+              avoid,
+            });
+      if (prompt.length > 4000)
+        throw new Error(
+          "Your variation brief exceeds 4,000 characters. Shorten the directions.",
+        );
+    } catch (error) {
+      return setImageError(
+        error instanceof Error ? error.message : "Check your visual brief.",
+      );
     }
-  };
-
-  const handleUsePost = () => {
-    const fullText = (result.headline ? `${result.headline}\n\n` : "") + result.caption + (result.hashtags.length > 0 ? `\n\n${result.hashtags.join(" ")}` : "");
-    navigator.clipboard
-      .writeText(fullText)
-      .then(() => {
-        setCopied(true);
-        toast.success("Post copied to clipboard!", { description: "Your edited copy is ready to paste into any editor." });
-        setTimeout(() => setCopied(false), 2500);
-      })
-      .catch(() => {
-        toast.error("Could not access the clipboard.", { description: "Your browser blocked clipboard access — copy from the editor instead." });
+    const controller = new AbortController();
+    imageRequest.current = controller;
+    setImageBusy(true);
+    setImageError(null);
+    try {
+      const image = await fetchDynamicAiVisual(
+        subject,
+        style.trim() || "Follow the visual brief",
+        0,
+        prompt,
+        companyId,
+        {
+          size: canvas.request,
+          canvas: { width: canvas.width, height: canvas.height, ratio: canvas.ratio },
+          quality,
+          signal: controller.signal,
+        },
+      );
+      if (controller.signal.aborted) return;
+      const next: Visual = {
+        id: crypto.randomUUID(),
+        url: image.url,
+        prompt,
+        ratio: image.aspectRatio,
+      };
+      setVisual(next);
+      setVisualHistory((previous) => [next, ...previous].slice(0, 4));
+      setImageChange("");
+      toast.success("Visual generated", {
+        description: "Review the image before saving or using it.",
       });
-  };
-
+    } catch (error) {
+      if (!controller.signal.aborted)
+        setImageError(
+          error instanceof Error
+            ? error.message
+            : "Image generation failed. Your previous image was kept.",
+        );
+    } finally {
+      if (imageRequest.current === controller) imageRequest.current = null;
+      if (mounted.current) setImageBusy(false);
+    }
+  }
+  async function ensureAsset(): Promise<MediaAsset | null> {
+    if (!visual) return null;
+    if (!companyId || !clientId)
+      throw new Error("Select a client before saving media.");
+    const existing = visual.asset ?? savedAssets.current.get(visual.url);
+    if (existing) return existing;
+    const record = await mediaApi.upload(
+      companyId,
+      clientId,
+      await generatedImageFile(visual.url),
+    );
+    const asset: MediaAsset = {
+      id: record.id,
+      url: record.url,
+      type: "image",
+      name: "AI studio visual",
+      width: record.width ?? undefined,
+      height: record.height ?? undefined,
+    };
+    savedAssets.current.set(visual.url, asset);
+    return asset;
+  }
+  async function upload(file: File) {
+    if (saveLock.current || !companyId || !clientId || !canWrite) return;
+    if (
+      !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+      file.size > 8 * 1024 * 1024
+    )
+      return setImageError("Choose a JPEG, PNG or WebP image up to 8 MB.");
+    saveLock.current = true;
+    setSaving(true);
+    setImageError(null);
+    try {
+      const record = await mediaApi.upload(companyId, clientId, file);
+      if (!mounted.current) return;
+      const asset: MediaAsset = {
+        id: record.id,
+        url: record.url,
+        type: "image",
+        name: file.name,
+        width: record.width ?? undefined,
+        height: record.height ?? undefined,
+      };
+      setVisual({
+        id: record.id,
+        url: record.url,
+        prompt: "Uploaded image",
+        ratio: "original",
+        asset,
+      });
+      toast.success("Image saved to your client library");
+    } catch (error) {
+      if (mounted.current)
+        setImageError(
+          error instanceof Error
+            ? error.message
+            : "Upload failed. Your previous image was kept.",
+        );
+    } finally {
+      saveLock.current = false;
+      if (mounted.current) setSaving(false);
+    }
+  }
+  function payload() {
+    const content = deliveryCaption({
+      caption: result.caption,
+      hashtags: result.hashtags,
+      cta: result.callToAction,
+      link: "",
+    });
+    const mapping: Record<string, string> = {
+      Facebook: "FACEBOOK_PAGE",
+      Instagram: "INSTAGRAM_ACCOUNT",
+      LinkedIn: "LINKEDIN_ORGANIZATION",
+    };
+    return {
+      title: result.headline || brief.slice(0, 80) || "AI draft",
+      content,
+      variants: Object.fromEntries(
+        channels.map((channel) => [mapping[channel], { content }]),
+      ),
+    };
+  }
+  async function persist(asset: MediaAsset | null) {
+    if (!channels.length)
+      throw new Error(
+        "Select a draft channel, or choose channels in the composer.",
+      );
+    let record: DraftRecord;
+    if (saved) {
+      record = await draftsApi.update(companyId, clientId, saved.id, {
+        ...payload(),
+        expectedRevision: saved.revision,
+      });
+      if (mounted.current) setSaved(record);
+      const ids = asset ? [asset.id] : [];
+      if (
+        JSON.stringify(record.media.map((item) => item.asset.id)) !==
+        JSON.stringify(ids)
+      )
+        record = await mediaApi.setDraftMedia(
+          companyId,
+          clientId,
+          record.id,
+          record.revision,
+          ids,
+        );
+    } else
+      record = await draftsApi.create(companyId, clientId, {
+        ...payload(),
+        ...(asset ? { assetIds: [asset.id] } : {}),
+      });
+    if (mounted.current) setSaved(record);
+    refreshLists();
+    return record;
+  }
+  async function handleSaveAction(action: "composer" | "draft" | "media") {
+    if (saveLock.current || !canWrite || !clientId || busy) return;
+    if (action === "draft" && !result.caption.trim())
+      return toast.error(
+        "Generate or write a caption first. An image can be saved to the media library separately.",
+      );
+    saveLock.current = true;
+    setSaving(true);
+    try {
+      const asset = await ensureAsset();
+      if (!mounted.current) return;
+      if (action === "media") {
+        if (!asset) throw new Error("Generate or upload an image first.");
+        toast.success("Visual saved to Media Library");
+        return;
+      }
+      if (action === "draft") {
+        await persist(asset);
+        if (mounted.current) toast.success("Draft saved to Content Studio!");
+        return;
+      }
+      const record =
+        saved && result.caption.trim() ? await persist(asset) : undefined;
+      if (!mounted.current) return;
+      onUsePost?.({
+        caption: result.caption,
+        hashtags: record ? [] : result.hashtags,
+        cta: result.callToAction,
+        media: asset ? [asset] : [],
+        ...(record ? { draft: record } : {}),
+      });
+    } catch (error) {
+      if (mounted.current)
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Unable to save your content.",
+        );
+    } finally {
+      saveLock.current = false;
+      if (mounted.current) setSaving(false);
+    }
+  }
+  async function download() {
+    if (!visual) return;
+    try {
+      const file = visual.url.startsWith("data:")
+        ? await generatedImageFile(visual.url)
+        : await fetch(visual.url).then((r) => {
+            if (!r.ok) throw new Error("Unable to download image");
+            return r.blob();
+          });
+      const url = URL.createObjectURL(file);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download =
+        file instanceof File
+          ? file.name
+          : `studio-visual.${file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg"}`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      toast.error("Unable to download this image.");
+    }
+  }
+  const copyReady = Boolean(result.caption.trim()),
+    visualReady = Boolean(visual);
   return (
-    <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
-      {/* 1. What would you like to create? */}
-      <Card
-        title="What would you like to create?"
-        action={
-          usageLoaded && (
-            <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10.5px] font-semibold text-[#7C3AED]">
-              {quotaLimit === null ? "Unlimited AI tokens" : `${(remainingTokens ?? 0).toLocaleString()} tokens left`}
-            </span>
-          )
-        }
-      >
-        <div className="grid grid-cols-4 gap-1.5">
-          {AI_TYPES.map((t) => (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex gap-1 rounded-xl border border-slate-200 bg-white p-1">
+          {[
+            { id: "copy", label: "Write content", icon: PenLine },
+            { id: "image", label: "Create image", icon: ImageIcon },
+          ].map((item) => (
             <button
-              key={t.id}
-              onClick={() => handleTypeSelect(t.id)}
+              key={item.id}
+              onClick={() => setMode(item.id as "copy" | "image")}
               className={cn(
-                "rounded-sm border p-2 text-left transition",
-                selected === t.id ? "border-purple-300 bg-purple-50 shadow-sm" : "border-[#E2E8F0] hover:border-[#CBD5E1]"
+                button,
+                "border-0",
+                mode === item.id && "bg-violet-50 text-violet-700",
               )}
             >
-              <span className={cn("mb-1 grid size-7 place-items-center rounded-sm", selected === t.id ? "bg-[#7C3AED] text-white" : "bg-[#F1F5F9] text-[#64748B]")}>
-                {t.icon}
-              </span>
-              <span className="block text-[10.5px] font-semibold text-[#24365A]">{t.id}</span>
-              <span className="block text-[9.5px] text-[#7A87A0]">{t.desc}</span>
+              <item.icon size={14} />
+              {item.label}
             </button>
           ))}
         </div>
-
-        {/* Prompt — each Content Type loads its own prompt (custom text is kept per type) */}
-        <div className="mt-3">
-          <div className="mb-1 flex items-center justify-between">
-            <label className="text-[11.5px] font-semibold text-[#33445F]">Topic / prompt *</label>
-            <span
-              className={cn(
-                "text-[10px] tabular-nums",
-                promptOverLimit ? "font-semibold text-red-500" : promptLength > TOPIC_MAX_CHARS * 0.8 ? "text-amber-500" : "text-slate-400",
-              )}
-            >
-              {promptLength.toLocaleString()} / {TOPIC_MAX_CHARS.toLocaleString()} characters
-            </span>
-          </div>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={4}
-            spellCheck
-            placeholder={PROMPT_HINTS[selected] || "What should the post be about?"}
-            className={cn(
-              "w-full resize-none rounded-sm border p-2.5 text-[12px] leading-5 outline-none focus:border-[#7C3AED]",
-              promptOverLimit ? "border-red-300 bg-red-50/40" : "border-[#D9E1EC]",
-            )}
-          />
-        </div>
-
-        {/* Custom instructions / What to include */}
-        <div className="mt-2.5">
-          <label className="mb-1 block text-[11.5px] font-semibold text-[#33445F]">
-            Custom instructions / Specific details to include (optional)
-          </label>
-          <input
-            type="text"
-            value={customInstructions}
-            onChange={(e) => setCustomInstructions(e.target.value)}
-            placeholder="e.g. Include 20% discount offer, mention Saturday 10 AM event, keep it punchy"
-            className="w-full rounded-sm border border-[#D9E1EC] px-2.5 py-1.5 text-[12px] outline-none focus:border-[#7C3AED]"
-          />
-        </div>
-
-        {/* Audience, Tone, Language with Custom inputs */}
-        <div className="mt-2.5 grid grid-cols-3 gap-1.5">
-          <div>
-            <SelectField
-              label="Audience"
-              value={isCustomAudience ? "Custom..." : audience}
-              options={[...AUDIENCE_OPTIONS, "Custom..."]}
-              onChange={(val) => {
-                if (val === "Custom...") {
-                  setIsCustomAudience(true);
-                } else {
-                  setIsCustomAudience(false);
-                  setAudience(val);
-                }
-              }}
-            />
-            {isCustomAudience && (
-              <input
-                type="text"
-                placeholder="Type custom audience..."
-                value={audience}
-                onChange={(e) => setAudience(e.target.value)}
-                className="mt-1 w-full rounded-sm border border-purple-300 px-2 py-1 text-[11px] outline-none focus:border-[#7C3AED]"
-              />
-            )}
-          </div>
-
-          <div>
-            <SelectField
-              label="Tone"
-              value={isCustomTone ? "Custom..." : tone}
-              options={[...TONE_OPTIONS, "Custom..."]}
-              onChange={(val) => {
-                if (val === "Custom...") {
-                  setIsCustomTone(true);
-                } else {
-                  setIsCustomTone(false);
-                  setTone(val);
-                }
-              }}
-            />
-            {isCustomTone && (
-              <input
-                type="text"
-                placeholder="Type custom tone..."
-                value={tone}
-                onChange={(e) => setTone(e.target.value)}
-                className="mt-1 w-full rounded-sm border border-purple-300 px-2 py-1 text-[11px] outline-none focus:border-[#7C3AED]"
-              />
-            )}
-          </div>
-
-          <SelectField label="Language" value={language} options={LANGUAGE_OPTIONS} onChange={setLanguage} />
-        </div>
-
-        {/* Image style */}
-        <div className="mb-2 mt-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <p className="text-[12px] font-semibold text-[#172044]">Image</p>
-            {aiVisual && !customImage && !imageRemoved && (
-              <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-[#7C3AED]">
-                <Sparkles className="size-2.5" /> AI Visual
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) void handleAddImage(file);
-                e.target.value = "";
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploadingImage}
-              className="flex items-center gap-1 whitespace-nowrap rounded-sm border border-[#D7E0EB] bg-white px-2.5 py-1 text-[11px] font-medium text-[#33445F] transition hover:bg-[#F8FAFD] disabled:opacity-50"
-            >
-              {isUploadingImage ? <Loader2 className="size-3 animate-spin" /> : <Camera className="size-3" />}
-              <span>{isUploadingImage ? "Uploading…" : "Add image"}</span>
+        <div className="text-[11px] text-slate-500">
+          {client?.name || "Choose a client to save content"} -{" "}
+          {usage.isError ? (
+            <button onClick={() => void usage.refetch()} className="underline">
+              Usage unavailable - refresh
             </button>
-            {selectedImage !== null && (
-              <button
-                type="button"
-                onClick={handleRemoveImage}
-                className="whitespace-nowrap rounded-sm border border-red-200 bg-red-50/60 px-2 py-1 text-[11px] font-medium text-red-600 transition hover:bg-red-100"
-              >
-                Remove
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Dynamic style visual cards with clean aesthetic tags */}
-        <div className="grid grid-cols-3 gap-1.5">
-          {PRESET_STYLE_LABELS.map((styleName, i) => {
-            const isSelected = !customImage && !imageRemoved && imageStyleIdx === i;
-            const gradients = [
-              "from-emerald-400 to-teal-500",
-              "from-blue-400 to-indigo-500",
-              "from-amber-400 to-orange-500",
-              "from-purple-400 to-pink-500",
-              "from-rose-400 to-red-500",
-              "from-slate-400 to-gray-600",
-            ];
-            const bg = gradients[i % gradients.length];
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => handlePickPreset(i)}
-                className={cn(
-                  "overflow-hidden rounded-sm border p-2 text-left transition group",
-                  isSelected
-                    ? "border-[#7C3AED] ring-2 ring-purple-100 bg-purple-50/40"
-                    : "border-[#E2E8F0] hover:border-purple-200 bg-white",
-                )}
-              >
-                <div className={cn("h-6 w-full rounded-xs bg-gradient-to-r mb-1.5 opacity-80 group-hover:opacity-100 transition", bg)} />
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold text-[#1E293B] truncate">{styleName}</span>
-                  {isSelected && (
-                    <span className="rounded bg-[#7C3AED] p-0.5 text-white shadow-xs">
-                      <Check className="size-2.5" />
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Dedicated Custom Image Prompt */}
-        <div className="mt-2.5 rounded-sm border border-purple-200/90 bg-purple-50/40 p-2.5">
-          <div className="mb-1.5 flex items-center justify-between">
-            <label className="flex items-center gap-1.5 text-[11px] font-semibold text-[#33445F]">
-              <Wand2 className="size-3 text-[#7C3AED]" /> Custom Image Prompt
-            </label>
-            {imagePrompt.trim() && (
-              <button
-                type="button"
-                onClick={() => {
-                  setImagePrompt("");
-                  handleGenerateAiImage(undefined, "");
-                }}
-                className="text-[10px] text-slate-400 hover:text-red-500"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-          <div className="flex gap-1.5">
-            <input
-              type="text"
-              value={imagePrompt}
-              onChange={(e) => setImagePrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleGenerateAiImage(undefined, imagePrompt);
-                }
-              }}
-              placeholder="e.g. Modern business conference, organic farmers market, vibrant 4K UHD..."
-              className="flex-1 rounded-sm border border-[#D7E0EB] bg-white px-2.5 py-1.5 text-[11px] text-[#1E293B] outline-none transition placeholder:text-slate-400 focus:border-[#7C3AED] focus:ring-1 focus:ring-purple-200"
-            />
-            <button
-              type="button"
-              onClick={() => handleGenerateAiImage(undefined, imagePrompt)}
-              disabled={isGeneratingImage}
-              className="flex shrink-0 whitespace-nowrap items-center gap-1 rounded-sm bg-[#7C3AED] px-3 py-1.5 text-[11px] font-semibold text-white shadow-xs transition hover:bg-[#6D28D9] disabled:opacity-50"
-            >
-              {isGeneratingImage ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3" />}
-              <span>{isGeneratingImage ? "Generating…" : "Generate Visual"}</span>
-            </button>
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-1">
-            <span className="text-[9.5px] font-medium text-slate-400">Quick ideas:</span>
-            {[
-              "Organic farmers market",
-              "Product launch showcase",
-              "Creative team workshop",
-              "Special promotional banner",
-              "Minimalist studio portrait",
-            ].map((suggest) => (
-              <button
-                key={suggest}
-                type="button"
-                onClick={() => {
-                  setImagePrompt(suggest);
-                  handleGenerateAiImage(undefined, suggest);
-                }}
-                className="whitespace-nowrap rounded-full border border-purple-200/80 bg-white px-2 py-0.5 text-[9.5px] font-medium text-[#7C3AED] transition hover:bg-purple-100"
-              >
-                + {suggest}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {aiVisual && !customImage && !imageRemoved && (
-          <div className="mt-2 flex items-center justify-between rounded border border-purple-100 bg-purple-50/50 p-1.5 px-2 text-[10px] text-[#7C3AED]">
-            <span className="truncate font-medium flex items-center gap-1">
-              <Sparkles className="size-3 shrink-0" /> {aiVisual.prompt}
-            </span>
-            <button
-              type="button"
-              onClick={() => handleGenerateAiImage()}
-              className="ml-2 shrink-0 font-semibold underline hover:text-purple-900"
-            >
-              Regenerate
-            </button>
-          </div>
-        )}
-
-        {customImage && (
-          <p className="mt-1 text-[10px] text-[#7C3AED]">
-            Custom image in use {customImage.local ? "(local preview)" : "(from your media library)"} — picking an AI style above replaces it.
-          </p>
-        )}
-        {imageRemoved && <p className="mt-1 text-[10px] text-slate-400">No image selected — this post will be text-only.</p>}
-
-        {/* Generate button */}
-        <button
-          onClick={() => handleGenerate()}
-          disabled={isGenerating || promptOverLimit}
-          className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-sm bg-[#7C3AED] text-[12.5px] font-semibold text-white shadow-sm transition hover:bg-[#6D28D9] disabled:opacity-70"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="size-4 animate-spin" /> Generating{provider ? ` with ${PROVIDER_LABEL[provider]}` : ""}…
-            </>
+          ) : usage.isPending ? (
+            "Loading usage..."
+          ) : remaining === null ? (
+            "No text-token cap reported"
           ) : (
-            <>
-              <Sparkles className="size-4" /> Generate content
-            </>
+            `${remaining?.toLocaleString()} text tokens left`
           )}
-        </button>
-        {promptOverLimit && (
-          <p className="mt-1.5 flex items-center gap-1 text-[10.5px] font-semibold text-red-500">
-            <AlertTriangle className="size-3" /> Prompt exceeds the {TOPIC_MAX_CHARS.toLocaleString()}-character limit.
-          </p>
-        )}
-      </Card>
-
-      {/* 2. AI Result — switch between editing every field and a rendered preview */}
-      <Card
-        title="AI result"
-        subtitle={
-          <>
-            {usageError && remainingTokens === null && quotaLimit === null ? (
-              <span className="text-[#DC2626]">
-                Usage unavailable{" "}
-                <button onClick={refreshUsage} className="font-semibold underline">
-                  retry
-                </button>
-              </span>
-            ) : usageLoaded ? (
-              <>
-                {quotaLimit === null ? (
-                  <span className="font-semibold text-[#7C3AED]">Unlimited AI tokens</span>
-                ) : (
-                  <>
-                    <span className="font-semibold text-[#7C3AED]">
-                      {(remainingTokens ?? 0).toLocaleString()} left
-                    </span>
-                    <span> of {quotaLimit.toLocaleString()}</span>
-                  </>
-                )}
-                <span> • </span>
-                {tokensUsed !== null ? (
-                  <>
-                    <span className="font-semibold text-[#7C3AED]">{tokensUsed.toLocaleString()} tokens consumed</span>
-                    <span> this run • </span>
-                  </>
-                ) : usedTokens !== null ? (
-                  <span>{usedTokens.toLocaleString()} used this cycle • </span>
-                ) : null}
-                <span>{provider ? `${PROVIDER_LABEL[provider]} AI` : "AI generated"}</span>
-              </>
-            ) : (
-              "Review, edit and approve every field"
-            )}
-          </>
-        }
-        action={
-          <div className="flex shrink-0 items-center gap-2">
-            {usageLoaded && (
-              <span
-                className={cn(
-                  "whitespace-nowrap rounded-full px-2 py-0.5 text-[10.5px] font-semibold",
-                  quotaLow ? "bg-amber-50 text-amber-600" : "bg-purple-50 text-[#7C3AED]",
-                )}
-                title="AI tokens remaining this billing cycle"
-              >
-                {usageError && quotaLimit === null
-                  ? "Usage —"
-                  : quotaLimit === null
-                    ? "Unlimited"
-                    : `${(remainingTokens ?? 0).toLocaleString()} left`}
-              </span>
-            )}
-            <div className="flex overflow-hidden rounded-sm border border-[#D7E0EB]">
-              <button
-                onClick={() => setResultView("edit")}
-                className={cn("px-2 py-1 text-[10.5px] font-semibold transition", resultView === "edit" ? "bg-[#1769DF] text-white" : "text-[#687797] hover:bg-[#F8FAFD]")}
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => setResultView("preview")}
-                className={cn("px-2 py-1 text-[10.5px] font-semibold transition", resultView === "preview" ? "bg-[#1769DF] text-white" : "text-[#687797] hover:bg-[#F8FAFD]")}
-              >
-                Preview
-              </button>
-            </div>
-            <button
-              onClick={() => handleGenerate()}
-              disabled={isGenerating}
-              className="text-[11px] font-semibold text-[#1769DF] hover:underline disabled:opacity-50"
-            >
-              Regenerate
-            </button>
-          </div>
-        }
-      >
-        {generated ? (
-          resultView === "preview" ? (
-            <div className="space-y-2.5">
-              <div className="max-h-[460px] overflow-auto rounded-sm border border-[#E2E8F0] bg-[#F8FAFD] p-3 text-[12px] leading-relaxed text-[#33445F] [&_blockquote]:mt-1 [&_blockquote]:border-l-2 [&_blockquote]:border-[#7C3AED] [&_blockquote]:pl-2 [&_blockquote]:italic [&_h3]:mb-1.5 [&_h3]:text-[13.5px] [&_h3]:font-semibold [&_h3]:text-[#172044] [&_h4]:mb-1.5 [&_h4]:text-[12.5px] [&_h4]:font-semibold [&_h4]:text-[#172044] [&_li]:mb-0.5 [&_ol]:mb-1.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-1.5 [&_ul]:mb-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_code]:rounded [&_code]:bg-slate-100 [&_code]:px-1">
-                {selectedImage && (
-                  <div className="mb-2.5 overflow-hidden rounded-sm border border-slate-200">
-                    <img src={selectedImage} alt="" className="h-44 w-full object-cover" />
-                  </div>
-                )}
-                <h3>{result.headline || "Untitled"}</h3>
-                <div dangerouslySetInnerHTML={{ __html: renderRichText(result.caption) }} />
-                {result.callToAction && (
-                  <p className="mt-2 rounded-sm bg-purple-50 px-2 py-1.5 text-[11.5px] font-semibold text-[#7C3AED]">
-                    {result.callToAction}
-                  </p>
-                )}
-                {result.hashtags.length > 0 && (
-                  <p className="mt-1.5 text-[11.5px] font-medium text-[#1769DF]">{result.hashtags.join(" ")}</p>
-                )}
+        </div>
+      </div>
+      <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(320px,0.85fr)_minmax(0,1.15fr)]">
+        <Card
+          title={
+            mode === "copy" ? "Your creative brief" : "Describe your visual"
+          }
+          subtitle={
+            mode === "copy"
+              ? "Your facts, audience and voice. AI follows your direction."
+              : "A specific scene and art direction work better than a preset."
+          }
+        >
+          {mode === "copy" ? (
+            <div className="space-y-3">
+              <label className="block text-xs font-medium">
+                What do you want to say?
+                <textarea
+                  aria-label="AI prompt"
+                  value={brief}
+                  onChange={(e) => setBrief(e.target.value)}
+                  rows={4}
+                  maxLength={1000}
+                  placeholder="Describe your announcement, product, story or question. Include the facts the AI should use."
+                  className={input}
+                />
+                <span className="mt-1 block text-right text-[10px] text-slate-400">
+                  {brief.length}/1,000
+                </span>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-xs font-medium">
+                  Output format
+                  <select
+                    value={format}
+                    onChange={(e) => setFormat(e.target.value)}
+                    className={input}
+                  >
+                    {formats.map((value) => (
+                      <option key={value}>{value}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs font-medium">
+                  Goal
+                  <input
+                    value={goal}
+                    onChange={(e) => setGoal(e.target.value)}
+                    maxLength={300}
+                    placeholder="What should the reader do or feel?"
+                    className={input}
+                  />
+                </label>
               </div>
-              <p className="text-center text-[10.5px] text-slate-400">
-                Read-only preview — switch to <span className="font-semibold text-[#1769DF]">Edit</span> to change any field.
-              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-xs font-medium">
+                  Audience
+                  <input
+                    value={audience}
+                    onChange={(e) => setAudience(e.target.value)}
+                    maxLength={100}
+                    placeholder="Describe your actual audience"
+                    className={input}
+                  />
+                </label>
+                <label className="text-xs font-medium">
+                  Voice / tone
+                  <input
+                    value={tone}
+                    onChange={(e) => setTone(e.target.value)}
+                    maxLength={100}
+                    placeholder="Write your own direction"
+                    className={input}
+                  />
+                </label>
+              </div>
+              <label className="block text-xs font-medium">
+                Language
+                <input
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  maxLength={50}
+                  list="studio-languages"
+                  className={input}
+                />
+                <datalist id="studio-languages">
+                  {["English", "Hindi", "Hinglish"].map((value) => (
+                    <option key={value}>{value}</option>
+                  ))}
+                </datalist>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {["Facebook", "Instagram", "LinkedIn"].map((channel) => (
+                  <label
+                    key={channel}
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-2 text-xs"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={channels.includes(channel)}
+                      onChange={() =>
+                        setChannels((previous) =>
+                          previous.includes(channel)
+                            ? previous.filter((item) => item !== channel)
+                            : [...previous, channel],
+                        )
+                      }
+                    />
+                    {channel}
+                  </label>
+                ))}
+              </div>
+              {client && (
+                <label className="flex items-start gap-2 rounded-lg bg-slate-50 p-2.5 text-[11px] leading-5 text-slate-500">
+                  <input
+                    type="checkbox"
+                    checked={includeClient}
+                    onChange={(e) => setIncludeClient(e.target.checked)}
+                    className="mt-1"
+                  />
+                  Use {client.name}
+                  {client.website ? ` and ${client.website}` : ""} as context.
+                  Website content is not fetched.
+                </label>
+              )}
+              <details>
+                <summary className="cursor-pointer text-xs font-medium text-slate-600">
+                  Extra instructions, facts and things to avoid
+                </summary>
+                <textarea
+                  aria-label="Additional AI instructions"
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
+                  maxLength={4000}
+                  rows={3}
+                  className={input}
+                  placeholder="Must-include details, claims you can support, preferred structure, words to avoid..."
+                />
+              </details>
+              {copyError && (
+                <p
+                  role="alert"
+                  className="rounded-lg bg-red-50 p-3 text-xs text-red-700"
+                >
+                  {copyError}
+                </p>
+              )}
+              <button
+                disabled={copyBusy || saving || !canWrite || !brief.trim()}
+                onClick={() => void generateCopy()}
+                className={cn(
+                  button,
+                  "w-full border-violet-600 bg-violet-600 text-white hover:bg-violet-700",
+                )}
+              >
+                {copyBusy ? (
+                  <Loader2 className="animate-spin" size={14} />
+                ) : (
+                  <Sparkles size={14} />
+                )}
+                Generate content
+              </button>
             </div>
           ) : (
-            <div className="space-y-2.5">
-              {/* Editable Headline */}
-              <div>
-                <div className="mb-1 flex items-center justify-between">
-                  <label className="text-[11px] font-semibold text-[#33445F]">Headline / Title</label>
-                  <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-[#7C3AED]">
-                    {selected}
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  value={result.headline || ""}
-                  onChange={(e) => setResult({ ...result, headline: e.target.value })}
-                  placeholder="Title or hook"
-                  className="w-full rounded-sm border border-[#D9E1EC] px-2.5 py-1.5 text-[12.5px] font-semibold text-[#1E293B] outline-none focus:border-[#7C3AED]"
-                />
-              </div>
-
-              {/* Editable Content Body / Slides / Script */}
-              <div>
-                <div className="mb-1 flex items-center justify-between">
-                  <label className="text-[11px] font-semibold text-[#33445F]">
-                    {selected === "Carousel"
-                      ? "Carousel Slides (editable)"
-                      : selected === "Reel Script"
-                        ? "Reel Script & Audio Cues (editable)"
-                        : selected === "Blog"
-                          ? "Blog Article Copy (editable)"
-                          : selected === "Variations"
-                            ? "Content Variations A/B/C (editable)"
-                            : "Main Content / Caption (editable)"}
-                  </label>
-                  <span className="text-[10px] text-slate-400">✏️ Editable</span>
-                </div>
+            <div className="space-y-3">
+              <label className="block text-xs font-medium">
+                Subject, scene and details
                 <textarea
-                  value={result.caption}
-                  onChange={(e) => setResult({ ...result, caption: e.target.value })}
-                  rows={selected === "Carousel" || selected === "Reel Script" || selected === "Blog" || selected === "Variations" ? 11 : 6}
-                  spellCheck
-                  className={cn(
-                    "w-full resize-y rounded-sm border p-2.5 text-[12px] leading-relaxed text-[#33445F] outline-none focus:border-[#7C3AED]",
-                    captionOverLimit ? "border-red-300 bg-red-50/40" : "border-[#D9E1EC]",
-                  )}
+                  aria-label="Image description"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  maxLength={2800}
+                  rows={4}
+                  className={input}
+                  placeholder="Describe what should be in the image, what is happening and which details matter."
                 />
-                <div className="mt-1 flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400">
-                    {captionLimit !== null ? `Platform limit for ${previewPlatform}: ${captionLimit.toLocaleString()} characters` : `No character limit for ${previewPlatform}`}
-                  </span>
-                  <span className={cn("tabular-nums", captionOverLimit ? "font-semibold text-red-500" : captionNearLimit ? "text-amber-500" : "text-slate-400")}>
-                    {captionLength.toLocaleString()}
-                    {captionLimit !== null ? ` / ${captionLimit.toLocaleString()}` : ""}
-                  </span>
-                </div>
-              </div>
-
-              {/* Editable Call To Action */}
-              <div>
-                <label className="mb-1 block text-[11px] font-semibold text-[#33445F]">Call To Action (CTA)</label>
+              </label>
+              <button
+                className="text-[11px] font-semibold text-violet-600 disabled:opacity-40"
+                disabled={!brief.trim() && !copyReady}
+                onClick={() =>
+                  setSubject((brief.trim() || result.caption).slice(0, 2800))
+                }
+              >
+                Use my content brief as a starting point
+              </button>
+              <label className="block text-xs font-medium">
+                Visual style
                 <input
-                  type="text"
-                  value={result.callToAction || ""}
-                  onChange={(e) => setResult({ ...result, callToAction: e.target.value })}
-                  placeholder="e.g. Save this post, Comment START, Link in bio"
-                  className="w-full rounded-sm border border-[#D9E1EC] px-2.5 py-1.5 text-[11.5px] text-[#33445F] outline-none focus:border-[#7C3AED]"
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value)}
+                  maxLength={100}
+                  placeholder="Your style: photography, illustration, collage, abstract..."
+                  className={input}
                 />
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-xs font-medium">
+                  Composition
+                  <input
+                    value={composition}
+                    onChange={(e) => setComposition(e.target.value)}
+                    maxLength={240}
+                    placeholder="Subject placement, framing, space"
+                    className={input}
+                  />
+                </label>
+                <label className="text-xs font-medium">
+                  Palette / lighting
+                  <input
+                    value={palette}
+                    onChange={(e) => setPalette(e.target.value)}
+                    maxLength={240}
+                    placeholder="Brand colors and mood"
+                    className={input}
+                  />
+                </label>
               </div>
-
-              {/* Editable Hashtags */}
-              <div>
-                <div className="mb-1 flex items-center justify-between">
-                  <label className="text-[11px] font-semibold text-[#33445F]">Hashtags (space separated)</label>
-                  <span className={cn("text-[10px] tabular-nums", hashtagsOverLimit ? "font-semibold text-red-500" : "text-slate-400")}>
-                    {hashtagCount} used{hashtagLimit !== null ? ` / ${hashtagLimit} allowed` : ""}
-                  </span>
-                </div>
+              <label className="block text-xs font-medium">
+                Exact text in image (optional)
                 <input
-                  type="text"
-                  value={result.hashtags.join(" ")}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    const tags = raw.split(/\s+/).filter(Boolean).map((t) => (t.startsWith("#") ? t : `#${t}`));
-                    setResult({ ...result, hashtags: tags });
-                  }}
-                  placeholder="#tag1 #tag2 #tag3"
-                  className={cn(
-                    "w-full rounded-sm border px-2.5 py-1.5 text-[11.5px] font-semibold text-[#1769DF] outline-none focus:border-[#7C3AED]",
-                    hashtagsOverLimit ? "border-red-300 bg-red-50/40" : "border-[#D9E1EC]",
-                  )}
+                  value={imageText}
+                  onChange={(e) => setImageText(e.target.value)}
+                  maxLength={200}
+                  placeholder="Leave blank for a text-free image"
+                  className={input}
                 />
-                {hashtagsOverLimit && (
-                  <p className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-red-500">
-                    <AlertTriangle className="size-3" /> {previewPlatform} allows at most {hashtagLimit} hashtags.
-                  </p>
+              </label>
+              <label className="block text-xs font-medium">
+                Avoid
+                <input
+                  value={avoid}
+                  onChange={(e) => setAvoid(e.target.value)}
+                  maxLength={240}
+                  placeholder="Unwanted objects, colors or treatments"
+                  className={input}
+                />
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-xs font-medium">
+                  Canvas size
+                  <select
+                    value={canvasId}
+                    onChange={(e) => setCanvasId(e.target.value)}
+                    className={input}
+                  >
+                    {CANVAS_GROUPS.map((group) => (
+                      <optgroup key={group} label={group}>
+                        {CANVAS_PRESETS.filter((preset) => preset.group === group).map((preset) => (
+                          <option key={preset.id} value={preset.id}>
+                            {preset.label} - {preset.ratio} ({canvasPixels(preset)})
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs font-medium">
+                  Quality
+                  <select
+                    value={quality}
+                    onChange={(e) =>
+                      setQuality(e.target.value as typeof quality)
+                    }
+                    className={input}
+                  >
+                    <option value="low">Draft</option>
+                    <option value="medium">Standard</option>
+                    <option value="high">High detail</option>
+                  </select>
+                </label>
+              </div>
+              <p className="text-[11px] leading-5 text-slate-400">
+                One image per request. Quality affects provider cost. The image
+                is made at the nearest shape the model allows and then fitted to
+                exactly {canvasPixels(canvas)} px for {canvas.usedFor}. Review
+                text and media requirements before publishing.
+              </p>
+              {imageError && (
+                <p
+                  role="alert"
+                  className="rounded-lg bg-red-50 p-3 text-xs text-red-700"
+                >
+                  {imageError}
+                </p>
+              )}
+              <button
+                disabled={imageBusy || saving || !canWrite || !subject.trim()}
+                onClick={() => void generateVisual()}
+                className={cn(
+                  button,
+                  "w-full border-violet-600 bg-violet-600 text-white hover:bg-violet-700",
                 )}
-              </div>
-
-              {/* Image — fully removable & replaceable */}
-              <div>
-                <div className="mb-1 flex items-center justify-between">
-                  <label className="text-[11px] font-semibold text-[#33445F]">Image</label>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploadingImage}
-                      className="rounded-sm border border-[#D7E0EB] px-2 py-0.5 text-[10.5px] font-semibold text-[#33445F] transition hover:bg-[#F8FAFD] disabled:opacity-50"
-                    >
-                      {isUploadingImage ? "Uploading…" : selectedImage ? "Replace" : "Add image"}
-                    </button>
-                    {selectedImage && (
-                      <button
-                        onClick={handleRemoveImage}
-                        className="rounded-sm border border-[#D7E0EB] px-2 py-0.5 text-[10.5px] font-semibold text-red-500 transition hover:bg-red-50"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                </div>
-                {selectedImage ? (
-                  <div className="relative aspect-video w-full overflow-hidden rounded-sm bg-slate-100 group">
-                    <img src={selectedImage} alt="" className="h-full w-full object-cover" />
-                    {aiVisual && !customImage && !imageRemoved && (
-                      <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-black/65 px-2 py-0.5 text-[9.5px] font-semibold text-white backdrop-blur-sm shadow-sm">
-                        <Sparkles className="size-2.5 text-purple-300" /> AI Visual ({aiVisual.style})
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleGenerateAiImage()}
-                      disabled={isGeneratingImage}
-                      title="Regenerate with a different AI visual"
-                      className="absolute top-2 right-2 flex items-center gap-1 rounded bg-black/65 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm hover:bg-black/85 transition shadow-sm"
-                    >
-                      <RefreshCw className={cn("size-2.5", isGeneratingImage && "animate-spin")} />
-                      Regenerate Visual
-                    </button>
-                  </div>
+              >
+                {imageBusy ? (
+                  <Loader2 size={14} className="animate-spin" />
                 ) : (
-                  <div className="grid aspect-video w-full place-items-center rounded-sm border border-dashed border-[#CBD5E1] bg-[#F8FAFD] p-4 text-center">
-                    <div>
-                      <ImageIcon className="mx-auto size-6 text-[#CBD5E1]" />
-                      <p className="mt-1.5 text-[11.5px] font-semibold text-[#64748B]">No image selected</p>
-                      <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Click 'Generate AI image' or upload a file.</p>
+                  <Sparkles size={14} />
+                )}
+                Generate visual
+              </button>
+            </div>
+          )}
+        </Card>
+        <div className="min-w-0 space-y-3">
+          <Card
+            title={mode === "copy" ? "Your working draft" : "Your visual"}
+            subtitle={
+              mode === "copy"
+                ? "Edit freely. Refinements use your current edited text."
+                : "Select a result, save it, or create another direction."
+            }
+            action={
+              <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-500">
+                {mode === "copy"
+                  ? `${result.caption.length.toLocaleString()} characters`
+                  : visual
+                    ? visual.ratio
+                    : "No image selected"}
+              </span>
+            }
+          >
+            {mode === "copy" ? (
+              <div className="space-y-3">
+                <label className="block text-xs font-medium">
+                  Post title
+                  <input
+                    value={result.headline ?? ""}
+                    onChange={(e) =>
+                      setResult({ ...result, headline: e.target.value })
+                    }
+                    className={input}
+                    placeholder="Optional title or hook"
+                  />
+                </label>
+                <textarea
+                  aria-label="Generated caption"
+                  value={result.caption}
+                  onChange={(e) =>
+                    setResult({ ...result, caption: e.target.value })
+                  }
+                  rows={8}
+                  className={input}
+                  placeholder="Your draft appears here. You can also write or paste your own copy."
+                />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs font-medium">
+                    Call to action
+                    <input
+                      value={result.callToAction ?? ""}
+                      onChange={(e) =>
+                        setResult({ ...result, callToAction: e.target.value })
+                      }
+                      className={input}
+                      placeholder="Optional next step"
+                    />
+                  </label>
+                  <label className="text-xs font-medium">
+                    Hashtags
+                    <input
+                      value={result.hashtags.join(" ")}
+                      onChange={(e) =>
+                        setResult({
+                          ...result,
+                          hashtags: e.target.value
+                            .split(/[\s,]+/)
+                            .filter(Boolean),
+                        })
+                      }
+                      className={input}
+                      placeholder="Optional hashtags"
+                    />
+                  </label>
+                </div>
+                <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-3">
+                  <label className="block text-xs font-medium text-violet-800">
+                    What should change?
+                    <textarea
+                      aria-label="Refinement instructions"
+                      value={change}
+                      onChange={(e) => setChange(e.target.value)}
+                      maxLength={2000}
+                      rows={2}
+                      className={input}
+                      placeholder="Describe your changes. What should stay, what should be different?"
+                    />
+                  </label>
+                  <button
+                    disabled={
+                      !copyReady ||
+                      !change.trim() ||
+                      copyBusy ||
+                      saving ||
+                      !canWrite
+                    }
+                    onClick={() => void generateCopy(change)}
+                    className={cn(
+                      button,
+                      "mt-2 border-violet-200 text-violet-700",
+                    )}
+                  >
+                    <RefreshCw size={13} />
+                    Refine draft
+                  </button>
+                </div>
+                {copyHistory.length > 0 && (
+                  <div>
+                    <p className="mb-2 flex items-center gap-1 text-[11px] text-slate-500">
+                      <History size={12} />
+                      Session versions - selecting does not generate again
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {copyHistory.map((version, index) => (
+                        <button
+                          key={version.id}
+                          disabled={copyBusy || saving}
+                          onClick={() => setResult(version.result)}
+                          className={button}
+                        >
+                          Version {copyHistory.length - index}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    className={button}
+                    disabled={!copyReady}
+                    onClick={() =>
+                      navigator.clipboard
+                        .writeText(
+                          deliveryCaption({
+                            caption: result.caption,
+                            hashtags: result.hashtags,
+                            cta: result.callToAction,
+                            link: "",
+                          }),
+                        )
+                        .then(() => toast.success("Copied"))
+                        .catch(() =>
+                          toast.error(
+                            "Unable to copy. Select the text manually.",
+                          ),
+                        )
+                    }
+                  >
+                    <Copy size={13} />
+                    Copy text
+                  </button>
+                  <button
+                    className={button}
+                    disabled={!copyReady || busy || !clientId || !canWrite}
+                    onClick={() => void handleSaveAction("draft")}
+                  >
+                    {saving ? (
+                      <Loader2 size={13} className="animate-spin" />
+                    ) : (
+                      <Check size={13} />
+                    )}
+                    Save draft
+                  </button>
+                  <button
+                    className={cn(
+                      button,
+                      "ml-auto border-blue-600 bg-blue-600 text-white hover:bg-blue-700",
+                    )}
+                    disabled={
+                      (!copyReady && !visualReady) ||
+                      busy ||
+                      !clientId ||
+                      !canWrite ||
+                      !onUsePost
+                    }
+                    onClick={() => void handleSaveAction("composer")}
+                  >
+                    <ArrowRight size={13} />
+                    Open in composer
+                  </button>
+                </div>
               </div>
-
-              {/* Actions */}
-              <div className="mt-2 flex gap-1.5">
-                <button
-                  onClick={handleSaveDraft}
-                  disabled={isSavingDraft}
-                  className="flex h-8.5 flex-1 items-center justify-center gap-1 rounded-sm border border-[#D7E0EB] bg-white text-[11.5px] font-semibold text-[#687797] hover:bg-gray-50 disabled:opacity-50 transition"
-                >
-                  {isSavingDraft ? <Loader2 className="size-3 animate-spin" /> : null} Save draft
-                </button>
-                <button
-                  onClick={handleUsePost}
-                  className="flex h-8.5 flex-1 items-center justify-center gap-1 rounded-sm bg-[#1769DF] text-[11.5px] font-semibold text-white hover:bg-blue-600 transition"
-                >
-                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} {copied ? "Copied!" : "Use this post"}
-                </button>
+            ) : (
+              <div className="space-y-3">
+                <div className="relative grid min-h-56 place-items-center overflow-hidden rounded-xl border border-dashed border-slate-200 bg-slate-50">
+                  {visual ? (
+                    <img
+                      src={visual.url}
+                      alt={visual.prompt.slice(0, 180)}
+                      className="max-h-[420px] w-full object-contain"
+                    />
+                  ) : (
+                    <div className="max-w-xs p-6 text-center">
+                      <ImageIcon className="mx-auto size-8 text-slate-300" />
+                      <p className="mt-3 text-sm font-medium text-slate-600">
+                        Build a visual around your idea
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-slate-400">
+                        Describe a scene, choose your art direction, then
+                        generate. You can also upload an existing image.
+                      </p>
+                    </div>
+                  )}
+                  {imageBusy && (
+                    <div
+                      role="status"
+                      className="absolute inset-0 grid place-items-center bg-white/85 text-sm font-medium text-violet-700"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Loader2 size={18} className="animate-spin" />
+                        Creating one visual?
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  ref={uploadInput}
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (file) void upload(file);
+                  }}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    className={button}
+                    disabled={busy || !clientId || !canWrite}
+                    onClick={() => uploadInput.current?.click()}
+                  >
+                    <Upload size={13} />
+                    Upload image
+                  </button>
+                  <button
+                    className={button}
+                    disabled={!visual || imageBusy}
+                    onClick={() => void download()}
+                  >
+                    <Download size={13} />
+                    Download
+                  </button>
+                  {visual && (
+                    <button
+                      className={button}
+                      disabled={busy}
+                      onClick={() => setVisual(null)}
+                    >
+                      <X size={13} />
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {visualHistory.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {visualHistory.map((version, index) => (
+                      <button
+                        key={version.id}
+                        disabled={busy}
+                        onClick={() => setVisual(version)}
+                        aria-label={`Use visual version ${index + 1}`}
+                        className={cn(
+                          "overflow-hidden rounded-lg border-2",
+                          visual?.id === version.id
+                            ? "border-violet-500"
+                            : "border-transparent",
+                        )}
+                      >
+                        <img
+                          src={version.url}
+                          alt={`Visual option ${index + 1}`}
+                          className="h-20 w-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {visual && (
+                  <>
+                    <label className="block text-xs font-medium">
+                      Describe another direction
+                      <input
+                        aria-label="Visual variation instructions"
+                        value={imageChange}
+                        onChange={(e) => setImageChange(e.target.value)}
+                        maxLength={1000}
+                        className={input}
+                        placeholder="For example, change the framing or palette"
+                      />
+                    </label>
+                    <button
+                      className={button}
+                      disabled={
+                        !imageChange.trim() ||
+                        busy ||
+                        !subject.trim() ||
+                        !canWrite
+                      }
+                      onClick={() => void generateVisual(true)}
+                    >
+                      <RefreshCw size={13} />
+                      Generate variation
+                    </button>
+                    <p className="text-[10px] leading-4 text-slate-400">
+                      A variation is a new image from your text brief. It does
+                      not edit the pixels of the selected or uploaded image.
+                    </p>
+                    <details>
+                      <summary className="cursor-pointer text-[11px] text-slate-500">
+                        Prompt used for this visual
+                      </summary>
+                      <p className="mt-2 whitespace-pre-wrap break-words text-xs text-slate-500">
+                        {visual.prompt}
+                      </p>
+                    </details>
+                  </>
+                )}
+                <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                  <button
+                    className={button}
+                    disabled={!visual || busy || !clientId || !canWrite}
+                    onClick={() => void handleSaveAction("media")}
+                  >
+                    Save visual to library
+                  </button>
+                  <button
+                    className={cn(
+                      button,
+                      "ml-auto border-blue-600 bg-blue-600 text-white hover:bg-blue-700",
+                    )}
+                    disabled={
+                      !visual || busy || !clientId || !canWrite || !onUsePost
+                    }
+                    onClick={() => void handleSaveAction("composer")}
+                  >
+                    <ArrowRight size={13} />
+                    Use in composer
+                  </button>
+                </div>
               </div>
-            </div>
-          )
-        ) : (
-          <div className="grid min-h-[220px] place-items-center rounded-sm border border-dashed border-[#CBD5E1] bg-[#F8FAFD] p-6 text-center">
-            <Sparkles className="size-7 text-[#CBD5E1]" />
-            <p className="mt-2 text-[12px] font-semibold text-[#64748B]">Your AI result will appear here</p>
-            <p className="mt-0.5 text-[11px] text-[#94A3B8]">Add a prompt, customize fields, and generate content</p>
-          </div>
-        )}
-      </Card>
-
-      {/* 3. Live Preview & Quick Refinements */}
-      <div className="space-y-2.5 xl:sticky xl:top-4">
-        <ContentPreviewPanel
-          platform={previewPlatform}
-          setPlatform={setPreviewPlatform}
-          channels={["instagram", "facebook"]}
-          caption={result.caption}
-          hashtags={result.hashtags}
-          image={selectedImage}
-          isLoadingImage={isGeneratingImage}
-        />
-
-        {/* Platform limits for the selected preview channel */}
-        <Card title="Platform limits" subtitle={PLATFORM_META[previewPlatform]?.label ?? previewPlatform}>
-          <ul className="space-y-1.5 text-[11px] text-[#687797]">
-            <li className="flex items-center justify-between gap-2">
-              <span>Caption characters</span>
-              <span className={cn("font-semibold tabular-nums", captionOverLimit ? "text-red-500" : "text-[#33445F]")}>
-                {captionLength}
-                {captionLimit !== null ? ` / ${captionLimit}` : ""}
-              </span>
-            </li>
-            <li className="flex items-center justify-between gap-2">
-              <span>Hashtags</span>
-              <span className={cn("font-semibold tabular-nums", hashtagsOverLimit ? "text-red-500" : "text-[#33445F]")}>
-                {hashtagCount}
-                {hashtagLimit !== null ? ` / ${hashtagLimit}` : ""}
-              </span>
-            </li>
-            <li className="flex items-center justify-between gap-2">
-              <span>Prompt characters</span>
-              <span className={cn("font-semibold tabular-nums", promptOverLimit ? "text-red-500" : "text-[#33445F]")}>
-                {promptLength} / {TOPIC_MAX_CHARS.toLocaleString()}
-              </span>
-            </li>
-          </ul>
-        </Card>
-
-        {/* AI token budget from the Usage API */}
-        <Card title="Usage & limits" subtitle={quotaPercent !== null ? `${quotaPercent}% of monthly AI tokens used` : "Monthly AI token budget"}>
-          {quotaPercent !== null ? (
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDF1F5]">
-              <div
-                className={cn("h-full rounded-full transition-all", quotaLow ? "bg-amber-400" : "bg-[#7C3AED]")}
-                style={{ width: `${quotaPercent}%` }}
+            )}
+          </Card>
+          {mode === "copy" && visual && (
+            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3">
+              <img
+                src={visual.url}
+                alt="Selected visual"
+                className="size-12 rounded-lg object-cover"
               />
-            </div>
-          ) : (
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#EDF1F5]">
-              <div className="h-full w-0 rounded-full bg-[#7C3AED]" />
-            </div>
-          )}
-          <div className="mt-2 flex items-center justify-between text-[11px]">
-            <span className="text-[#687797]">
-              {effectiveRemaining.toLocaleString()} tokens left
-            </span>
-            <span className="text-slate-400">of {effectiveLimit.toLocaleString()}/mo</span>
-          </div>
-          {usedTokens > 0 && (
-            <p className="mt-1 text-[10.5px] text-slate-400">{usedTokens.toLocaleString()} used this cycle</p>
-          )}
-          {quotaLow && (
-            <p className="mt-1.5 flex items-center gap-1 text-[10.5px] font-semibold text-amber-600">
-              <AlertTriangle className="size-3" /> Running low — consider upgrading your plan in Billing.
-            </p>
-          )}
-        </Card>
-
-        <Card title="Quick refinements">
-          <div className="grid grid-cols-2 gap-1">
-            {["Make shorter", "Add CTA", "Change tone", "More hashtags", "Hindi version", "Add emojis"].map((x) => (
-              <button
-                key={x}
-                onClick={() => handleGenerate([x])}
-                disabled={isGenerating}
-                className="rounded-sm border border-[#E2E8F0] px-2 py-1.5 text-left text-[11px] font-semibold text-[#687797] hover:border-purple-200 hover:bg-purple-50/50 disabled:opacity-50 transition"
-              >
-                ✨ {x}
+              <span className="flex-1 text-xs text-slate-500">
+                This visual will travel with your copy into the composer.
+              </span>
+              <button className={button} onClick={() => setMode("image")}>
+                Manage image
               </button>
-            ))}
-          </div>
-        </Card>
+            </div>
+          )}
+          <p className="px-1 text-[11px] leading-5 text-slate-400">
+            Session versions stay here while you switch tabs. Save a draft or
+            visual to keep it after a reload. AI does not publish anything;
+            destination and format checks happen in the composer.
+          </p>
+        </div>
       </div>
     </div>
   );
-}
-
-/**
- * Tiny escape-first markdown renderer for the read-only Preview view.
- * Everything is HTML-escaped first; only our own tags are injected, so
- * model output can never smuggle in markup or scripts.
- */
-function renderRichText(src: string): string {
-  const escaped = src
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-  const inline = (s: string) =>
-    s
-      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-      .replace(/(^|[^*\w])\*([^*\n]+)\*/g, "$1<em>$2</em>")
-      .replace(/`([^`]+)`/g, "<code>$1</code>");
-
-  const lines = escaped.split(/\r?\n/);
-  const out: string[] = [];
-  let list: "ul" | "ol" | null = null;
-  const closeList = () => {
-    if (list) {
-      out.push(`</${list}>`);
-      list = null;
-    }
-  };
-
-  for (const raw of lines) {
-    const line = raw.trimEnd();
-    if (!line.trim()) {
-      closeList();
-      continue;
-    }
-
-    const heading = line.match(/^(#{1,6})\s+(.*)$/);
-    if (heading) {
-      closeList();
-      const level = Math.min(6, (heading[1]?.length ?? 1) + 2);
-      out.push(`<h${level}>${inline(heading[2] ?? "")}</h${level}>`);
-      continue;
-    }
-
-    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
-      closeList();
-      out.push("<hr/>");
-      continue;
-    }
-
-    const quote = line.match(/^&gt;\s?(.*)$/);
-    if (quote) {
-      closeList();
-      out.push(`<blockquote>${inline(quote[1] ?? "")}</blockquote>`);
-      continue;
-    }
-
-    const ul = line.match(/^[-*•]\s+(.*)$/);
-    if (ul) {
-      if (list !== "ul") {
-        closeList();
-        out.push("<ul>");
-        list = "ul";
-      }
-      out.push(`<li>${inline(ul[1] ?? "")}</li>`);
-      continue;
-    }
-
-    const ol = line.match(/^\d+[.)]\s+(.*)$/);
-    if (ol) {
-      if (list !== "ol") {
-        closeList();
-        out.push("<ol>");
-        list = "ol";
-      }
-      out.push(`<li>${inline(ol[1] ?? "")}</li>`);
-      continue;
-    }
-
-    closeList();
-    out.push(`<p>${inline(line)}</p>`);
-  }
-
-  closeList();
-  return out.join("");
 }
