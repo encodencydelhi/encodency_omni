@@ -162,7 +162,7 @@ export function ClientsListPage({ basePath: propBasePath }: { basePath?: string 
     <div className="space-y-3">
       <PageHeader
         title="Clients"
-        description="Monitor and manage client workspaces across all companies on OmniPlatform."
+        description="Monitor and manage client workspaces across all companies on Media360."
         meta={CLIENTS_MOCK_MODE ? <DemoTag>Demo data</DemoTag> : undefined}
         actions={
           <>
@@ -272,7 +272,7 @@ export function ClientsListPage({ basePath: propBasePath }: { basePath?: string 
                       getRowId={(summary) => summary.client.id}
                       isLoading={false}
                       isFetching={list.isFetching}
-                      caption="Clients on OmniPlatform"
+                      caption="Clients on Media360"
                       sort={table.sort}
                       onToggleSort={table.toggleSort}
                       pagination={list.data?.pagination}

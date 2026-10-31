@@ -333,7 +333,7 @@ function ContentManager() {
         ) : videosState.isError && videosState.error && videos.length === 0 ? (
           <ErrorState error={videosState.error} onRetry={videosState.refetch} title="Content couldn't load" />
         ) : videos.length === 0 ? (
-          <EmptyState icon={VideoIcon} title="No Content Yet" description="Upload your first video to start building your channel from OmniPlatform." action={<Button variant="primary" icon={Upload} gate={can.canUpload} href={ytRoutes.upload}>Upload Your First Video</Button>} />
+          <EmptyState icon={VideoIcon} title="No Content Yet" description="Upload your first video to start building your channel from Media360." action={<Button variant="primary" icon={Upload} gate={can.canUpload} href={ytRoutes.upload}>Upload Your First Video</Button>} />
         ) : filtered.length === 0 ? (
           <EmptyState icon={Filter} title="No Content Matches These Filters" description="Try a different search term or clear the filters to see everything." action={<Button variant="secondary" icon={X} onClick={() => { setSearch(""); reset(["view"]); }}>Clear filters</Button>} />
         ) : values.view === "grid" ? (

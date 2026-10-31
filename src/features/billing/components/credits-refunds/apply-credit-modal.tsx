@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Apply Account Credit Modal
+ * Media360 - Apply Account Credit Modal
  * Applies available company credit balance to reduce open invoice receivables.
  */
 

@@ -167,7 +167,7 @@ const MOCK_RUNS: AutomationRun[] = [
         endpoint: "https://graph.facebook.com/v19.0/lead_123?fields=field_data,created_time",
         statusCode: 200,
         durationMs: 95,
-        requestHeaders: { Authorization: "Bearer EAAQZ...", "User-Agent": "OmniPlatform/2.0" },
+        requestHeaders: { Authorization: "Bearer EAAQZ...", "User-Agent": "Media360/2.0" },
         responseBody: { id: "lead_123", status: "VALID", field_data: [{ name: "full_name", values: ["Rahul Sharma"] }] }
       },
       {
@@ -282,7 +282,7 @@ const MOCK_RUNS: AutomationRun[] = [
         id: "dump_g2",
         service: "Omni SES Email Gateway",
         method: "POST",
-        endpoint: "https://email.omniplatform.internal/v1/send",
+        endpoint: "https://email.media360.internal/v1/send",
         statusCode: 200,
         durationMs: 180,
         responseBody: { status: "QUEUED", messageId: "ses_8819284a" }

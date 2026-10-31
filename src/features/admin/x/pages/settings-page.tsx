@@ -371,7 +371,7 @@ function SyncSection({ canManage }: { canManage: boolean }) {
   ];
 
   return (
-    <Section id="sync" title="Sync" description="How often OmniPlatform pulls fresh data from X" icon={RefreshCw}>
+    <Section id="sync" title="Sync" description="How often Media360 pulls fresh data from X" icon={RefreshCw}>
       <SettingRow
         title="Automatic sync"
         description="When off, data only updates when someone presses Sync."
@@ -443,7 +443,7 @@ function PublishingSection({ canManage }: { canManage: boolean }) {
       title="Publishing defaults"
       description="Applied to every new post created in this workspace"
       icon={Send}
-      badge={<InternalBadge hint="These defaults are OmniPlatform's. X has no equivalent settings." />}
+      badge={<InternalBadge hint="These defaults are Media360's. X has no equivalent settings." />}
       actions={
         dirty ? (
           <div className="flex gap-1.5">
@@ -576,7 +576,7 @@ function NotificationsSection({ canManage }: { canManage: boolean }) {
       title="Notifications"
       description="Who hears about what, and where"
       icon={BellRing}
-      badge={<InternalBadge hint="Delivered by OmniPlatform, not by X." />}
+      badge={<InternalBadge hint="Delivered by Media360, not by X." />}
     >
       <div className="scrollbar-thin overflow-x-auto py-2">
         <table className="w-full min-w-[520px] border-collapse">
@@ -648,7 +648,7 @@ function PermissionsSection({ canManage }: { canManage: boolean }) {
       title="Team access"
       description="What each role can do in the X workspace"
       icon={Users}
-      badge={<InternalBadge hint="Roles and permissions are OmniPlatform's. They sit on top of whatever X itself allows." />}
+      badge={<InternalBadge hint="Roles and permissions are Media360's. They sit on top of whatever X itself allows." />}
       actions={
         X_MOCK_MODE ? (
           <SelectMenu
@@ -764,7 +764,7 @@ function ContentRulesSection({ canManage }: { canManage: boolean }) {
       title="Content rules"
       description="Guardrails the composer enforces before a post can go out"
       icon={ScrollText}
-      badge={<InternalBadge hint="Enforced by OmniPlatform in the composer. X does not police any of this." />}
+      badge={<InternalBadge hint="Enforced by Media360 in the composer. X does not police any of this." />}
       actions={
         dirty ? (
           <div className="flex gap-1.5">
@@ -852,7 +852,7 @@ function ApprovalsSection({ canManage }: { canManage: boolean }) {
       title="Approvals"
       description="Require a second pair of eyes before anything goes out"
       icon={ListChecks}
-      badge={<InternalBadge hint="Approval is an OmniPlatform workflow. X publishes whatever it is sent." />}
+      badge={<InternalBadge hint="Approval is an Media360 workflow. X publishes whatever it is sent." />}
     >
       <SettingRow
         title="Require approval before publishing"
@@ -1030,7 +1030,7 @@ function DataSection() {
 
   return (
     <>
-      <Section id="data" title="Data & export" description="Take your X data out of OmniPlatform at any time" icon={Database}>
+      <Section id="data" title="Data & export" description="Take your X data out of Media360 at any time" icon={Database}>
         <ul className="py-1">
           {exports.map((item) => (
             <li key={item.label}>
@@ -1232,7 +1232,7 @@ function DangerZone() {
         open={dialog === "reset"}
         onOpenChange={(open) => !open && setDialog(null)}
         title="Reset the X workspace?"
-        description={`Everything OmniPlatform holds for ${account.handle} is cleared and rebuilt from the next sync. Your posts on X are not affected.`}
+        description={`Everything Media360 holds for ${account.handle} is cleared and rebuilt from the next sync. Your posts on X are not affected.`}
         affected={[
           "All drafts are deleted",
           "The scheduling queue is emptied",

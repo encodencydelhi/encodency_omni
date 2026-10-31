@@ -359,7 +359,7 @@ function ComposerBody({ target }: { target: string }) {
                   <p className="text-[12px] leading-4 text-[#3C4A66]">
                     <b className="font-semibold text-[#0F1B3D]">Approval required.</b> Your workspace requires a reviewer to approve content
                     before it goes out, so this post will be submitted rather than published directly.{" "}
-                    <InternalBadge hint="Approval workflow is an OmniPlatform feature. X has no equivalent." />
+                    <InternalBadge hint="Approval workflow is an Media360 feature. X has no equivalent." />
                   </p>
                 </div>
               )}
@@ -516,7 +516,7 @@ function ComposerBody({ target }: { target: string }) {
                     </Button>
                   </div>
                   <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-[#6B7890]">
-                    <InternalBadge label="OmniPlatform scheduler" hint="OmniPlatform holds the post and publishes it to X at this time. X has no native scheduling for this API." />
+                    <InternalBadge label="Media360 scheduler" hint="Media360 holds the post and publishes it to X at this time. X has no native scheduling for this API." />
                     Held here until it publishes to X.
                   </p>
                 </div>
@@ -526,7 +526,7 @@ function ComposerBody({ target }: { target: string }) {
               <div className="rounded-sm border border-[#E4E9F0] bg-[#FAFBFD] p-3">
                 <p className="mb-2.5 flex items-center gap-2 text-[12px] font-semibold text-[#24324F]">
                   Internal details
-                  <InternalBadge hint="Campaign, tags and owner are OmniPlatform fields. They're never sent to X." />
+                  <InternalBadge hint="Campaign, tags and owner are Media360 fields. They're never sent to X." />
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <FormField label="Campaign">
@@ -550,7 +550,7 @@ function ComposerBody({ target }: { target: string }) {
                       options={team.map((member) => ({ value: member.id, label: member.name, description: member.role }))}
                     />
                   </FormField>
-                  <FormField label="Internal tags" className="sm:col-span-2" hint="Used for filtering and reporting inside OmniPlatform.">
+                  <FormField label="Internal tags" className="sm:col-span-2" hint="Used for filtering and reporting inside Media360.">
                     <TagInput value={draft.internalTags} onChange={(internalTags) => patch({ internalTags })} />
                   </FormField>
                   <FormField

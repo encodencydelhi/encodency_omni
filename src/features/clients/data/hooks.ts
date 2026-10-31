@@ -81,23 +81,23 @@ export function useEligibleMembers(companyId: string | null) {
 }
 
 export function useClient(id: string) {
-  return useQuery({ queryKey: clientKeys.client(id), queryFn: () => clientsRepository.getClient(id), retry: false });
+  return useQuery({ queryKey: clientKeys.client(id), queryFn: () => clientsRepository.getClient(id), retry: false, enabled: Boolean(id) });
 }
 
 export function useClientOverview(id: string) {
-  return useQuery({ queryKey: clientKeys.section(id, "overview"), queryFn: () => clientsRepository.getOverview(id), retry: false });
+  return useQuery({ queryKey: clientKeys.section(id, "overview"), queryFn: () => clientsRepository.getOverview(id), retry: false, enabled: Boolean(id) });
 }
 
 export function useClientTeam(id: string) {
-  return useQuery({ queryKey: clientKeys.section(id, "team"), queryFn: () => clientsRepository.getTeam(id), retry: false });
+  return useQuery({ queryKey: clientKeys.section(id, "team"), queryFn: () => clientsRepository.getTeam(id), retry: false, enabled: Boolean(id) });
 }
 
 export function useClientChannels(id: string) {
-  return useQuery({ queryKey: clientKeys.section(id, "channels"), queryFn: () => clientsRepository.getChannels(id), retry: false });
+  return useQuery({ queryKey: clientKeys.section(id, "channels"), queryFn: () => clientsRepository.getChannels(id), retry: false, enabled: Boolean(id) });
 }
 
 export function useClientWebsiteSeo(id: string) {
-  return useQuery({ queryKey: clientKeys.section(id, "website-seo"), queryFn: () => clientsRepository.getWebsiteSeo(id), retry: false });
+  return useQuery({ queryKey: clientKeys.section(id, "website-seo"), queryFn: () => clientsRepository.getWebsiteSeo(id), retry: false, enabled: Boolean(id) });
 }
 
 export function useClientActivity(id: string, filter: ClientActivityFilter) {
@@ -106,11 +106,12 @@ export function useClientActivity(id: string, filter: ClientActivityFilter) {
     queryFn: () => clientsRepository.getActivity(id, filter),
     placeholderData: keepPreviousData,
     retry: false,
+    enabled: Boolean(id),
   });
 }
 
 export function useClientSettings(id: string) {
-  return useQuery({ queryKey: clientKeys.section(id, "settings"), queryFn: () => clientsRepository.getSettings(id), retry: false });
+  return useQuery({ queryKey: clientKeys.section(id, "settings"), queryFn: () => clientsRepository.getSettings(id), retry: false, enabled: Boolean(id) });
 }
 
 /* ------------------------------------------------------------------ */

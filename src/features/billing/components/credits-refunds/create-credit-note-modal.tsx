@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Create Credit Note Draft Modal
+ * Media360 - Create Credit Note Draft Modal
  * Drafts an authorized credit note adjustment against an eligible issued invoice.
  */
 

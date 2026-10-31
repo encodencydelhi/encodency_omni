@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Centralized Financial Selectors
+ * Media360 - Centralized Financial Selectors
  * Pure calculation functions ensuring zero discrepancies across Overview, Invoices, Payments, and Billing Accounts.
  */
 

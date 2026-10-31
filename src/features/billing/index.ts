@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Billing & Payments Module Root
+ * Media360 - Super Admin Billing & Payments Module Root
  */
 
 export * from "./data";

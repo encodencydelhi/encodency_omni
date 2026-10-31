@@ -42,7 +42,7 @@ function ChannelMark({ channel }: { channel: PublishChannel }) {
 }
 
 /**
- * Posts OmniPlatform scheduled or published for this Client. `channel` pins the table to one network; without
+ * Posts Media360 scheduled or published for this Client. `channel` pins the table to one network; without
  * it a channel filter is offered. Rows open a detail dialog; a still-scheduled post can be cancelled there.
  */
 export function ScheduledPostsTable({ channel, targetId, pageSize = 8 }: { channel?: "FACEBOOK_PAGE" | "INSTAGRAM_ACCOUNT"; /** Only posts aimed at this Page / Instagram account id. */ targetId?: string; pageSize?: number }) {

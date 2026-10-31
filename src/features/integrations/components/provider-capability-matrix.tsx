@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Provider Capability Matrix Component
  * Filterable, categorized capability list with interactive detail drawer
  */

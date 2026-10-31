@@ -37,6 +37,27 @@ async function getCompanyWorkspace(companyId: string, clientId: string): Promise
   return clientsApi.getWorkspace<ClientWorkspace>(companyId, clientId);
 }
 
+/**
+ * Admin pages are tenant-scoped: a client is read only through the company endpoint (GET /clients/:id/workspace, which needs
+ * clients:read and an x-client-id that matches). The /super-admin endpoints are for /super-admin pages and are never a fallback here.
+ */
+async function readWorkspace(id: string): Promise<ClientWorkspace> {
+  if (isSuperAdminRoute()) return getSuperAdminWorkspace(id);
+  const companyId = getCompanyIdHeader();
+  if (!companyId || !UUID_PATTERN.test(companyId)) throw new ApiError({ code: "NO_COMPANY_SELECTED", message: "Select a company to continue.", status: 400 });
+  if (!UUID_PATTERN.test(id)) throw new ApiError({ code: "NO_CLIENT_SELECTED", message: "Select a client to continue.", status: 400 });
+  return getCompanyWorkspace(companyId, id);
+}
+
+/** The company a client write belongs to: the selected company, or (Super Admin pages only) the client's own company. */
+async function companyIdFor(clientId: string): Promise<string> {
+  const selected = getCompanyIdHeader();
+  if (selected && UUID_PATTERN.test(selected)) return selected;
+  if (!isSuperAdminRoute()) return "";
+  const workspace = await getSuperAdminWorkspace(clientId).catch(() => null);
+  return workspace?.summary?.company?.id ?? "";
+}
+
 const LANGUAGE_NAME_TO_CODE: Record<string, string> = {
   english: "en",
   hindi: "hi",
@@ -84,24 +105,24 @@ function toClientSummary(raw: any, companyInfo?: { id: string; name: string }): 
 
   const websiteObj: ClientWebsite | null = website
     ? {
-        id: `web_${id}_1`,
-        clientId: id,
-        companyId,
-        url: website,
-        domain: website.replace(/^https?:\/\//i, "").split("/")[0] || website,
-        addedAt: createdAt,
-        monitoring: "active",
-        availability: "unknown",
-        lastCheckedAt: null,
-        lastCrawlAt: null,
-        pagesDiscovered: null,
-        criticalIssues: 0,
-        warnings: 0,
-        sitemap: "unknown",
-        robots: "unknown",
-        redirect: null,
-        dataSource: "demo",
-      }
+      id: `web_${id}_1`,
+      clientId: id,
+      companyId,
+      url: website,
+      domain: website.replace(/^https?:\/\//i, "").split("/")[0] || website,
+      addedAt: createdAt,
+      monitoring: "active",
+      availability: "unknown",
+      lastCheckedAt: null,
+      lastCrawlAt: null,
+      pagesDiscovered: null,
+      criticalIssues: 0,
+      warnings: 0,
+      sitemap: "unknown",
+      robots: "unknown",
+      redirect: null,
+      dataSource: "demo",
+    }
     : null;
 
   const rawLogo = raw.logo ?? null;
@@ -166,9 +187,9 @@ function toClientSummary(raw: any, companyInfo?: { id: string; name: string }): 
     attention: [],
     lead: raw.lead
       ? {
-          membershipId: raw.lead.membershipId,
-          name: raw.lead.name || raw.lead.email || "Client Lead",
-        }
+        membershipId: raw.lead.membershipId,
+        name: raw.lead.name || raw.lead.email || "Client Lead",
+      }
       : null,
     counts: {
       connections: 0,
@@ -200,9 +221,9 @@ function toAssignmentView(m: any): ClientAssignmentView {
   const roleLower = (m.systemRole || "").toLowerCase();
   const companyRole: OrganisationRole =
     roleLower === "owner" ? "owner" :
-    roleLower === "admin" ? "admin" :
-    roleLower === "manager" ? "marketing_manager" :
-    roleLower === "viewer" ? "viewer" : "viewer";
+      roleLower === "admin" ? "admin" :
+        roleLower === "manager" ? "marketing_manager" :
+          roleLower === "viewer" ? "viewer" : "viewer";
 
   return {
     membershipId: m.membershipId,
@@ -265,7 +286,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
   const provider: ClientsRepository = {
     ...fallback,
     mode: "api",
-    
+
     async listClients(query: ClientListQuery): Promise<ClientListResult> {
       // In Super Admin cross-company view, fetch from GET /super-admin/clients
       if (isSuperAdminRoute()) {
@@ -342,19 +363,19 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
                 bundle.clients.push(c.client);
                 writeBundle(bundle);
               }
-            } catch {}
+            } catch { }
           }
           const page = query.page ?? 1;
           const pageSize = query.pageSize ?? 10;
           const totalPages = Math.max(1, Math.ceil(clients.length / pageSize));
-          
+
           return {
             data: clients,
             matchingIds: clients.map(c => c.displayId ?? c.client.id),
-            pagination: { 
-              total: clients.length, 
-              page, 
-              pageSize, 
+            pagination: {
+              total: clients.length,
+              page,
+              pageSize,
               totalPages,
               hasNextPage: page < totalPages,
               hasPreviousPage: page > 1
@@ -364,10 +385,10 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
           return {
             data: [],
             matchingIds: [],
-            pagination: { 
-              total: 0, 
-              page: query.page ?? 1, 
-              pageSize: query.pageSize ?? 10, 
+            pagination: {
+              total: 0,
+              page: query.page ?? 1,
+              pageSize: query.pageSize ?? 10,
               totalPages: 1,
               hasNextPage: false,
               hasPreviousPage: false,
@@ -442,7 +463,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
             bundle.clients.push(summary.client);
             writeBundle(bundle);
           }
-        } catch {}
+        } catch { }
         return summary;
       } catch (err) {
         if (ApiError.isApiError(err) && (err.status === 400 || err.status === 403 || err.status === 404)) {
@@ -453,19 +474,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async getClient(id: string): Promise<ClientSummary> {
-      if (isSuperAdminRoute()) {
-        return (await getSuperAdminWorkspace(id)).summary;
-      }
-      const companyId = getCompanyIdHeader();
-      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
-        try {
-          return (await getCompanyWorkspace(companyId, id)).summary;
-        } catch {
-          return (await getSuperAdminWorkspace(id)).summary;
-        }
-      }
-
-      return (await getSuperAdminWorkspace(id)).summary;
+      return (await readWorkspace(id)).summary;
     },
 
     async listCreationCompanies(): Promise<ClientCreationCompany[]> {
@@ -658,69 +667,23 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async getOverview(id: string): Promise<ClientOverviewData> {
-      if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).overview;
-      const companyId = getCompanyIdHeader();
-      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
-        try {
-          return (await getCompanyWorkspace(companyId, id)).overview;
-        } catch {
-          return (await getSuperAdminWorkspace(id)).overview;
-        }
-      }
-      return (await getSuperAdminWorkspace(id)).overview;
+      return (await readWorkspace(id)).overview;
     },
 
     async getTeam(id: string): Promise<ClientTeamData> {
-      if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).team;
-      const companyId = getCompanyIdHeader();
-      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
-        try {
-          return (await getCompanyWorkspace(companyId, id)).team;
-        } catch {
-          return (await getSuperAdminWorkspace(id)).team;
-        }
-      }
-      return (await getSuperAdminWorkspace(id)).team;
+      return (await readWorkspace(id)).team;
     },
 
     async getChannels(id: string): Promise<ClientChannelsData> {
-      if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).channels;
-      const companyId = getCompanyIdHeader();
-      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
-        try {
-          return (await getCompanyWorkspace(companyId, id)).channels;
-        } catch {
-          return (await getSuperAdminWorkspace(id)).channels;
-        }
-      }
-      return (await getSuperAdminWorkspace(id)).channels;
+      return (await readWorkspace(id)).channels;
     },
 
     async getWebsiteSeo(id: string): Promise<ClientWebsiteData> {
-      if (isSuperAdminRoute()) return (await getSuperAdminWorkspace(id)).websiteSeo;
-      const companyId = getCompanyIdHeader();
-      if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
-        try {
-          return (await getCompanyWorkspace(companyId, id)).websiteSeo;
-        } catch {
-          return (await getSuperAdminWorkspace(id)).websiteSeo;
-        }
-      }
-      return (await getSuperAdminWorkspace(id)).websiteSeo;
+      return (await readWorkspace(id)).websiteSeo;
     },
 
     async getActivity(id: string, filter: ClientActivityFilter): Promise<ClientActivityData> {
-      const companyId = getCompanyIdHeader();
-      let data: ClientActivityData;
-      if (isSuperAdminRoute() || !companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) {
-        data = (await getSuperAdminWorkspace(id)).activity;
-      } else {
-        try {
-          data = (await getCompanyWorkspace(companyId, id)).activity;
-        } catch {
-          data = (await getSuperAdminWorkspace(id)).activity;
-        }
-      }
+      const data: ClientActivityData = (await readWorkspace(id)).activity;
       const entries = data.entries.filter((entry) => {
         const term = filter.search?.trim().toLowerCase();
         if (filter.actor && entry.actor.name !== filter.actor) return false;
@@ -736,24 +699,10 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async getSettings(id: string): Promise<ClientSettingsData> {
-      let settings: ClientSettingsData;
-      if (isSuperAdminRoute()) {
-        settings = (await getSuperAdminWorkspace(id)).settings;
-      } else {
-        const companyId = getCompanyIdHeader();
-        if (companyId && UUID_PATTERN.test(companyId) && UUID_PATTERN.test(id)) {
-          try {
-            settings = (await getCompanyWorkspace(companyId, id)).settings;
-          } catch {
-            settings = (await getSuperAdminWorkspace(id)).settings;
-          }
-        } else {
-          settings = (await getSuperAdminWorkspace(id)).settings;
-        }
-      }
+      let settings: ClientSettingsData = (await readWorkspace(id)).settings;
 
-      // Populate live staff if staff list is empty so the Platform Internal Reviewer dropdown works
-      if (!settings.staff || settings.staff.length === 0) {
+      // The Platform Internal Reviewer dropdown lists platform staff, which only Super Admin pages may read; company users never call /super-admin/staff.
+      if (isSuperAdminRoute() && (!settings.staff || settings.staff.length === 0)) {
         try {
           const staffRes = await apiClient.request<any[]>({ method: "GET", path: "/super-admin/staff" });
           if (Array.isArray(staffRes)) {
@@ -779,11 +728,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async updateClient(id: string, input: UpdateClientInput, actor): Promise<ClientSummary> {
-      let companyId = getCompanyIdHeader();
-      if (!companyId || !UUID_PATTERN.test(companyId)) {
-        const ws = await getSuperAdminWorkspace(id).catch(() => null);
-        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
-      }
+      const companyId = await companyIdFor(id);
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(id)) {
         return unavailableClientsProvider.updateClient(id, input, actor);
       }
@@ -828,11 +773,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async setLead(clientId: string, leadMembershipId: string | null, actor: MutationActor): Promise<ClientSummary> {
-      let companyId = getCompanyIdHeader();
-      if (!companyId || !UUID_PATTERN.test(companyId)) {
-        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
-        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
-      }
+      const companyId = await companyIdFor(clientId);
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
         return unavailableClientsProvider.setLead(clientId, leadMembershipId, actor);
       }
@@ -841,11 +782,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async assignMember(clientId: string, input: { membershipId: string; level: any }, actor: MutationActor): Promise<ClientSummary> {
-      let companyId = getCompanyIdHeader();
-      if (!companyId || !UUID_PATTERN.test(companyId)) {
-        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
-        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
-      }
+      const companyId = await companyIdFor(clientId);
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
         return unavailableClientsProvider.assignMember(clientId, input, actor);
       }
@@ -858,11 +795,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async removeAccess(clientId: string, input: { membershipId: string; newLeadId?: string | null; note: string }, actor: MutationActor): Promise<ClientSummary> {
-      let companyId = getCompanyIdHeader();
-      if (!companyId || !UUID_PATTERN.test(companyId)) {
-        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
-        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
-      }
+      const companyId = await companyIdFor(clientId);
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
         return unavailableClientsProvider.removeAccess(clientId, input, actor);
       }
@@ -879,11 +812,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
       const skipped: Array<{ id: string; name: string; reason: string }> = [];
 
       for (const id of ids) {
-        let companyId = getCompanyIdHeader();
-        if (!companyId || !UUID_PATTERN.test(companyId)) {
-          const ws = await getSuperAdminWorkspace(id).catch(() => null);
-          if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
-        }
+        const companyId = await companyIdFor(id);
 
         try {
           if (action.kind === "archive") {
@@ -903,11 +832,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async changeAccess(clientId: string, input: { membershipId: string; level: ClientAccessLevel }, actor: MutationActor): Promise<ClientSummary> {
-      let companyId = getCompanyIdHeader();
-      if (!companyId || !UUID_PATTERN.test(companyId)) {
-        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
-        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
-      }
+      const companyId = await companyIdFor(clientId);
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
         return unavailableClientsProvider.changeAccess(clientId, input, actor);
       }
@@ -924,11 +849,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async addWebsite(clientId: string, input: { url: string; makePrimary: boolean }, actor: MutationActor): Promise<ClientSummary> {
-      let companyId = getCompanyIdHeader();
-      if (!companyId || !UUID_PATTERN.test(companyId)) {
-        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
-        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
-      }
+      const companyId = await companyIdFor(clientId);
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
         return unavailableClientsProvider.addWebsite(clientId, input, actor);
       }
@@ -945,11 +866,7 @@ export function createApiClientsProvider(fallback: ClientsRepository): ClientsRe
     },
 
     async removeWebsite(clientId: string, websiteId: string, actor: MutationActor): Promise<ClientSummary> {
-      let companyId = getCompanyIdHeader();
-      if (!companyId || !UUID_PATTERN.test(companyId)) {
-        const ws = await getSuperAdminWorkspace(clientId).catch(() => null);
-        if (ws?.summary?.company?.id) companyId = ws.summary.company.id;
-      }
+      const companyId = await companyIdFor(clientId);
       if (!companyId || !UUID_PATTERN.test(companyId) || !UUID_PATTERN.test(clientId)) {
         return unavailableClientsProvider.removeWebsite(clientId, websiteId, actor);
       }

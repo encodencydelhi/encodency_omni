@@ -150,7 +150,7 @@ function affectedModules(dependencies: IntegrationDependency[], connectionId: st
         .map((dependency) => MODULE_META[dependency.module].label),
     ),
   ];
-  if (!modules.length) return "No OmniPlatform features rely on it yet.";
+  if (!modules.length) return "No Media360 features rely on it yet.";
   return `${modules.slice(0, 4).join(", ")}${modules.length > 4 ? ` and ${modules.length - 4} more` : ""}.`;
 }
 

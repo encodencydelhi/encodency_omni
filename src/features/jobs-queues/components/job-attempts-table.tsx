@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Jobs & Queues Module
+ * Media360 - Jobs & Queues Module
  * Job Attempts Table
  */
 

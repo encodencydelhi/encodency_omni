@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Live Billing Store
+ * Media360 - Live Billing Store
  * The same surface as the sample-data store the Billing pages were built on, backed by the platform's billing API: everything shown is read from the server,
  * and every change is made by the server and then read back. Nothing is held or invented here.
  */

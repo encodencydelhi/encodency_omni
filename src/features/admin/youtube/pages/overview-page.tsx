@@ -392,7 +392,7 @@ function ChannelHealthCard({ className, analytics }: { className?: string; analy
     <Card className={cn("flex flex-col", className)}>
       <CardHeader
         title="Channel Health"
-        badge={<InternalBadge hint="Calculated by OmniPlatform from synced data. Not an official YouTube score." />}
+        badge={<InternalBadge hint="Calculated by Media360 from synced data. Not an official YouTube score." />}
         actions={<Button size="xs" variant="link" onClick={() => setOpen(true)}>View details</Button>}
       />
       <div className="flex flex-1 flex-col gap-3 px-4 pb-4">

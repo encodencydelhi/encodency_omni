@@ -4,7 +4,7 @@ import { hours } from "./format";
 import type { Channel, Maybe, Video } from "../types";
 
 /**
- * OmniPlatform's own scores (labelled "OmniPlatform" in the UI, never presented as YouTube metrics). Every factor is computed
+ * Media360's own scores (labelled "Media360" in the UI, never presented as YouTube metrics). Every factor is computed
  * from data that was actually loaded; a factor whose input is unavailable is left out instead of being filled with a number.
  */
 

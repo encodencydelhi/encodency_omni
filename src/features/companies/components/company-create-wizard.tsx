@@ -445,8 +445,8 @@ function WizardBody({ onClose, newDefaults }: { onClose: () => void; newDefaults
             </SheetTitle>
             <SheetDescription>
               {IS_LIVE
-                ? "Set up a new tenant on OmniPlatform. The owner is invited by email as soon as the company is created."
-                : "Set up a new tenant on OmniPlatform. Company write APIs are pending backend implementation."}
+                ? "Set up a new tenant on Media360. The owner is invited by email as soon as the company is created."
+                : "Set up a new tenant on Media360. Company write APIs are pending backend implementation."}
             </SheetDescription>
             {!created ? <Stepper steps={[...STEPS]} current={step} className="pt-1" /> : null}
           </SheetHeader>

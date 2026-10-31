@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Invoice Quick Preview Drawer
+ * Media360 - Invoice Quick Preview Drawer
  * Slide-out panel for fast invoice inspection without leaving the directory.
  */
 

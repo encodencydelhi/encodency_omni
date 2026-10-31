@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Deliveries & Attempts directory with KPI cards and quick preview.
  */
 

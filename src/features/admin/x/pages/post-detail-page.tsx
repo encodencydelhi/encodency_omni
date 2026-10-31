@@ -71,7 +71,7 @@ function NotFound() {
       <EmptyState
         icon={XLogo}
         title="We couldn't find that post"
-        description="It may have been deleted from OmniPlatform, or published and given a new id by X. The content list has everything this workspace knows about."
+        description="It may have been deleted from Media360, or published and given a new id by X. The content list has everything this workspace knows about."
         action={
           <Button variant="primary" href={xRoutes.content}>
             Back to content
@@ -251,7 +251,7 @@ function OverviewTab({ post }: { post: XPost }) {
         <div>
           <p className="mb-1.5 flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">
             Details
-            <InternalBadge label="Internal" hint="Campaign, owner and tags are OmniPlatform fields." />
+            <InternalBadge label="Internal" hint="Campaign, owner and tags are Media360 fields." />
           </p>
           <dl className="rounded-sm border border-[#E4E9F0] px-3 py-1">
             <DefinitionRow label="Status">
@@ -391,7 +391,7 @@ function AnalyticsTab({ post }: { post: XPost }) {
             <p className="mt-3 flex items-start gap-2 rounded-sm border border-[#E2D8FD] bg-[#F9F7FF] px-2.5 py-2 text-[11.5px] leading-4 text-[#3C4A66]">
               <Sparkles className="mt-px size-3.5 shrink-0 text-[#6D28D9]" />
               <span>
-                <b className="font-semibold text-[#0F1B3D]">OmniPlatform insight.</b>{" "}
+                <b className="font-semibold text-[#0F1B3D]">Media360 insight.</b>{" "}
                 {rate >= average.engagementRate
                   ? "This post is pulling above your account average — worth revisiting its format and timing."
                   : "This post is below your account average. Compare it against your top posts for format and posting time."}
@@ -468,7 +468,7 @@ function ActivityTab({ postId }: { postId: string }) {
         icon={ListChecks}
         compact
         title="No activity recorded"
-        description="Edits, scheduling changes and approvals made in OmniPlatform are logged here."
+        description="Edits, scheduling changes and approvals made in Media360 are logged here."
       />
     );
   }

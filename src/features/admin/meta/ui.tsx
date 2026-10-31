@@ -167,7 +167,7 @@ export function MetaShell({
 const GATE_COPY: Record<"no_company" | "no_client" | "not_connected" | "reconnect" | "error", { title: string; body: string }> = {
   no_company: { title: "Select a Company", body: "Choose the Company whose Meta account you want to manage from the switcher at the top." },
   no_client: { title: "Select a Client", body: "Meta connections and posts are shown per Client. Pick a Client from the switcher at the top." },
-  not_connected: { title: "Connect your Meta account", body: "One Meta login gives OmniPlatform your ad accounts, Facebook Pages and Instagram accounts. Nothing is posted or changed when you connect." },
+  not_connected: { title: "Connect your Meta account", body: "One Meta login gives Media360 your ad accounts, Facebook Pages and Instagram accounts. Nothing is posted or changed when you connect." },
   reconnect: { title: "Reconnect Meta", body: "The Meta login expired or was revoked, so data cannot be read. Reconnect to continue; nothing you saved here is lost." },
   error: { title: "Meta connection could not be loaded", body: "Something went wrong while loading the connection. Try again in a moment." },
 };

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Invoice Status Distribution
+ * Media360 - Invoice Status Distribution
  * Breakdown of invoices by document and collection state with deep-link filters.
  */
 

@@ -55,7 +55,7 @@ function FrameBody({ children }: { children: ReactNode }) {
     <div className="space-y-3">
       <PageHeader
         title="Global Settings"
-        description="Configure OmniPlatform identity, defaults, security and governance policies."
+        description="Configure Media360 identity, defaults, security and governance policies."
         meta={SETTINGS_MOCK_MODE ? <DemoTag>Demo configuration - nothing here is enforced on real accounts</DemoTag> : undefined}
         actions={
           <>

@@ -795,7 +795,7 @@ export function UserDetailPage() {
                     <AlertTriangleIcon className="size-4 text-amber-600 shrink-0 mt-0.5" />
                     <p className="leading-relaxed">
                       <strong>Reassignment Precaution:</strong> This user owns {user.ownedResources.length} live operational resources.
-                      If their company membership is removed, the OmniPlatform workflow engine requires transferring ownership of these resources
+                      If their company membership is removed, the Media360 workflow engine requires transferring ownership of these resources
                       to another active company member to prevent workflow stoppage.
                     </p>
                   </div>
@@ -936,7 +936,7 @@ export function UserDetailPage() {
                   Strict Multi-Tenant Boundary Isolation
                 </h4>
                 <p className="leading-relaxed">
-                  OmniPlatform strictly isolates company boundaries. A user may hold completely different roles (e.g. <em>Owner</em> in Company A,
+                  Media360 strictly isolates company boundaries. A user may hold completely different roles (e.g. <em>Owner</em> in Company A,
                   <em>Member</em> in Company B, and <em>Guest</em> in Company C) without cross-contamination.
                   Suspending or modifying a role in one company will <strong>never</strong> affect their standing in any other company.
                 </p>

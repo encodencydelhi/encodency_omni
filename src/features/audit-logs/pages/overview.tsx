@@ -50,7 +50,7 @@ export function AuditOverviewPage() {
     <div className="space-y-3">
       <PageHeader
         title="Audit Logs"
-        description="Review platform actions, security events and configuration changes across OmniPlatform."
+        description="Review platform actions, security events and configuration changes across Media360."
         meta={AUDIT_MOCK_MODE ? <DemoTag>Demo Audit Data - Backend Ingestion Not Connected</DemoTag> : undefined}
         actions={
           <>

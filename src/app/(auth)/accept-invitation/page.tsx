@@ -6,7 +6,7 @@ import { AcceptInvitationView } from "@/features/auth/components/accept-invitati
 
 export const metadata: Metadata = {
   title: "Accept invitation",
-  description: "Create your EnCodency omniPlatform account from an invitation.",
+  description: "Create your Media360 account from an invitation.",
   // The URL carries a one-time token; keep it out of referrers.
   referrer: "no-referrer",
 };

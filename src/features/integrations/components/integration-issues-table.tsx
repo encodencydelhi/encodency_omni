@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Issues & Health Incident Operations Queue Component
  */
 

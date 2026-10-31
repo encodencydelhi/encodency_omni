@@ -109,7 +109,7 @@ export const languageLabel = (id: string) => LANGUAGES.find((l) => l.id === id)?
 export const TIMEZONES = ["Asia/Kolkata", "UTC", "Europe/London", "America/New_York", "Asia/Dubai", "Asia/Singapore"];
 
 /**
- * The Google permissions OmniPlatform can hold for a channel. Each maps to ONE named consent capability (the server owns the
+ * The Google permissions Media360 can hold for a channel. Each maps to ONE named consent capability (the server owns the
  * Google scope behind it); `readChannel` is part of the initial connection and has no separate consent.
  */
 export const GRANTED_INFO: Record<GrantedKey, { label: string; description: string; consent: YouTubeConsentCapability | null }> = {

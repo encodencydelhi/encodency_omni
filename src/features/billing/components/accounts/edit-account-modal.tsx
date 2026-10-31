@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Edit Billing Account Modal
+ * Media360 - Edit Billing Account Modal
  * Manages company billing identity, legal entity name, and tax configuration.
  */
 

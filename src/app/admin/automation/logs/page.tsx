@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { AutomationLogsPage } from "@/features/admin/automation/components/logs/automation-logs-page";
 
 export const metadata = {
-  title: "Automation Logs & Diagnostics | EnCodency OmniPlatform",
+  title: "Automation Logs & Diagnostics | Media360",
   description: "Real-time execution traces, webhook payload inspection, and error diagnostics.",
 };
 

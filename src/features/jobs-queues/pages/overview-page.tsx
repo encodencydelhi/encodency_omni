@@ -61,7 +61,7 @@ export function OverviewPage() {
             <span className="px-2 py-0.5 text-xs font-semibold bg-violet-50 text-violet-700 rounded-sm border border-violet-200">Platform</span>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            Monitor background execution, queue processing, scheduled jobs and operational failures across OmniPlatform.
+            Monitor background execution, queue processing, scheduled jobs and operational failures across Media360.
           </p>
         </div>
         <div className="flex items-center gap-2">

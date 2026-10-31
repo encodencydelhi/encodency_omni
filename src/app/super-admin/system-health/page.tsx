@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SystemHealthOperationsCenter } from "@/features/system-health/components/operations-center";
 
 export const metadata: Metadata = {
-  title: "System Health | EnCodency OmniPlatform Super Admin",
+  title: "System Health | Media360 Super Admin",
   description: "Platform reliability, service health and incident operations center.",
 };
 

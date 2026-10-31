@@ -1,4 +1,4 @@
-# EnCodency omniPlatform
+# Media360
 
 ## Omnichannel Digital Marketing SaaS — Product Requirements Document
 
@@ -6,7 +6,7 @@
 
 ## 1. Product Vision
 
-**EnCodency omniPlatform** is a proprietary omnichannel digital marketing SaaS platform designed for agencies, organizations, and multi-brand companies.
+**Media360** is a proprietary omnichannel digital marketing SaaS platform designed for agencies, organizations, and multi-brand companies.
 
 The platform will allow a company to manage multiple Clients or brands from one centralized dashboard.
 
@@ -65,7 +65,7 @@ A company should be able to:
 The system should follow this hierarchy:
 
 ```text
-EnCodency omniPlatform
+Media360
         ↓
 Organization / Company
         ↓
@@ -1611,7 +1611,7 @@ The product should be considered successful when:
 # 42. Final Product Model
 
 ```text
-                    EnCodency omniPlatform
+                    Media360
 
                              AI
                               │
@@ -1638,4 +1638,4 @@ The product should be considered successful when:
 
 > **Create once. Connect every channel. Manage every project. Measure everything. Automate intelligently.**
 
-EnCodency omniPlatform should become the central operating system for an organization's digital marketing activities.
+Media360 should become the central operating system for an organization's digital marketing activities.

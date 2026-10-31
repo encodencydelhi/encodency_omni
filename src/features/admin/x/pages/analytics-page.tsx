@@ -217,7 +217,7 @@ function Analytics() {
             title="Posting time insights"
             description="Average engagement rate of your published posts"
             icon={Clock}
-            badge={<InternalBadge label="OmniPlatform insight" hint="Calculated by OmniPlatform from your own published posts, not supplied by X." />}
+            badge={<InternalBadge label="Media360 insight" hint="Calculated by Media360 from your own published posts, not supplied by X." />}
           />
           <div className="grid gap-4 px-4 pb-4 md:grid-cols-2">
             <div>
@@ -248,7 +248,7 @@ function Analytics() {
           <div className="mx-4 mb-4 flex items-start gap-2.5 rounded-sm border border-[#E2D8FD] bg-[#F9F7FF] px-3 py-2.5">
             <Sparkles className="mt-0.5 size-4 shrink-0 text-[#6D28D9]" />
             <div className="min-w-0">
-              <p className="text-[12px] font-semibold text-[#0F1B3D]">OmniPlatform recommendation</p>
+              <p className="text-[12px] font-semibold text-[#0F1B3D]">Media360 recommendation</p>
               <p className="mt-0.5 text-[12px] leading-4 text-[#3C4A66]">{timing.headline}</p>
               {timing.bestDays.length > 0 && (
                 <p className="mt-1.5 flex flex-wrap gap-1.5">
@@ -309,9 +309,9 @@ function Analytics() {
         <Card>
           <CardHeader
             title="What's working"
-            description="Patterns OmniPlatform found in your published posts"
+            description="Patterns Media360 found in your published posts"
             icon={Sparkles}
-            badge={<InternalBadge label="OmniPlatform insight" hint="Derived by OmniPlatform from your own posts." />}
+            badge={<InternalBadge label="Media360 insight" hint="Derived by Media360 from your own posts." />}
           />
           <div className="grid gap-1 px-4 pb-4 md:grid-cols-3">
             {insights.map((insight) => (
@@ -382,7 +382,7 @@ function ContentPerformance({ posts, breakdown, onBreakdown }: { posts: XPost[];
         title="Content performance"
         description="Where your engagement actually comes from"
         icon={BarChart3}
-        badge={<SourceBadge hint="Metrics from X, grouped by OmniPlatform fields." />}
+        badge={<SourceBadge hint="Metrics from X, grouped by Media360 fields." />}
         actions={
           <div className="scrollbar-thin max-w-full overflow-x-auto">
             <UnderlineTabs label="Break down by" size="sm" value={breakdown} onChange={onBreakdown} items={BREAKDOWNS} />

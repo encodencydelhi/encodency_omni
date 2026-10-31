@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * React Query hooks. Mutations invalidate the snapshot so every route sees shared demo configuration.
  */
 

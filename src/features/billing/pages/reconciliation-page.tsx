@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Reconciliation & Issues Workspace
+ * Media360 - Reconciliation & Issues Workspace
  * Operational exception queue identifying discrepancies between provider statements and internal ledgers.
  */
 

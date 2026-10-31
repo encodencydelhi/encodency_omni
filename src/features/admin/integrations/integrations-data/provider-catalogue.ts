@@ -80,7 +80,7 @@ interface ScopeCopy {
   modules: ModuleKey[];
 }
 
-const ID_SCOPE = (label: string): ScopeCopy => ({ label, description: "Confirms which account signed in. It does not give OmniPlatform any access to content.", modules: [] });
+const ID_SCOPE = (label: string): ScopeCopy => ({ label, description: "Confirms which account signed in. It does not give Media360 any access to content.", modules: [] });
 
 /** What each scope the backend can request means, in plain words. An unlisted scope shows its own name. */
 const SCOPE_COPY: Record<string, ScopeCopy> = {
@@ -117,7 +117,7 @@ export function scopeDefinition(scope: string, optional: boolean): PermissionDef
   return {
     key: scope,
     label: copy?.label ?? lastSegment(scope),
-    description: copy?.description ?? "A permission the provider grants to OmniPlatform.",
+    description: copy?.description ?? "A permission the provider grants to Media360.",
     optional,
     requiredFor: copy?.modules ?? [],
     technicalScope: scope,

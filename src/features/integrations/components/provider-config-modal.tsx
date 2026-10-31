@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Provider configuration: what the platform team decides about a provider, next to the facts the server knows.
  *
  * Every control here is saved to the server and enforced there: a disabled provider (or one in maintenance) cannot start a new

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Create Draft Invoice Wizard
+ * Media360 - Create Draft Invoice Wizard
  * 5-Step progressive draft invoice creation wizard with live integer-minor math.
  */
 

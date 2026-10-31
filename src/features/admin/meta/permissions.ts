@@ -1,5 +1,5 @@
 /**
- * What each Meta login permission unlocks in OmniPlatform. The scope list itself lives in the backend
+ * What each Meta login permission unlocks in Media360. The scope list itself lives in the backend
  * (`META_SCOPES` + optional `META_EXTRA_SCOPES`); this catalogue only explains it to the user and decides
  * which product a missing scope blocks.
  */

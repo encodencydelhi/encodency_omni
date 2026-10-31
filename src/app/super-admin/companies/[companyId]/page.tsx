@@ -4,7 +4,7 @@ import { CompanyOverviewPage } from "@/features/companies/pages/company-overview
 
 export const metadata: Metadata = {
   title: "Company overview",
-  description: "Operational profile of one OmniPlatform tenant.",
+  description: "Operational profile of one Media360 tenant.",
 };
 
 export default function Page() {

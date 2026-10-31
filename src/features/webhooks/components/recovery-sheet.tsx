@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Recovery review drawer for retry, redelivery and incoming reprocess requests.
  *
  * Frontend-only: submitting creates a clearly labelled demo request. It never adds a delivery attempt,

@@ -4,7 +4,7 @@ import { ResetPasswordForm } from "@/features/auth/components/reset-password-for
 
 export const metadata: Metadata = {
   title: "Set new password",
-  description: "Reset your EnCodency omniPlatform account password.",
+  description: "Reset your Media360 account password.",
 };
 
 export default function ResetPasswordPage() {

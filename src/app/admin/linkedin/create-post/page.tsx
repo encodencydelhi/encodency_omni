@@ -147,7 +147,7 @@ function LinkedInCreatePost() {
             </button>
             <div>
               <h1 className="text-sm font-bold text-slate-900">Create LinkedIn Text Post</h1>
-              <p className="text-[11px] font-medium text-slate-500">Uses OmniPlatform drafts and scheduled publishing for LinkedIn Organization pages.</p>
+              <p className="text-[11px] font-medium text-slate-500">Uses Media360 drafts and scheduled publishing for LinkedIn Organization pages.</p>
             </div>
           </div>
           <span className="rounded-sm border border-blue-100 bg-blue-50 px-2 py-1 text-[10.5px] font-bold text-[#0A66C2]">Text only</span>

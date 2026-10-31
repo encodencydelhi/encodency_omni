@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Small shared presentation primitives. Everything else composes the app's shared components.
  */
 

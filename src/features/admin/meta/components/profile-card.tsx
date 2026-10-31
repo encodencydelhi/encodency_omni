@@ -42,7 +42,7 @@ export function ProfileCard({ compact = false }: { compact?: boolean }) {
   return (
     <Section
       title="Connected Facebook profile"
-      description="The personal account OmniPlatform signed in with. Pages, ad accounts and Instagram are reached through it."
+      description="The personal account Media360 signed in with. Pages, ad accounts and Instagram are reached through it."
       action={
         !compact && (
           <Link href={`${META_ROOT}/settings`} className="text-xs font-semibold text-blue-700 hover:underline">

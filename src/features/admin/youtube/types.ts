@@ -123,7 +123,7 @@ export interface Video {
   status: PublishStatus;
   publishedAt: Maybe<ISODate>;
   scheduledAt: Maybe<ISODate>;
-  /** The id of the OmniPlatform publish/schedule record that owns `scheduledAt` (for reschedule/cancel). */
+  /** The id of the Media360 publish/schedule record that owns `scheduledAt` (for reschedule/cancel). */
   scheduleId: Maybe<string>;
   durationSec: Maybe<number>;
   tags: string[];

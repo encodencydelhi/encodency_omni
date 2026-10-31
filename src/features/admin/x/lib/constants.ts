@@ -27,7 +27,7 @@ export const xRoutes = {
   postAnalytics: (id: string) => `${X_ROOT}/content/${id}?tab=analytics`,
   scheduling: `${X_ROOT}/scheduling`,
   settings: `${X_ROOT}/settings`,
-  /** Cross-module links that already exist in OmniPlatform. */
+  /** Cross-module links that already exist in Media360. */
   calendar: "/admin/calendar?channel=x",
   campaigns: "/admin/campaigns",
   /* X itself */
@@ -82,7 +82,7 @@ export const DEFAULT_PERIOD: Period = "30d";
 
 /**
  * `source` drives the "where does this come from" affordance in the UI.
- * Everything here is X-reported; OmniPlatform metrics are labelled separately.
+ * Everything here is X-reported; Media360 metrics are labelled separately.
  */
 export const METRICS: Record<MetricKey, { label: string; short: string; color: string; help: string }> = {
   impressions: {
@@ -227,7 +227,7 @@ export const PERMISSION_HELP: Record<XPermission, string> = {
   view_x: "See the X workspace, posts, mentions and account data.",
   create_content: "Write posts, threads and polls, and save them as drafts.",
   publish_content: "Publish posts to X immediately.",
-  schedule_content: "Put posts into the OmniPlatform publishing queue.",
+  schedule_content: "Put posts into the Media360 publishing queue.",
   reply_mentions: "Send replies to mentions from the engagement inbox.",
   delete_content: "Delete the account's own posts from X.",
   view_analytics: "Open Analytics, Audience and post-level performance.",

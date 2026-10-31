@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Status Badges
  * Font sizes strictly >= 12px (text-xs)
  */

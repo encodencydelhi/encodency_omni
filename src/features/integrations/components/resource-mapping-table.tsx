@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Resource Mapping Table Component
  * Displays external accounts/pages discovered under an authorization and their mapped tenant clients
  */

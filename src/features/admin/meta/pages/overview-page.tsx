@@ -220,7 +220,7 @@ function Overview() {
 
       <AdAccountsSection accounts={accountList} totals={overviewById} loading={accounts.isLoading} onOpenAds={openAds} />
 
-      <Section title="Scheduled & published posts" description="Facebook and Instagram posts scheduled from OmniPlatform for this Client." flush>
+      <Section title="Scheduled & published posts" description="Facebook and Instagram posts scheduled from Media360 for this Client." flush>
         <ScheduledPostsTable />
       </Section>
     </div>
@@ -383,7 +383,7 @@ function Capabilities() {
   if (meta.state === "connected" || meta.state === "loading") return null;
   const items = [
     { icon: <FaMeta className="size-5 text-[#0866ff]" />, title: "Meta Ads", body: "Campaigns, ad sets, ads, instant-form leads, audiences, creatives and daily performance — read live from your ad accounts." },
-    { icon: <FaFacebookF className="size-5 text-[#1877f2]" />, title: "Facebook", body: "Your Page profile, recent posts with reactions, comments and shares, and what OmniPlatform has scheduled for it." },
+    { icon: <FaFacebookF className="size-5 text-[#1877f2]" />, title: "Facebook", body: "Your Page profile, recent posts with reactions, comments and shares, and what Media360 has scheduled for it." },
     { icon: <FaInstagram className="size-5 text-[#d946ef]" />, title: "Instagram", body: "Profile, followers, recent posts and reels with likes and comments, plus scheduled publishing." },
   ];
   return (

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ActivityPage } from "@/features/integrations";
 
 export const metadata: Metadata = {
-  title: "Integration Activity Log | EnCodency OmniPlatform Super Admin",
+  title: "Integration Activity Log | Media360 Super Admin",
   description: "Platform audit trail of tenant authorizations, provider configurations, and background sync operations.",
 };
 

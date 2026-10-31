@@ -434,7 +434,7 @@ export interface ValidationIssue {
 
 /**
  * Every rule the composer enforces before it will let a post leave. Content
- * rules that are OmniPlatform's own (alt text, blocked words) are separated
+ * rules that are Media360's own (alt text, blocked words) are separated
  * from X's own limits so the messages can say which is which.
  */
 export function validateDraft(draft: DraftShape, settings: XSettings, max: number): ValidationIssue[] {

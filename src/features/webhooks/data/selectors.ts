@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Pure derivations over a snapshot. No state, no I/O, safe to unit test.
  */
 
@@ -363,7 +363,7 @@ export function evaluateDeliveryRecovery(input: {
   const existingSuccess = siblingDeliveries.some((item) => item.id !== delivery.id && item.state === "delivered");
   const factors: EligibilityFactor[] = [];
 
-  factors.push({ id: "authenticity", label: "Original event authenticity", status: "info", detail: "Outgoing platform events originate inside OmniPlatform. Incoming authenticity checks do not apply." });
+  factors.push({ id: "authenticity", label: "Original event authenticity", status: "info", detail: "Outgoing platform events originate inside Media360. Incoming authenticity checks do not apply." });
 
   const stateStatus: FactorStatus =
     delivery.state === "cancelled" ? "block" : delivery.state === "pending" || delivery.state === "attempting" ? "block"
@@ -586,7 +586,7 @@ export function securitySummary(snapshot: WebhooksSnapshot, window: TimeWindow):
 
 export function endpointSecurityWarnings(endpoint: OutgoingEndpoint): string[] {
   const warnings: string[] = [];
-  if (endpoint.signing.state === "not_configured") warnings.push("Signing is not configured. Recipients cannot verify events came from OmniPlatform.");
+  if (endpoint.signing.state === "not_configured") warnings.push("Signing is not configured. Recipients cannot verify events came from Media360.");
   if (endpoint.signing.state === "demo_reference") warnings.push("Signing uses a demo reference only. No real signing implementation exists.");
   if (endpoint.security.httpsState !== "https") warnings.push("The destination does not use HTTPS.");
   if (endpoint.security.urlValidationState === "warnings") warnings.push("The destination URL has validation warnings.");

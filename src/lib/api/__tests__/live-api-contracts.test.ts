@@ -2124,7 +2124,7 @@ describe("organizationApi (Organization Settings contracts)", () => {
 describe("global settings", () => {
   it("GET /super-admin/settings/configuration and /new-company-defaults", async () => {
     responses.push(
-      { status: 200, body: { values: { "identity.platform_name": "OmniPlatform" } } },
+      { status: 200, body: { values: { "identity.platform_name": "Media360" } } },
       { status: 200, body: { timezone: "Asia/Kolkata", language: "en", currency: "INR" } },
     );
 
@@ -2135,7 +2135,7 @@ describe("global settings", () => {
     assert.equal(calls[0]!.init.method, "GET");
     assert.equal(calls[1]!.url, "/api/v1/super-admin/settings/new-company-defaults");
     assert.equal(calls[1]!.init.method, "GET");
-    assert.equal(snapshot.values["identity.platform_name"], "OmniPlatform");
+    assert.equal(snapshot.values["identity.platform_name"], "Media360");
     assert.equal(defaults.timezone, "Asia/Kolkata");
   });
 

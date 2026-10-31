@@ -63,7 +63,7 @@ function ProviderCallbackUrls() {
   ];
 
   return (
-    <SectionCard title="Provider Callback URLs" description="Copy the matching URL into that provider's webhook settings. These receive events in OmniPlatform; they are different from outgoing endpoint URLs.">
+    <SectionCard title="Provider Callback URLs" description="Copy the matching URL into that provider's webhook settings. These receive events in Media360; they are different from outgoing endpoint URLs.">
       <Notice tone="warning" title="Running locally">
         These localhost URLs work only from your computer. Razorpay and LinkedIn need a public HTTPS URL; during local development, expose this app through a secure tunnel and replace localhost with that tunnel's domain.
       </Notice>

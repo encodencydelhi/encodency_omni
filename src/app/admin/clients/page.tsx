@@ -4,7 +4,7 @@ import { ClientsListPage } from "@/features/clients/pages/clients-list";
 
 export const metadata: Metadata = {
   title: "Clients",
-  description: "Monitor and manage client workspaces across all companies on OmniPlatform.",
+  description: "Monitor and manage client workspaces across all companies on Media360.",
 };
 
 export default function AdminClientsPage() {

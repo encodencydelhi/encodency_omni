@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Creates an incoming source: a signed receiver URL for an outside system (a website form, Zapier, another product).
  * The signing secret is returned once, so it stays in this dialog until the person confirms they saved it.
  */

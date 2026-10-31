@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { UserDetailPage } from "@/features/users/pages/user-detail-page";
 
 export const metadata: Metadata = {
-  title: "User Profile & Access Management | OmniPlatform Super Admin",
+  title: "User Profile & Access Management | Media360 Super Admin",
   description: "Platform-wide user identity, multi-company access governance, and security profile.",
 };
 

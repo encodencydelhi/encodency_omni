@@ -50,7 +50,7 @@ export const INITIAL_SETTINGS_STATE: AllSettingsState = {
     secondaryColor: "#111C3A",
     reportLogo: "",
     emailLogo: "",
-    footerText: "© 2026 Namo Gange Trust. Powered by EnCodency OmniPlatform.",
+    footerText: "© 2026 Namo Gange Trust. Powered by Media360.",
     customDomain: "portal.namogange.org",
     isWhiteLabelEnabled: false,
   },

@@ -1,8 +1,8 @@
 /**
- * OmniPlatform-computed scores and recommendations.
+ * Media360-computed scores and recommendations.
  *
  * None of this comes from X. Every surface that renders it carries the
- * "OmniPlatform" badge so nobody mistakes an internal heuristic for a
+ * "Media360" badge so nobody mistakes an internal heuristic for a
  * platform-reported metric.
  */
 

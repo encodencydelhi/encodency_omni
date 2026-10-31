@@ -97,7 +97,7 @@ function LoadErrorState() {
       <EmptyState
         icon={AlertTriangle}
         title="We couldn't load your YouTube data"
-        description={loadError?.message ?? "OmniPlatform couldn't reach its YouTube data service. Your channel isn't affected. Try again in a moment."}
+        description={loadError?.message ?? "Media360 couldn't reach its YouTube data service. Your channel isn't affected. Try again in a moment."}
         action={
           <Button variant="primary" icon={RefreshCw} onClick={reload}>
             Try again
@@ -476,7 +476,7 @@ function DisconnectedState() {
       <EmptyState
         icon={VideoIcon}
         title="Connect Your YouTube Channel"
-        description="Connect a channel to manage videos, Shorts, playlists, comments, live streams and analytics from OmniPlatform. You'll be asked to sign in with Google and choose the permissions to grant."
+        description="Connect a channel to manage videos, Shorts, playlists, comments, live streams and analytics from Media360. You'll be asked to sign in with Google and choose the permissions to grant."
         action={
           <Button
             variant="primary"

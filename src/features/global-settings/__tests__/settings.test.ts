@@ -156,7 +156,7 @@ describe("resolver", () => {
 
   it("never lets anything override platform identity", () => {
     const resolved = resolveSetting(def("identity.platform_name"), platform(), { company: "Acme", user: "Me" });
-    assert.equal(resolved.value, "EnCodency omniPlatform");
+    assert.equal(resolved.value, "Media360");
     assert.equal(resolved.ignored.length, 2);
   });
 
@@ -319,7 +319,7 @@ describe("saving", () => {
       .catch((failure: unknown) => failure);
     assert.ok(ApiError.isApiError(error));
     assert.ok(error.fieldErrors?.["identity.support_email"]);
-    assert.equal((await repo.getConfiguration()).values["identity.platform_short_name"], "omniPlatform");
+    assert.equal((await repo.getConfiguration()).values["identity.platform_short_name"], "Media360");
   });
 
   it("refuses to change a locked setting or one from another section", async () => {

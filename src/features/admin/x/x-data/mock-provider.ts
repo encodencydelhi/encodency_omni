@@ -1014,16 +1014,16 @@ export const mockApprovals: ApprovalEvent[] = [
 ];
 
 export const mockActivity: ActivityEvent[] = [
-  { id: "ac-1", actor: "Sara Thomas", action: "post_scheduled", summary: "Scheduled for tomorrow, 10:00", entity: { type: "post", id: "draft-sch-01", label: "Kanpur volunteer drive" }, source: "OmniPlatform", at: iso(subHours(NOW, 28)) },
-  { id: "ac-2", actor: "Rohit Verma", action: "approval", summary: "Approved for publishing", entity: { type: "post", id: "draft-sch-01", label: "Kanpur volunteer drive" }, source: "OmniPlatform", at: iso(subHours(NOW, 28)) },
-  { id: "ac-3", actor: "Divya Menon", action: "owner_assigned", summary: "Assigned to Divya Menon", entity: { type: "mention", id: "mention-1000", label: "@rahulmehta — methodology question" }, source: "OmniPlatform", at: iso(subHours(NOW, 1)) },
+  { id: "ac-1", actor: "Sara Thomas", action: "post_scheduled", summary: "Scheduled for tomorrow, 10:00", entity: { type: "post", id: "draft-sch-01", label: "Kanpur volunteer drive" }, source: "Media360", at: iso(subHours(NOW, 28)) },
+  { id: "ac-2", actor: "Rohit Verma", action: "approval", summary: "Approved for publishing", entity: { type: "post", id: "draft-sch-01", label: "Kanpur volunteer drive" }, source: "Media360", at: iso(subHours(NOW, 28)) },
+  { id: "ac-3", actor: "Divya Menon", action: "owner_assigned", summary: "Assigned to Divya Menon", entity: { type: "mention", id: "mention-1000", label: "@rahulmehta — methodology question" }, source: "Media360", at: iso(subHours(NOW, 1)) },
   { id: "ac-4", actor: "X sync", action: "post_published", summary: "Published to X", entity: { type: "post", id: "1798452013874120001", label: "12 tonnes of plastic…" }, source: "X sync", at: iso(subHours(NOW, 3)) },
-  { id: "ac-5", actor: "Rohit Verma", action: "reply_sent", summary: "Replied to @sanjaykumar", entity: { type: "mention", id: "mention-1006", label: "Boatman at Dashashwamedh" }, source: "OmniPlatform", at: iso(subHours(NOW, 21)) },
-  { id: "ac-6", actor: "Anita Desai", action: "settings_updated", summary: "Turned on approval requirement", entity: { type: "settings", label: "Approvals" }, source: "OmniPlatform", at: iso(subDays(NOW, 4)) },
+  { id: "ac-5", actor: "Rohit Verma", action: "reply_sent", summary: "Replied to @sanjaykumar", entity: { type: "mention", id: "mention-1006", label: "Boatman at Dashashwamedh" }, source: "Media360", at: iso(subHours(NOW, 21)) },
+  { id: "ac-6", actor: "Anita Desai", action: "settings_updated", summary: "Turned on approval requirement", entity: { type: "settings", label: "Approvals" }, source: "Media360", at: iso(subDays(NOW, 4)) },
   { id: "ac-7", actor: "X sync", action: "post_published", summary: "Publishing failed — rate limit", entity: { type: "post", id: "draft-fail-02", label: "Ballia monsoon briefing reminder" }, source: "X sync", at: iso(subHours(NOW, 26)) },
-  { id: "ac-8", actor: "Rohit Verma", action: "mention_resolved", summary: "Marked resolved", entity: { type: "mention", id: "mention-1011", label: "@deepakyadav — Sherpur briefing" }, source: "OmniPlatform", at: iso(subHours(NOW, 45)) },
-  { id: "ac-9", actor: "Anita Desai", action: "connection_refreshed", summary: "Reconnected the X account", entity: { type: "account", label: "@NamoGangeTrust" }, source: "OmniPlatform", at: iso(subDays(NOW, 11)) },
-  { id: "ac-10", actor: "Imran Qureshi", action: "post_created", summary: "Created a draft", entity: { type: "post", id: "draft-dr-01", label: "Patna school programme expansion" }, source: "OmniPlatform", at: iso(subHours(NOW, 12)) },
+  { id: "ac-8", actor: "Rohit Verma", action: "mention_resolved", summary: "Marked resolved", entity: { type: "mention", id: "mention-1011", label: "@deepakyadav — Sherpur briefing" }, source: "Media360", at: iso(subHours(NOW, 45)) },
+  { id: "ac-9", actor: "Anita Desai", action: "connection_refreshed", summary: "Reconnected the X account", entity: { type: "account", label: "@NamoGangeTrust" }, source: "Media360", at: iso(subDays(NOW, 11)) },
+  { id: "ac-10", actor: "Imran Qureshi", action: "post_created", summary: "Created a draft", entity: { type: "post", id: "draft-dr-01", label: "Patna school programme expansion" }, source: "Media360", at: iso(subHours(NOW, 12)) },
 ];
 
 export const mockNotifications: WorkspaceNotification[] = [

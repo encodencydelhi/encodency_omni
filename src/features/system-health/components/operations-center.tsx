@@ -224,7 +224,7 @@ function Header({ snapshot, setEnvironment, exportJson }: { snapshot: SystemHeal
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-normal text-[#111C3A]">System Health</h1>
-          <p className="mt-1 max-w-3xl text-sm text-slate-600">Monitor platform services, investigate incidents and review operational impact across OmniPlatform.</p>
+          <p className="mt-1 max-w-3xl text-sm text-slate-600">Monitor platform services, investigate incidents and review operational impact across Media360.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <ButtonLink href={`${BASE}/services`}><Layers3 className="size-4" />View Services</ButtonLink>

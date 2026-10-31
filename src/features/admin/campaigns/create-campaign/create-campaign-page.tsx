@@ -13,10 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils/cn";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { clientsApi } from "@/features/clients/data/clients-api";
-import { Field } from "@/features/companies/components/primitives";
 import { AdminPageTitle } from "@/features/admin/shared/admin-page-title";
 import { campaignsApi, type CampaignObjective, type CampaignMode } from "../live/campaigns-api";
-import { ChannelTag, Section, channelLabel, humanize } from "../campaign-ui";
+import { ChannelTag, Field, Section, channelLabel, humanize } from "../campaign-ui";
 
 const objectives: CampaignObjective[] = ["AWARENESS", "TRAFFIC", "ENGAGEMENT", "LEADS", "SALES", "APP_PROMOTION", "RETENTION", "REENGAGEMENT"];
 const modes: CampaignMode[] = ["ORGANIC", "PAID", "UNIFIED"];

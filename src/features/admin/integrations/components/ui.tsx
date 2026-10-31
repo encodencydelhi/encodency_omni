@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Integration-specific UI, built on the shared OmniPlatform workspace
+ * Integration-specific UI, built on the shared Media360 workspace
  * primitives. The primitives are re-exported from here so every file in this
  * module imports from one place, and so they can move to a shared package
  * later without touching the pages.

@@ -66,7 +66,7 @@ export const FEATURES: readonly FeatureDef[] = [
   { key: "client_permissions", name: "Client-level Permissions", description: "Restrict members to specific clients.", category: "Team & Governance", dependencies: ["multiple_clients"] },
   { key: "extended_audit", name: "Extended Audit Retention", description: "Longer retention of audit history.", category: "Team & Governance", dependencies: [] },
   { key: "priority_support", name: "Priority Support", description: "Faster support response.", category: "Team & Governance", dependencies: [] },
-  { key: "success_manager", name: "Named Success Manager", description: "A dedicated OmniPlatform contact.", category: "Team & Governance", dependencies: ["priority_support"] },
+  { key: "success_manager", name: "Named Success Manager", description: "A dedicated Media360 contact.", category: "Team & Governance", dependencies: ["priority_support"] },
 
   { key: "api_access", name: "API Access", description: "Access to the platform API.", category: "Platform/API", dependencies: [] },
   { key: "webhooks", name: "Webhooks", description: "Outbound webhook delivery.", category: "Platform/API", dependencies: ["api_access"] },

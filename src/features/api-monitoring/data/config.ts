@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin API Monitoring Module
+ * Media360 - Super Admin API Monitoring Module
  * Module Constants, Badge Metadata and Configuration
  */
 

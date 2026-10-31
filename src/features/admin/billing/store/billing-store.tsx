@@ -205,7 +205,7 @@ export function BillingProvider({ children }: { children: ReactNode }) {
     () => ({
       status: simulation.loading ? "loading" : simulation.loadError ? "error" : status,
       snapshot,
-      loadError: simulation.loadError ? { message: "Billing data is unavailable.", hint: "OmniPlatform couldn't load your billing details. Your subscription and payments aren't affected." } : loadError,
+      loadError: simulation.loadError ? { message: "Billing data is unavailable.", hint: "Media360 couldn't load your billing details. Your subscription and payments aren't affected." } : loadError,
       mode: repository.mode,
       scenario,
       role,

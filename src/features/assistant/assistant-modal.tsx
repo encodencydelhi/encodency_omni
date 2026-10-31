@@ -118,7 +118,7 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
               <AiAssistantRobotLottie className="size-7" />
             </span>
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-[14px] font-semibold leading-tight text-slate-900">OmniPlatform Assistant</DialogTitle>
+              <DialogTitle className="text-[14px] font-semibold leading-tight text-slate-900">Media360 Assistant</DialogTitle>
               <DialogDescription className="truncate text-[11px] font-medium text-slate-500">
                 {bootstrap?.page ? `You are on ${bootstrap.page.title}` : "Ask me how to use the platform"} · any language
               </DialogDescription>

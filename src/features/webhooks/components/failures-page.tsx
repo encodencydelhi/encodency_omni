@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Failures & Retries: incoming processing failures, outgoing delivery failures, retry-scheduled,
  * attempts exhausted, recovery requests.
  */

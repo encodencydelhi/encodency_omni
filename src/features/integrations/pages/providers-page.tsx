@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Provider Catalogue Page Component
  */
 
@@ -93,7 +93,7 @@ export function ProvidersPage() {
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            OmniPlatform upstream connectors, developer portal credentials, and operational controls.
+            Media360 upstream connectors, developer portal credentials, and operational controls.
           </p>
         </div>
 

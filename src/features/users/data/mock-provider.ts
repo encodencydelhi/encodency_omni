@@ -1260,7 +1260,7 @@ export const mockUsersProvider = {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `omniplatform-users-export-${new Date().toISOString().split("T")[0]}.csv`;
+      link.download = `media360-users-export-${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

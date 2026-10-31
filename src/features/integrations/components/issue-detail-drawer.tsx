@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Issue Detail Drawer
  * Full operational management: status update, owner assignment, internal notes, audit timeline
  */

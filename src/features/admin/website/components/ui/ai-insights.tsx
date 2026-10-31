@@ -166,7 +166,7 @@ export function AiRecommendationCard({
       {open && rec.status === "approved" ? (
         <p className="mt-1.5 flex items-center gap-1 text-[10.5px] text-[#0B7A55]">
           <ShieldCheck className="size-3.5" aria-hidden />
-          Approved as a proposal. OmniPlatform does not change your website — apply the change yourself, then re-scan to verify.
+          Approved as a proposal. Media360 does not change your website — apply the change yourself, then re-scan to verify.
         </p>
       ) : null}
     </li>

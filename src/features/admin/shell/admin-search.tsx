@@ -194,7 +194,7 @@ const COMMAND_RESULTS: AdminSearchResult[] = [
   { id: "cmd-run-audit", kind: "command", group: "Commands", title: "Run SEO Audit", subtitle: "Initiate full technical SEO crawler on website", href: "/admin/website", badge: "Command", tone: "info", preview: [{ label: "Action", value: "Trigger Site Audit" }, { label: "Destination", value: "/admin/website" }], score: 0 },
   { id: "cmd-invite-team", kind: "command", group: "Commands", title: "Invite Team Member", subtitle: "Invite staff or agency collaborators", href: "/admin/team", badge: "Command", tone: "brand", preview: [{ label: "Action", value: "Send Invitation" }, { label: "Destination", value: "/admin/team" }], score: 0 },
   { id: "cmd-connect-channel", kind: "command", group: "Commands", title: "Connect Channel", subtitle: "Authorize Meta, Google, LinkedIn or YouTube", href: "/admin/integrations", badge: "Command", tone: "neutral", preview: [{ label: "Action", value: "Manage Connections" }, { label: "Destination", value: "/admin/integrations" }], score: 0 },
-  { id: "cmd-ai-assistant", kind: "command", group: "Commands", title: "Ask AI Assistant", subtitle: "Open OmniPlatform intelligent copilot", href: "#assistant", badge: "AI Copilot", tone: "brand", preview: [{ label: "Action", value: "Launch Copilot" }, { label: "Feature", value: "Interactive AI Chat" }], score: 0, isAiAction: true },
+  { id: "cmd-ai-assistant", kind: "command", group: "Commands", title: "Ask AI Assistant", subtitle: "Open Media360 intelligent copilot", href: "#assistant", badge: "AI Copilot", tone: "brand", preview: [{ label: "Action", value: "Launch Copilot" }, { label: "Feature", value: "Interactive AI Chat" }], score: 0, isAiAction: true },
 ];
 
 const SUGGESTED_CHIPS = [
@@ -709,7 +709,7 @@ export function AdminGlobalSearch() {
               {/* Empty state with helpful filter tags */}
               {!isActive && recents.length === 0 && pinned.length === 0 ? (
                 <div className="px-4 py-8 text-center text-sm text-slate-500">
-                  <p className="font-medium text-slate-700">Type to search across OmniPlatform</p>
+                  <p className="font-medium text-slate-700">Type to search across Media360</p>
                   <p className="mt-1 text-xs text-slate-400">
                     Jump to a page, run a quick action, or find clients, campaigns, drafts, leads and tickets. You only see what your role allows.
                   </p>

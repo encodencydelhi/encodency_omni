@@ -1,10 +1,10 @@
 export const APP = {
-  name: "EnCodency omniPlatform",
-  shortName: "omniPlatform",
+  name: "Media360",
+  shortName: "Media360",
   vendor: "EnCodency",
   panelName: "Super Admin",
   description:
-    "Internal control panel for the EnCodency omniPlatform omnichannel marketing SaaS.",
+    "Internal control panel for the Media360 omnichannel marketing SaaS.",
   supportEmail: "platform-ops@encodency.com",
   /** Default page size used by every server-paginated table. */
   defaultPageSize: 10,

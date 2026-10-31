@@ -39,7 +39,7 @@ export function BulkActionsToolbar({
   const handleExportSelected = () => {
     exportUsersToCsv(
       selectedUsers,
-      `omniplatform-selected-users-${new Date().toISOString().split("T")[0]}.csv`,
+      `media360-selected-users-${new Date().toISOString().split("T")[0]}.csv`,
     );
   };
 

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * High-impact change review: current vs proposed configuration, affected scope, impact, reason, confirm.
  */
 

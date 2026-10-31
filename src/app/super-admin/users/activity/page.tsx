@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { UserActivityPage } from "@/features/users/pages/user-activity-page";
 
 export const metadata: Metadata = {
-  title: "User Activity Audit Log | OmniPlatform Super Admin",
+  title: "User Activity Audit Log | Media360 Super Admin",
   description: "Platform-wide user authentication, security, and administrative action audit logs.",
 };
 

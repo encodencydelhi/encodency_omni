@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Rotating a signing secret asks first (with a reason) and says how long the OLD secret keeps working, so the receiving system can
  * switch without a gap. The new secret is then shown in this dialog, not only copied to the clipboard, and stays until the person
  * confirms they saved it: it cannot be shown again.

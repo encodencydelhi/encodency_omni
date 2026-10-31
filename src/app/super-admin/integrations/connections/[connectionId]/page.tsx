@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ConnectionDetailPage } from "@/features/integrations";
 
 export const metadata: Metadata = {
-  title: "Connection Command Center | EnCodency OmniPlatform Super Admin",
+  title: "Connection Command Center | Media360 Super Admin",
   description: "Authorization details, client resource mapping, permission health, and sync telemetry.",
 };
 

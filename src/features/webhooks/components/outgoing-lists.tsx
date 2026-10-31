@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Outgoing workspace: Endpoints directory and Endpoint Configuration overview.
  */
 

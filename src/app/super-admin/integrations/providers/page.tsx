@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ProvidersPage } from "@/features/integrations";
 
 export const metadata: Metadata = {
-  title: "Provider Catalogue | EnCodency OmniPlatform Super Admin",
+  title: "Provider Catalogue | Media360 Super Admin",
   description: "Configure and manage third-party integration providers, API credentials and platform availability.",
 };
 

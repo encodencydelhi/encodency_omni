@@ -791,23 +791,23 @@ const activity: ActivityEvent[] = [
   },
   {
     id: "act-2", actor: "Ritika Bansal", action: "review_reply", summary: "Replied to a 5-star review", entity: { type: "review", id: "rev-2000", label: "Priya Sharma" },
-    locationId: locations[0]!.locationId, source: "OmniPlatform", at: iso(subHours(NOW, 5)),
+    locationId: locations[0]!.locationId, source: "Media360", at: iso(subHours(NOW, 5)),
   },
   {
     id: "act-3", actor: "Aakash Verma", action: "post_publish", summary: "Published an event post", entity: { type: "post", id: "post-1002", label: "Assi Ghat Clean-up Drive" },
-    locationId: locations[1]!.locationId, source: "OmniPlatform", at: iso(subDays(NOW, 1)),
+    locationId: locations[1]!.locationId, source: "Media360", at: iso(subDays(NOW, 1)),
   },
   {
     id: "act-4", actor: "Ritika Bansal", action: "hours_change", summary: "Updated Friday hours", entity: { type: "location", id: locations[0]!.locationId, label: "Head Office" },
-    locationId: locations[0]!.locationId, previous: "Closed", next: "10:00 - 14:00", source: "OmniPlatform", at: iso(subDays(NOW, 2)),
+    locationId: locations[0]!.locationId, previous: "Closed", next: "10:00 - 14:00", source: "Media360", at: iso(subDays(NOW, 2)),
   },
   {
     id: "act-5", actor: "Aakash Verma", action: "media_upload", summary: "Uploaded 3 photos", entity: { type: "media", label: "Varanasi Center" },
-    locationId: locations[1]!.locationId, source: "OmniPlatform", at: iso(subDays(NOW, 3)),
+    locationId: locations[1]!.locationId, source: "Media360", at: iso(subDays(NOW, 3)),
   },
   {
     id: "act-6", actor: "Manish Sirohi", action: "permission_change", summary: "Changed Editor permissions", entity: { type: "settings", label: "Team access" },
-    locationId: null, previous: "Cannot publish posts", next: "Can publish posts", source: "OmniPlatform", at: iso(subDays(NOW, 6)),
+    locationId: null, previous: "Cannot publish posts", next: "Can publish posts", source: "Media360", at: iso(subDays(NOW, 6)),
   },
   {
     id: "act-7", actor: "System", action: "location_sync", summary: "Sync failed for Haridwar Center", entity: { type: "location", id: locations[2]!.locationId, label: "Haridwar Center" },
@@ -815,7 +815,7 @@ const activity: ActivityEvent[] = [
   },
   {
     id: "act-8", actor: "Manish Sirohi", action: "connection_change", summary: "Reconnected the Google account", entity: { type: "account", label: "profiles@namogange.org" },
-    locationId: null, source: "OmniPlatform", at: iso(subDays(NOW, 14)),
+    locationId: null, source: "Media360", at: iso(subDays(NOW, 14)),
   },
 ];
 

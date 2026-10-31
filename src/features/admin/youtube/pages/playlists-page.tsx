@@ -378,7 +378,7 @@ export function PlaylistDetailPage() {
   if (!playlist) {
     const notFound = ApiError.isApiError(query.error) && (query.error.status === 404 || query.error.reason === "youtube_playlist_not_found" || query.error.reason === "youtube_playlist_not_owned");
     if (query.error && !notFound) return <Card><ErrorState error={describeYouTubeError(query.error)} onRetry={() => void query.refetch()} title="Playlist couldn't load" /></Card>;
-    return <Card><EmptyState icon={ListVideo} title="Playlist Not Found" description="It may have been deleted on YouTube, or it isn't managed through OmniPlatform." action={<Button variant="primary" icon={ArrowLeft} href={ytRoutes.playlists}>Back To Playlists</Button>} /></Card>;
+    return <Card><EmptyState icon={ListVideo} title="Playlist Not Found" description="It may have been deleted on YouTube, or it isn't managed through Media360." action={<Button variant="primary" icon={ArrowLeft} href={ytRoutes.playlists}>Back To Playlists</Button>} /></Card>;
   }
   return <PlaylistDetail playlist={playlist} />;
 }

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Billing Settings & Governance Page
+ * Media360 - Billing Settings & Governance Page
  * Policy configuration for invoice generation, payment reconciliation and refund approvals.
  */
 

@@ -2,7 +2,7 @@
 //
 // Field names follow the Google Business Profile API resources they map to
 // (locations, reviews, localPosts, media, performance) so the backend mapper
-// stays thin. Anything marked "internal" is owned by OmniPlatform and has no
+// stays thin. Anything marked "internal" is owned by Media360 and has no
 // Google equivalent - the UI labels those explicitly.
 
 export type ISODate = string;
@@ -133,7 +133,7 @@ export interface Location {
   reviewCount: number;
   photoCount: number;
   sync: { state: SyncState; lastSyncedAt: Maybe<ISODate>; error?: string };
-  /** Internal OmniPlatform labels used for filtering and bulk actions. */
+  /** Internal Media360 labels used for filtering and bulk actions. */
   labels: string[];
   /** Whether this workspace manages the location (Settings can turn it off). */
   managed: boolean;
@@ -148,7 +148,7 @@ export type StarRating = 1 | 2 | 3 | 4 | 5;
 export interface ReviewReply {
   comment: string;
   updateTime: ISODate;
-  /** Internal: which OmniPlatform user posted it. */
+  /** Internal: which Media360 user posted it. */
   author: string;
 }
 
@@ -178,7 +178,7 @@ export type PostType = "update" | "event" | "offer" | "cta";
 /** Google callToAction actionTypes. */
 export type CtaType = "BOOK" | "ORDER" | "SHOP" | "LEARN_MORE" | "SIGN_UP" | "CALL";
 
-/** Google-side lifecycle (LocalPost.state) plus the OmniPlatform workflow states. */
+/** Google-side lifecycle (LocalPost.state) plus the Media360 workflow states. */
 export type PostState =
   | "draft"
   | "pending_approval"
@@ -210,7 +210,7 @@ export interface Post {
   event: Maybe<{ title: string; startDate: ISODate; endDate: ISODate }>;
   offer: Maybe<{ couponCode: string; redeemOnlineUrl: string; termsConditions: string }>;
   state: PostState;
-  /** OmniPlatform scheduling - the Google API itself publishes immediately. */
+  /** Media360 scheduling - the Google API itself publishes immediately. */
   scheduledAt: Maybe<ISODate>;
   publishedAt: Maybe<ISODate>;
   createdAt: ISODate;
@@ -243,7 +243,7 @@ export interface MediaItem {
   dimensions: Maybe<{ widthPx: number; heightPx: number }>;
   sizeBytes: Maybe<number>;
   state: "processing" | "live" | "rejected";
-  /** Internal: who uploaded it through OmniPlatform. */
+  /** Internal: who uploaded it through Media360. */
   uploadedBy: Maybe<string>;
   rejectionReason?: string;
 }
@@ -384,7 +384,7 @@ export interface ActivityEvent {
   locationId: Maybe<string>;
   previous?: string;
   next?: string;
-  source: "OmniPlatform" | "Google sync";
+  source: "Media360" | "Google sync";
   at: ISODate;
 }
 

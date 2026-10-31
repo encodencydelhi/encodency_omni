@@ -36,7 +36,7 @@ function Audience() {
   const tab = values.tab as AudienceTab;
   const t = analytics.data.totals;
 
-  // YouTube's Analytics API reports channel totals for the period; unique / returning / new viewer counts are not available to OmniPlatform.
+  // YouTube's Analytics API reports channel totals for the period; unique / returning / new viewer counts are not available to Media360.
   const kpis: { label: string; key: MetricKey; value: number | null; prev: number | null; icon: LucideIcon; hint: string; format: (v: number) => string }[] = [
     { label: "Views", key: "views", value: t.views.value, prev: t.views.previous, icon: Eye, hint: "In The Selected Period", format: compact },
     { label: "Watch Time", key: "watchTime", value: t.watchTime.value, prev: t.watchTime.previous, icon: Clock, hint: "Time Watched", format: (v) => hours(v) },

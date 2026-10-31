@@ -59,7 +59,7 @@ export function PaymentMethodCard() {
 
         <p className="mt-auto flex items-center gap-1.5 pt-2 text-[11.5px] text-[#6B7890]">
           <Lock className="size-3 shrink-0" />
-          Card details are held by our payment partner. OmniPlatform only stores the brand, last four digits and expiry.
+          Card details are held by our payment partner. Media360 only stores the brand, last four digits and expiry.
         </p>
       </div>
     </Section>

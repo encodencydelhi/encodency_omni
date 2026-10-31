@@ -182,7 +182,7 @@ export function AllJobsPage() {
             <span className="px-2 py-0.5 text-xs font-semibold bg-violet-50 text-violet-700 rounded-sm border border-violet-200">Platform</span>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            Browse, search, filter, and export all background jobs across OmniPlatform.
+            Browse, search, filter, and export all background jobs across Media360.
           </p>
         </div>
         <div className="flex items-center gap-2">

@@ -97,7 +97,7 @@ export interface TeamMember {
 /* Content                                                             */
 /* ------------------------------------------------------------------ */
 
-/** `archived` is an OmniPlatform state — X itself has no archive. */
+/** `archived` is an Media360 state — X itself has no archive. */
 export type PostStatus =
   | "published"
   | "scheduled"
@@ -183,7 +183,7 @@ export interface XPost {
   metrics: PostMetrics;
   failure: Maybe<PostFailure>;
 
-  /* [OmniPlatform] ------------------------------------------------- */
+  /* [Media360] ------------------------------------------------- */
   approval: ApprovalState;
   ownerId: string;
   campaignId: Maybe<string>;
@@ -233,7 +233,7 @@ export interface ConversationMessage {
   at: ISODate;
 }
 
-/** [OmniPlatform] Private team note attached to a mention. */
+/** [Media360] Private team note attached to a mention. */
 export interface InternalNote {
   id: string;
   author: string;
@@ -408,7 +408,7 @@ export interface ActivityEvent {
   action: ActivityAction;
   summary: string;
   entity: { type: "post" | "mention" | "account" | "settings" | "audience"; id?: string; label: string };
-  source: "OmniPlatform" | "X sync";
+  source: "Media360" | "X sync";
   at: ISODate;
 }
 

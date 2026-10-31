@@ -145,7 +145,7 @@ export const JOB_FAILURE_WARNING = 1;
 export const JOB_FAILURE_CRITICAL = 8;
 
 export const HEALTH_METHOD =
-  "OmniPlatform Tenant Health is an internal assessment of the factors the platform measures for each company: billing, subscription, usage limits, connected accounts and ownership. Background-job failures and support SLA are not collected per company yet, so they are not part of it. A company is Critical if any factor is critical, Needs Attention if any factor warns, and Healthy otherwise.";
+  "Media360 Tenant Health is an internal assessment of the factors the platform measures for each company: billing, subscription, usage limits, connected accounts and ownership. Background-job failures and support SLA are not collected per company yet, so they are not part of it. A company is Critical if any factor is critical, Needs Attention if any factor warns, and Healthy otherwise.";
 
 export const USAGE_METHOD =
   "Highest limit utilisation: the largest used-to-effective-limit ratio across the plan-controlled resources. Resources are never averaged together, because their units are not comparable. Seat, client and connection caps are hard limits, so sitting exactly at the cap is normal - they only count once exceeded.";

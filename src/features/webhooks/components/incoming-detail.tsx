@@ -84,7 +84,7 @@ export function IncomingSourceDetailPage({ sourceId }: { sourceId: string }) {
       {!source.verificationConfigured ? <Notice tone="warning" title="No verification policy defined">Events from this source cannot be treated as authentic and are never processed.</Notice> : null}
 
       <div className="grid gap-1 lg:grid-cols-2">
-        <InfoCard title="Source & Receiver" description="Use this source-specific callback for a provider that can sign requests using OmniPlatform's HMAC header contract." items={[
+        <InfoCard title="Source & Receiver" description="Use this source-specific callback for a provider that can sign requests using Media360's HMAC header contract." items={[
           { label: "Source name", value: source.name },
           { label: "Source ID", value: <Mono>{source.id}</Mono> },
           { label: "Provider", value: source.providerName },

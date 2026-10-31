@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Invoices Directory Table
+ * Media360 - Invoices Directory Table
  * High-density financial table with quick preview drawer and multi-dimensional status badges.
  */
 

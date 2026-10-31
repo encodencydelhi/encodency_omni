@@ -101,7 +101,7 @@ export function VideoDetailPage() {
         <EmptyState
           icon={VideoOff}
           title="Video Not Found"
-          description="It may have been deleted on YouTube or from OmniPlatform, or the link is incorrect."
+          description="It may have been deleted on YouTube or from Media360, or the link is incorrect."
           action={<Button variant="primary" icon={ArrowLeft} href={ytRoutes.content}>Back To Content</Button>}
         />
       </Card>
@@ -579,10 +579,10 @@ function SeoTab({ video, onEdit, onThumb }: { video: Video; onEdit: () => void; 
   return (
     <div className="grid gap-1 xl:grid-cols-12">
       <Card className="h-fit p-4 xl:col-span-4">
-        <div className="flex items-center gap-2"><h3 className="text-[13.5px] font-semibold text-[#0F1B3D]">Optimization score</h3><InternalBadge label="OmniPlatform Optimization" /></div>
+        <div className="flex items-center gap-2"><h3 className="text-[13.5px] font-semibold text-[#0F1B3D]">Optimization score</h3><InternalBadge label="Media360 Optimization" /></div>
         <div className="mt-4 flex items-center gap-4">
           <ScoreRing score={score} />
-          <p className="text-[12.5px] leading-5 text-[#6B7890]">Based on OmniPlatform&apos;s analysis of your metadata. YouTube doesn&apos;t publish an SEO score.</p>
+          <p className="text-[12.5px] leading-5 text-[#6B7890]">Based on Media360&apos;s analysis of your metadata. YouTube doesn&apos;t publish an SEO score.</p>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button size="sm" variant="primary" icon={Pencil} gate={can.canEditVideo} onClick={onEdit}>Improve Details</Button>

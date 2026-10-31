@@ -286,8 +286,8 @@ export function Badge({
   );
 }
 
-/** Marks OmniPlatform-owned data so it is never mistaken for a Google metric. */
-export function InternalBadge({ label = "OmniPlatform", hint }: { label?: string; hint?: string }) {
+/** Marks Media360-owned data so it is never mistaken for a Google metric. */
+export function InternalBadge({ label = "Media360", hint }: { label?: string; hint?: string }) {
   const badge = (
     <span className="inline-flex h-5 items-center gap-1 rounded-md bg-[#F3E8FD] px-1.5 text-[10.5px] font-medium text-[#8430CE] ring-1 ring-inset ring-[#E9D2FD]">
       {label}

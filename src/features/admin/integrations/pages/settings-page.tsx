@@ -115,14 +115,14 @@ function Settings() {
         <Card className="flex items-start gap-2.5 border-[#D5E1FD] bg-[#F5F8FF] px-3.5 py-2.5">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#1D4ED8]" />
           <p className="text-[12px] leading-4 text-[#3C4A66]">
-            These settings apply to your organization only. Provider credentials, callback URLs and platform limits are managed by OmniPlatform and never shown here.
+            These settings apply to your organization only. Provider credentials, callback URLs and platform limits are managed by Media360 and never shown here.
           </p>
         </Card>
 
-        <Section id="upkeep" title="Connection upkeep" description="What OmniPlatform does by itself to keep logins working" icon={RefreshCw}>
+        <Section id="upkeep" title="Connection upkeep" description="What Media360 does by itself to keep logins working" icon={RefreshCw}>
           <SettingRow
             title="Renew access automatically"
-            description="About once a day, and when a LinkedIn token is within a week of its end, OmniPlatform renews the logins that can renew themselves (Google Business, YouTube, LinkedIn). A login that was revoked is found early instead of when someone needs it. Meta logins cannot renew themselves; you reconnect them before they end."
+            description="About once a day, and when a LinkedIn token is within a week of its end, Media360 renews the logins that can renew themselves (Google Business, YouTube, LinkedIn). A login that was revoked is found early instead of when someone needs it. Meta logins cannot renew themselves; you reconnect them before they end."
             control={<Switch checked={draft.autoRefresh} disabled={!canEdit} onCheckedChange={(autoRefresh) => update({ autoRefresh })} aria-label="Renew access automatically" />}
           />
         </Section>

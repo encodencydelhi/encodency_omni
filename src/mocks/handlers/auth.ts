@@ -150,7 +150,7 @@ export const authRoutes: MockRoutes = {
     return {
       status: "replacement_pending",
       challengeToken,
-      otpauthUri: `otpauth://totp/Encodency%20OmniPlatform:demo-replacement?secret=${DEMO_REPLACEMENT_SECRET}&issuer=Encodency%20OmniPlatform`,
+      otpauthUri: `otpauth://totp/Encodency%20Media360:demo-replacement?secret=${DEMO_REPLACEMENT_SECRET}&issuer=Encodency%20Media360`,
       qrDataUrl: DEMO_QR_DATA_URL,
       expiresAt: new Date(expiresAt).toISOString(),
     } satisfies TotpReplacementPendingResponse;

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Upcoming Billing Events
+ * Media360 - Upcoming Billing Events
  * Forward-looking calendar of upcoming invoice due dates and expected subscription renewals.
  */
 

@@ -448,7 +448,7 @@ export function LocationsPage() {
         onOpenChange={setConfirmSync}
         destructive={false}
         title={`Sync ${validSelected.length} location${validSelected.length > 1 ? "s" : ""} with Google?`}
-        description="OmniPlatform pulls the latest profile, reviews and media for the selected locations. Local edits that have not been saved to Google may be overwritten."
+        description="Media360 pulls the latest profile, reviews and media for the selected locations. Local edits that have not been saved to Google may be overwritten."
         affected={selectedLocations.map((location) => location.profile.title)}
         confirmLabel="Sync now"
         onConfirm={() => syncLocations(validSelected)}

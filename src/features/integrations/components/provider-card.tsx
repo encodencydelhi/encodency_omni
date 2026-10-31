@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Provider Card Component
  * Compact, equal height (h-full), font-size >= 12px
  */

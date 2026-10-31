@@ -251,7 +251,7 @@ function OverviewTab({ connection, provider, actions, issuesCount }: { connectio
           <DefinitionRow label="Access">{connection.autoRenews ? "Renews itself" : connection.tokenExpiresAt ? <>Ends <RelativeTime iso={connection.tokenExpiresAt} future /></> : "No end date"}</DefinitionRow>
           {connection.autoRenews && connection.tokenExpiresAt && <DefinitionRow label="Current token ends"><RelativeTime iso={connection.tokenExpiresAt} future /></DefinitionRow>}
         </dl>
-        <p className="mt-2 text-[11.5px] leading-4 text-[#98A2B3]">Access tokens and provider credentials are held by OmniPlatform&apos;s integration service and never shown here.</p>
+        <p className="mt-2 text-[11.5px] leading-4 text-[#98A2B3]">Access tokens and provider credentials are held by Media360&apos;s integration service and never shown here.</p>
       </div>
 
       <div className="min-w-0 space-y-4">
@@ -468,12 +468,12 @@ function PermissionsTab({ connection, provider, actions }: { connection: Integra
       ) : unreported ? (
         <p className="flex items-center gap-2 rounded-sm border border-[#E4E9F0] bg-[#F8FAFC] px-3 py-2 text-[12.5px] text-[#3C4A66]">
           <ShieldAlert className="size-4 shrink-0 text-[#6B7890]" />
-          {provider.name} does not tell OmniPlatform which permissions were granted, so they are listed as “Not reported”. If something does not work, a check shows the reason.
+          {provider.name} does not tell Media360 which permissions were granted, so they are listed as “Not reported”. If something does not work, a check shows the reason.
         </p>
       ) : (
         <p className="flex items-center gap-2 rounded-sm border border-[#C6EFD9] bg-[#F4FCF8] px-3 py-2 text-[12.5px] text-[#067647]">
           <CheckCircle2 className="size-4" />
-          No permissions missing. Everything OmniPlatform needs is granted.
+          No permissions missing. Everything Media360 needs is granted.
         </p>
       )}
 

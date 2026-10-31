@@ -159,7 +159,7 @@ function Audience() {
             <div className="min-w-[140px] flex-1">
               <LegendList data={audience.followerSplit} colors={["#2563EB", "#C9D1DC"]} />
               <p className="mt-3 rounded-sm border border-[#E2D8FD] bg-[#F9F7FF] px-2.5 py-2 text-[11.5px] leading-4 text-[#3C4A66]">
-                <b className="font-semibold text-[#6D28D9]">OmniPlatform insight.</b>{" "}
+                <b className="font-semibold text-[#6D28D9]">Media360 insight.</b>{" "}
                 {(audience.followerSplit[1]?.value ?? 0) > 30
                   ? "A healthy share of engagement comes from outside your followers — your posts are travelling beyond the timeline."
                   : "Most engagement comes from existing followers. Posts with a broader hook could widen the reach."}
@@ -235,7 +235,7 @@ function SimpleKpi({
     <div className={cn(x.card, "p-3.5")}>
       <p className="flex items-center justify-between gap-2 text-[12px] font-medium text-[#6B7890]">
         <span className="truncate">{label}</span>
-        {internal ? <InternalBadge label="Internal" hint="Calculated by OmniPlatform from data X provides." /> : source ? <SourceBadge /> : null}
+        {internal ? <InternalBadge label="Internal" hint="Calculated by Media360 from data X provides." /> : source ? <SourceBadge /> : null}
       </p>
       <p className={cn("mt-1.5 text-[21px] font-semibold leading-7 tracking-[-0.02em] tabular-nums", tone === "green" ? "text-[#067647]" : tone === "red" ? "text-[#C81E2B]" : "text-[#0F1B3D]")}>
         {value}
@@ -343,7 +343,7 @@ function AccountLists() {
           </Button>
         )}
         <span className="ml-auto flex items-center gap-2 text-[11.5px] text-[#98A2B3]">
-          <InternalBadge label="Tags, notes & lists are internal" hint="Tags, notes, owners and lists live in OmniPlatform. Nothing is written back to X." />
+          <InternalBadge label="Tags, notes & lists are internal" hint="Tags, notes, owners and lists live in Media360. Nothing is written back to X." />
         </span>
       </div>
 
@@ -500,7 +500,7 @@ function MemberDialog({ member, open, onOpenChange }: { member: AudienceMember |
             {member.followedAt && <DefinitionRow label="Following since">{date(member.followedAt)}</DefinitionRow>}
           </dl>
 
-          <FormField label="Internal tags" hint="Used to segment and filter the audience inside OmniPlatform.">
+          <FormField label="Internal tags" hint="Used to segment and filter the audience inside Media360.">
             <TagInput value={tags} onChange={setTags} placeholder="Add a tag and press Enter" />
           </FormField>
 

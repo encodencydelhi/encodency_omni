@@ -74,7 +74,7 @@ function evaluate(rule: Rule, input: CapabilityInput): Capability {
   }
   if (rule.needsVerifiedLocation && input.location) {
     if (!input.location.managed) {
-      return { allowed: false, reason: "This location is switched off for OmniPlatform management in Settings.", fix: "request_access" };
+      return { allowed: false, reason: "This location is switched off for Media360 management in Settings.", fix: "request_access" };
     }
     if (input.location.verification !== "verified") {
       return {
@@ -107,11 +107,11 @@ export const CAPABILITY_DOCS: { key: CapabilityKey; label: string; googleSupport
   { key: "canDeleteReviewReply", label: "Delete review reply", googleSupported: true, note: "reviews.deleteReply" },
   { key: "canCreatePosts", label: "Create posts", googleSupported: true, note: "localPosts.create (update, event, offer, CTA)" },
   { key: "canPublishPosts", label: "Publish posts", googleSupported: true, note: "localPosts.create publishes immediately" },
-  { key: "canApproveContent", label: "Approve content", googleSupported: false, note: "OmniPlatform approval workflow" },
+  { key: "canApproveContent", label: "Approve content", googleSupported: false, note: "Media360 approval workflow" },
   { key: "canManageMedia", label: "Upload media", googleSupported: true, note: "media.create" },
   { key: "canDeleteMedia", label: "Delete media", googleSupported: true, note: "media.delete" },
   { key: "canViewPerformance", label: "View performance", googleSupported: true, note: "Business Profile Performance API" },
-  { key: "canSyncLocations", label: "Sync locations", googleSupported: true, note: "Scheduled pull into OmniPlatform" },
-  { key: "canManageConnection", label: "Manage connection", googleSupported: false, note: "OmniPlatform OAuth connection record" },
-  { key: "canManageSettings", label: "Manage settings", googleSupported: false, note: "OmniPlatform workspace settings" },
+  { key: "canSyncLocations", label: "Sync locations", googleSupported: true, note: "Scheduled pull into Media360" },
+  { key: "canManageConnection", label: "Manage connection", googleSupported: false, note: "Media360 OAuth connection record" },
+  { key: "canManageSettings", label: "Manage settings", googleSupported: false, note: "Media360 workspace settings" },
 ];

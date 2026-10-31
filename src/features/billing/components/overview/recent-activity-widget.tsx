@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Recent Financial Activity Widget
+ * Media360 - Recent Financial Activity Widget
  * Snapshot of platform-wide billing mutations and governance actions.
  */
 

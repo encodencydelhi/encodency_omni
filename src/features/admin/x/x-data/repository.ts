@@ -2,7 +2,7 @@
  * The X repository is the only boundary the UI talks to.
  *
  *   today:  UI → XRepository → mock provider (in-memory, deterministic)
- *   later:  UI → XRepository → OmniPlatform backend → X API
+ *   later:  UI → XRepository → Media360 backend → X API
  *
  * Swapping the implementation is the whole integration: no component imports
  * mock data, and no component knows whether a mutation crossed a network.
@@ -83,7 +83,7 @@ export type PostDraft = Pick<
 };
 
 export interface PublishResult {
-  /** X issues a new post id on publish; drafts keep their OmniPlatform id until then. */
+  /** X issues a new post id on publish; drafts keep their Media360 id until then. */
   id: string;
   publishedAt: ISODate;
 }
@@ -316,7 +316,7 @@ class MockXRepository implements XRepository {
 const UNAVAILABLE = () =>
   new XServiceError(
     "service_unavailable",
-    "X service not connected — the OmniPlatform backend for this channel isn't available.",
+    "X service not connected — the Media360 backend for this channel isn't available.",
     "Mock mode is off and no X backend is configured. Set NEXT_PUBLIC_X_MOCK_MODE=true to explore the workspace with sample data.",
   );
 

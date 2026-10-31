@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Invoicing & Collections Trend Chart
+ * Media360 - Invoicing & Collections Trend Chart
  * Recharts component with metric selectors, period selection and currency-aware tooltips.
  */
 

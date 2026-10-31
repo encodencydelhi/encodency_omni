@@ -24,7 +24,7 @@ export const userService = {
       avatarUrl: u.avatarUrl,
       company: {
         id: "platform",
-        name: "OmniPlatform",
+        name: "Media360",
       },
       role: (u.platformRole === "SUPER_ADMIN" ? "owner" : "viewer") as any,
       status: "active" as UserStatus,
@@ -63,7 +63,7 @@ export const userService = {
           }
         : {
             id: "platform",
-            name: "OmniPlatform",
+            name: "Media360",
           },
       role: (firstMembership?.systemRole?.toLowerCase() === "owner" ? "owner" : "viewer") as any,
       status: "active" as UserStatus,

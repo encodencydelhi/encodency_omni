@@ -149,7 +149,7 @@ function InviteUserWizardDemo({
         <SheetHeader className="p-4 border-b border-border bg-slate-50/60">
           <SheetTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
             <MailIcon className="size-4.5 text-blue-600" />
-            <span>Invite User to OmniPlatform</span>
+            <span>Invite User to Media360</span>
           </SheetTitle>
           <SheetDescription className="text-xs text-slate-500">
             Send an onboarding invitation and provision company access.
@@ -247,7 +247,7 @@ function InviteUserWizardDemo({
                   <div className="flex items-start gap-2 text-xs text-blue-900">
                     <AlertCircleIcon className="size-4 text-blue-600 shrink-0 mt-0.5" />
                     <div>
-                      <strong>This user already exists:</strong> {existingUser.identity.name} ({existingUser.identity.id}) is already registered on OmniPlatform with {existingUser.memberships.length} existing membership(s).
+                      <strong>This user already exists:</strong> {existingUser.identity.name} ({existingUser.identity.id}) is already registered on Media360 with {existingUser.memberships.length} existing membership(s).
                     </div>
                   </div>
                   <Button

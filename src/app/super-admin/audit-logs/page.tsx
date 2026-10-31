@@ -4,7 +4,7 @@ import { AuditOverviewPage } from "@/features/audit-logs/pages/overview";
 
 export const metadata: Metadata = {
   title: "Audit Logs",
-  description: "Review platform actions, security events and configuration changes across OmniPlatform.",
+  description: "Review platform actions, security events and configuration changes across Media360.",
 };
 
 export default function Page() {

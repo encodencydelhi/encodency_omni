@@ -282,11 +282,11 @@ function ContentEmptyState({ status, filtered, onClear }: { status: PostStatus |
   const copy: Record<PostStatus | "all", { icon: ComponentType<{ className?: string }>; title: string; description: string; cta?: "create" | "schedule" }> = {
     all: { icon: XLogo, title: "No posts yet", description: "Everything you write, schedule or publish to X will live here.", cta: "create" },
     published: { icon: XLogo, title: "Nothing published yet", description: "Published posts and their performance appear here once your first post goes out.", cta: "create" },
-    draft: { icon: FileText, title: "No drafts", description: "Drafts are OmniPlatform-only — nothing is sent to X until you publish or schedule them.", cta: "create" },
+    draft: { icon: FileText, title: "No drafts", description: "Drafts are Media360-only — nothing is sent to X until you publish or schedule them.", cta: "create" },
     scheduled: { icon: CalendarClock, title: "Nothing scheduled", description: "Queue posts ahead so the account keeps a steady rhythm.", cta: "schedule" },
     publishing: { icon: CalendarClock, title: "Nothing publishing", description: "Posts currently being sent to X appear here for the few seconds it takes." },
     failed: { icon: XCircle, title: "No failed posts", description: "Posts that X rejects show up here with the reason and a way to retry." },
-    archived: { icon: Archive, title: "Nothing archived", description: "Archiving hides a post from your working views in OmniPlatform. It stays live on X." },
+    archived: { icon: Archive, title: "Nothing archived", description: "Archiving hides a post from your working views in Media360. It stays live on X." },
   };
 
   const meta = copy[status];

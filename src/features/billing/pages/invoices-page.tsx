@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Invoices Page
+ * Media360 - Super Admin Invoices Page
  */
 
 "use client";

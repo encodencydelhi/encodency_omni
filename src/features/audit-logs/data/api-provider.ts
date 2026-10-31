@@ -122,7 +122,7 @@ export function toAuditEvent(item: SuperAdminAuditLogItem): AuditEvent {
     workflowStage: null,
     securityView: item.securityView,
     related: [],
-    technical: { ipAddress: item.ipAddress, userAgent: item.userAgent, sessionRef: null, producerService: "OmniPlatform backend", ingestion: "Written in the same transaction as the change" },
+    technical: { ipAddress: item.ipAddress, userAgent: item.userAgent, sessionRef: null, producerService: "Media360 backend", ingestion: "Written in the same transaction as the change" },
     integrity: { status: "verified", note: "The database refuses any edit or delete of an audit record." },
     followUp: null,
   };
@@ -224,7 +224,7 @@ export const apiAuditProvider: AuditRepository = {
       recentSensitive: live.recentSensitive.map(toAuditEvent),
       lastRecordedAt: live.lastRecordedAt,
       source: {
-        dataSource: "OmniPlatform audit log (PostgreSQL)",
+        dataSource: "Media360 audit log (PostgreSQL)",
         ingestion: "Recorded in the same transaction as each change",
         collection: `${live.totalRecorded.toLocaleString()} records in total`,
         lastReceivedAt: live.lastRecordedAt,
@@ -329,7 +329,7 @@ export const apiAuditProvider: AuditRepository = {
         loggedExports: exported.total,
       },
       status: {
-        dataSource: "OmniPlatform audit log (PostgreSQL)",
+        dataSource: "Media360 audit log (PostgreSQL)",
         ingestion: "Recorded in the same transaction as each change",
         collection: `${coverage.totalRecorded.toLocaleString()} records in total`,
         lastReceivedAt: coverage.lastRecordedAt,

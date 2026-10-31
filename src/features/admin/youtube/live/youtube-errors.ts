@@ -20,7 +20,7 @@ export type YouTubeErrorAction =
   | "wait"
   /** The role lacks the RBAC capability. */
   | "request_access"
-  /** Nothing the user can do in OmniPlatform (e.g. do it in YouTube Studio). */
+  /** Nothing the user can do in Media360 (e.g. do it in YouTube Studio). */
   | "none";
 
 export interface YouTubeErrorInfo {
@@ -57,7 +57,7 @@ const TABLE: Record<string, Entry> = {
   youtube_reconnect_required: E("Reconnect YouTube", "The YouTube connection has expired or was revoked. Reconnect to continue.", "reconnect"),
   youtube_quota_exceeded: E("YouTube quota reached", "The daily YouTube API quota is used up. Cached data still works; try again after the quota resets.", "wait"),
   youtube_rate_limited: E("Too many requests", "YouTube is limiting requests right now. Wait a moment and try again.", "wait", true),
-  youtube_provider_unreachable: E("YouTube is unreachable", "OmniPlatform couldn't reach YouTube. Try again in a moment.", "retry", true),
+  youtube_provider_unreachable: E("YouTube is unreachable", "Media360 couldn't reach YouTube. Try again in a moment.", "retry", true),
   youtube_provider_error: E("YouTube returned an error", "YouTube couldn't complete the request. Try again later.", "retry", true),
   youtube_provider_not_configured: E("YouTube isn't configured", "The YouTube integration isn't set up on this platform yet.", "none"),
   youtube_sync_too_soon: E("Synced a moment ago", "The channel was just synced. Try again in a minute.", "wait"),

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { IssuesPage } from "@/features/integrations";
 
 export const metadata: Metadata = {
-  title: "Integration Issues & Incidents | EnCodency OmniPlatform Super Admin",
+  title: "Integration Issues & Incidents | Media360 Super Admin",
   description: "Platform-wide integration incident investigation, provider outages, and authorization failures.",
 };
 

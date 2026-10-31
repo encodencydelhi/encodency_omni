@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { IntegrationsOverviewPage } from "@/features/integrations";
 
 export const metadata: Metadata = {
-  title: "Platform Integrations Overview | EnCodency OmniPlatform",
+  title: "Platform Integrations Overview | Media360",
   description: "Manage platform providers, connection health, capabilities and external service availability.",
 };
 

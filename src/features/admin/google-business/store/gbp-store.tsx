@@ -261,7 +261,7 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
           setNotConnected((err as GbpNotConnectedError).detail);
           setStatus("not_connected");
         } else {
-          setError("OmniPlatform could not load Google Business data.");
+          setError("Media360 could not load Google Business data.");
           setStatus("error");
         }
       });
@@ -306,7 +306,7 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     (event: Omit<ActivityEvent, "id" | "at" | "actor" | "source"> & { source?: ActivityEvent["source"] }) => {
       patchSnapshot((prev) => ({
         ...prev,
-        activity: [{ id: uid("act"), at: nowIso(), actor: live.current.currentUser.name, source: "OmniPlatform", ...event }, ...prev.activity],
+        activity: [{ id: uid("act"), at: nowIso(), actor: live.current.currentUser.name, source: "Media360", ...event }, ...prev.activity],
       }));
     },
     [patchSnapshot],
@@ -475,12 +475,12 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
       const location = live.current.snapshot?.locations.find((l) => l.locationId === locationId);
       if (!location) return false;
       return perform(
-        { pending: managed ? "Enabling management..." : "Disabling management...", success: managed ? "Location is now managed in OmniPlatform" : "Location is no longer managed here", requiresWrite: false },
+        { pending: managed ? "Enabling management..." : "Disabling management...", success: managed ? "Location is now managed in Media360" : "Location is no longer managed here", requiresWrite: false },
         () => {
           patchSnapshot((prev) => ({ ...prev, locations: prev.locations.map((l) => (l.locationId === locationId ? { ...l, managed } : l)) }));
           log({
             action: "permission_change",
-            summary: managed ? "Enabled OmniPlatform management" : "Disabled OmniPlatform management",
+            summary: managed ? "Enabled Media360 management" : "Disabled Media360 management",
             entity: { type: "location", id: locationId, label: location.profile.title },
             locationId,
           });

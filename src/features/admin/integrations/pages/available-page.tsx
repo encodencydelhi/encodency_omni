@@ -240,7 +240,7 @@ function AboutSheet({ provider, onOpenChange }: { provider: IntegrationProvider 
               </div>
               {provider.permissions.length > 0 && (
                 <div>
-                  <p className="mb-1 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">What OmniPlatform will ask for</p>
+                  <p className="mb-1 text-[11.5px] font-semibold uppercase tracking-[0.04em] text-[#6B7890]">What Media360 will ask for</p>
                   <ul className="divide-y divide-[#EEF1F5] rounded-sm border border-[#E4E9F0]">
                     {provider.permissions.map((permission) => (
                       <li key={permission.key} className="px-3 py-2">

@@ -428,7 +428,7 @@ export function PostCreatePage() {
                   }}
                 />
                 <p className="text-[12px] text-[#5F6368]">Google shows one photo per post. Landscape images of at least 720x540 look best.</p>
-                {draft.media.length > 1 && <Notice tone="amber" title="Only the first photo is published">Google uses a single image per post. The rest stay in OmniPlatform for reference.</Notice>}
+                {draft.media.length > 1 && <Notice tone="amber" title="Only the first photo is published">Google uses a single image per post. The rest stay in Media360 for reference.</Notice>}
               </>
             )}
 
@@ -464,8 +464,8 @@ export function PostCreatePage() {
 
             {step === "Schedule" && (
               <>
-                <Notice tone="violet" icon={Sparkles} title={<span className="flex items-center gap-2">Scheduling is an OmniPlatform feature <InternalBadge /></span>}>
-                  The Google API publishes immediately, so OmniPlatform holds scheduled posts and publishes them at the chosen time.
+                <Notice tone="violet" icon={Sparkles} title={<span className="flex items-center gap-2">Scheduling is an Media360 feature <InternalBadge /></span>}>
+                  The Google API publishes immediately, so Media360 holds scheduled posts and publishes them at the chosen time.
                 </Notice>
                 {needsApproval && (
                   <Notice tone="amber" title="This post needs approval first">
@@ -474,7 +474,7 @@ export function PostCreatePage() {
                 )}
                 <div className="space-y-2">
                   <ChoiceCard name="publish-mode" checked={draft.publishMode === "now"} onSelect={() => set("publishMode", "now")} icon={Send} title="Publish now" description="Goes live on Google as soon as you confirm." />
-                  <ChoiceCard name="publish-mode" checked={draft.publishMode === "schedule"} onSelect={() => set("publishMode", "schedule")} icon={CalendarClock} title="Schedule" description="OmniPlatform publishes it at the time you choose." />
+                  <ChoiceCard name="publish-mode" checked={draft.publishMode === "schedule"} onSelect={() => set("publishMode", "schedule")} icon={CalendarClock} title="Schedule" description="Media360 publishes it at the time you choose." />
                   {draft.publishMode === "schedule" && (
                     <div className="ml-7 grid gap-1 sm:grid-cols-2">
                       <FormField label="Date" htmlFor="post-date">
@@ -485,7 +485,7 @@ export function PostCreatePage() {
                       </FormField>
                     </div>
                   )}
-                  <ChoiceCard name="publish-mode" checked={draft.publishMode === "draft"} onSelect={() => set("publishMode", "draft")} icon={MessageSquare} title="Keep as draft" description="Save in OmniPlatform without sending anything to Google." />
+                  <ChoiceCard name="publish-mode" checked={draft.publishMode === "draft"} onSelect={() => set("publishMode", "draft")} icon={MessageSquare} title="Keep as draft" description="Save in Media360 without sending anything to Google." />
                 </div>
               </>
             )}

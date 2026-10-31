@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Financial Capabilities
+ * Media360 - Financial Capabilities
  * Role and permission mappings for Super Admin billing operations.
  */
 

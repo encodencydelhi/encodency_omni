@@ -51,7 +51,7 @@ export function UsersFilterToolbar({
   companyOptions,
 }: UsersFilterToolbarProps) {
   const handleExport = () => {
-    exportUsersToCsv(filteredUsers, `omniplatform-users-${new Date().toISOString().split("T")[0]}.csv`);
+    exportUsersToCsv(filteredUsers, `media360-users-${new Date().toISOString().split("T")[0]}.csv`);
   };
 
   return (

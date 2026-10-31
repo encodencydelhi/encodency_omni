@@ -237,7 +237,7 @@ function NeedsAttentionCard({ className, onOpenAll }: { className?: string; onOp
     <Card className={cn("flex flex-col", className)}>
       <CardHeader
         title="Needs attention"
-        badge={<InternalBadge hint="Issues detected by OmniPlatform from your synced Google data." />}
+        badge={<InternalBadge hint="Issues detected by Media360 from your synced Google data." />}
         description={issues.length ? `${high} high priority of ${issues.length} open issues` : "Everything looks healthy"}
         actions={
           <Button size="xs" variant="link" onClick={onOpenAll}>
@@ -347,7 +347,7 @@ function ProfileHealthCard({ className, onOpenDetails }: { className?: string; o
     <Card className={cn("flex flex-col", className)}>
       <CardHeader
         title="Profile health"
-        badge={<InternalBadge label="OmniPlatform Profile Health" hint="Calculated by OmniPlatform. Not a Google score." />}
+        badge={<InternalBadge label="Media360 Profile Health" hint="Calculated by Media360. Not a Google score." />}
         description={location ? location.profile.title : "Average across all locations"}
         actions={
           <Button size="xs" variant="link" onClick={onOpenDetails}>
@@ -644,7 +644,7 @@ function RecentActivityCard({ className }: { className?: string }) {
     <Card className={className}>
       <CardHeader
         title="Recent activity"
-        badge={<InternalBadge label="OmniPlatform log" />}
+        badge={<InternalBadge label="Media360 log" />}
         actions={<ViewLink href={`${gbRoutes.settings}#activity`}>Full log</ViewLink>}
       />
       <ul className="space-y-2.5 px-4 pb-4">

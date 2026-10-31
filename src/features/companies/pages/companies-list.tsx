@@ -189,7 +189,7 @@ export function CompaniesListPage() {
     <div className="space-y-3">
       <PageHeader
         title="Companies"
-        description="Manage organizations, subscriptions, usage and tenant health across OmniPlatform."
+        description="Manage organizations, subscriptions, usage and tenant health across Media360."
         actions={
           <>
             {capabilities.canExportCompanyData ? (
@@ -319,7 +319,7 @@ export function CompaniesListPage() {
                       getRowId={(summary) => summary.company.id}
                       isLoading={false}
                       isFetching={list.isFetching}
-                      caption="Companies on OmniPlatform"
+                      caption="Companies on Media360"
                       sort={table.sort}
                       onToggleSort={table.toggleSort}
                       pagination={list.data?.pagination}

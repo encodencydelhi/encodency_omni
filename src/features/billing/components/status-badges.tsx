@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Financial Semantic Status Badges
+ * Media360 - Financial Semantic Status Badges
  * Compact, modern badges with rounded-sm and minimum 12px text size.
  */
 

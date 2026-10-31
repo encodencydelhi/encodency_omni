@@ -2,7 +2,7 @@
  * The one seam between the UI and wherever Google Business data comes from.
  *
  * Today:   UI -> repository -> mock provider (local state)
- * Later:   UI -> repository -> OmniPlatform backend -> Google Business Profile API
+ * Later:   UI -> repository -> Media360 backend -> Google Business Profile API
  *
  * Components never import the mock provider directly, so connecting the backend
  * means implementing `GbpProvider` once - no page or component changes.
@@ -27,7 +27,7 @@ export interface GbpProvider {
   loadSnapshot(base: GbpSnapshot): Promise<GbpSnapshot>;
   /**
    * Write seam. The mock provider only simulates latency and failures; the live
-   * provider will POST to the OmniPlatform backend and return its response.
+   * provider will POST to the Media360 backend and return its response.
    */
   commit<T>(context: MutationContext, apply: () => T): Promise<T>;
 }

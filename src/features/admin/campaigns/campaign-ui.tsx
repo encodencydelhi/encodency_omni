@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 import { ChannelLogo } from "@/features/admin/shared/channel-logo";
+import { Label } from "@/components/ui/label";
 
 /** "APP_PROMOTION" -> "App promotion". */
 export function humanize(value: string | null | undefined): string {
@@ -38,5 +39,25 @@ export function Section({ title, icon: Icon, action, children, className }: { ti
       </div>
       <div className="p-3.5">{children}</div>
     </section>
+  );
+}
+
+/** Label + control + hint/error. Kept here so the Company Admin panel does not import tenant-management code. */
+export function Field({ label, htmlFor, required, hint, error, children, className }: { label: string; htmlFor: string; required?: boolean; hint?: ReactNode; error?: string | null; children: ReactNode; className?: string }) {
+  return (
+    <div className={cn("space-y-1", className)}>
+      <Label htmlFor={htmlFor} className="text-[0.8125rem]">
+        {label}
+        {required ? <span className="ml-0.5 text-danger" aria-hidden>*</span> : null}
+      </Label>
+      {children}
+      {error ? (
+        <p id={`${htmlFor}-error`} role="alert" className="text-2xs text-danger">
+          {error}
+        </p>
+      ) : hint ? (
+        <p className="text-2xs text-muted-foreground">{hint}</p>
+      ) : null}
+    </div>
   );
 }

@@ -83,7 +83,7 @@ async function requestUsagePage<T, Meta = Record<string, never>>(
 
 /**
  * 100% Live Backend Provider for Super Admin Usage & Limits.
- * Connects directly to OmniPlatform backend NestJS endpoints.
+ * Connects directly to Media360 backend NestJS endpoints.
  * Never invents synthetic data or silently falls back to mock snapshots.
  */
 export const liveUsageProvider: UsageRepository = {

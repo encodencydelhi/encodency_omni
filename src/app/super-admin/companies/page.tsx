@@ -4,7 +4,7 @@ import { CompaniesListPage } from "@/features/companies/pages/companies-list";
 
 export const metadata: Metadata = {
   title: "Companies",
-  description: "Manage organizations, subscriptions, usage and tenant health across OmniPlatform.",
+  description: "Manage organizations, subscriptions, usage and tenant health across Media360.",
 };
 
 export default function CompaniesPage() {

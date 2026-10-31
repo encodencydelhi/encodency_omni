@@ -172,7 +172,7 @@ function UsersListContent() {
   };
 
   const handleExportAll = () => {
-    exportUsersToCsv(users, `omniplatform-users-${new Date().toISOString().split("T")[0]}.csv`);
+    exportUsersToCsv(users, `media360-users-${new Date().toISOString().split("T")[0]}.csv`);
   };
 
   return (

@@ -213,7 +213,7 @@ export function PaymentMethodFlow({ role, onClose }: { role: "primary" | "backup
           <p className="flex items-start gap-1.5 text-[11.5px] leading-4 text-[#6B7890]">
             <Lock className="mt-px size-3 shrink-0" />
             {type === "card"
-              ? "Card details go straight to our payment partner and are never stored by OmniPlatform. A ₹2 verification charge may appear and is reversed immediately."
+              ? "Card details go straight to our payment partner and are never stored by Media360. A ₹2 verification charge may appear and is reversed immediately."
               : "The mandate lets us collect renewals automatically. You can revoke it from your UPI app at any time."}
           </p>
           {BILLING_MOCK_MODE && type === "card" && (

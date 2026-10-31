@@ -28,9 +28,9 @@ function assess(snapshot: WebhooksSnapshot, delivery: Delivery) {
 
 describe("destination URL validation", () => {
   it("accepts a normal HTTPS URL and strips nothing sensitive", () => {
-    const result = checkDestinationUrl("https://hooks.example.com/omniplatform", "production");
+    const result = checkDestinationUrl("https://hooks.example.com/media360", "production");
     assert.equal(result.ok, true);
-    assert.equal(result.sanitizedUrl, "https://hooks.example.com/omniplatform");
+    assert.equal(result.sanitizedUrl, "https://hooks.example.com/media360");
   });
 
   it("requires HTTPS in production but only warns in development", () => {

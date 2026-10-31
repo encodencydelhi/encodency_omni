@@ -113,7 +113,7 @@ function LoadErrorState({ onRetry }: { onRetry: () => void }) {
       <EmptyState
         icon={AlertTriangle}
         title="We couldn't load your X data"
-        description="OmniPlatform couldn't reach its X data service. Your account on X isn't affected — nothing has changed there."
+        description="Media360 couldn't reach its X data service. Your account on X isn't affected — nothing has changed there."
         action={
           <Button variant="primary" icon={RefreshCw} onClick={onRetry}>
             Try again
@@ -137,7 +137,7 @@ function DisconnectedState() {
       <EmptyState
         icon={XLogo}
         title="Connect your X account"
-        description="Connect an account to publish posts, run the engagement inbox, track audience growth and report on performance from OmniPlatform. You'll sign in with X and choose which permissions to grant."
+        description="Connect an account to publish posts, run the engagement inbox, track audience growth and report on performance from Media360. You'll sign in with X and choose which permissions to grant."
         action={
           <Button
             variant="dark"
@@ -463,7 +463,7 @@ function ConnectionBanner() {
       <Strip
         tone="red"
         icon={ShieldAlert}
-        title="X needs you to re-authorise OmniPlatform"
+        title="X needs you to re-authorise Media360"
         body="X has asked for fresh consent for this app. Reading works; publishing and replying are paused until you re-authorise."
       >
         {reconnectButton}
@@ -477,7 +477,7 @@ function ConnectionBanner() {
         tone="amber"
         icon={ShieldAlert}
         title={`${6 - scopes.length} X permission${6 - scopes.length === 1 ? "" : "s"} missing`}
-        body="Some actions are unavailable until OmniPlatform is granted the permissions it needs on X."
+        body="Some actions are unavailable until Media360 is granted the permissions it needs on X."
       >
         <Button size="sm" variant="secondary" href={`${xRoutes.settings}#permissions`}>
           Review permissions

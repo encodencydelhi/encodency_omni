@@ -221,7 +221,7 @@ function Settings() {
             </div>
           </Section>
 
-          <Section id="defaults" title="Defaults" icon={SlidersHorizontal} badge={<InternalBadge label="OmniPlatform defaults" />} description="Pre-filled when your team creates posts and replies.">
+          <Section id="defaults" title="Defaults" icon={SlidersHorizontal} badge={<InternalBadge label="Media360 defaults" />} description="Pre-filled when your team creates posts and replies.">
             <fieldset disabled={!editable} className="grid gap-1 sm:grid-cols-2">
               <FormField label="Default post button">
                 <SelectMenu<CtaType>
@@ -370,7 +370,7 @@ function Settings() {
                           <td className={cn(tdClass, "pl-4 font-medium text-[#202124]")}>{row.label}</td>
                           <td className={cn(tdClass, "text-[11.5px] text-[#5F6368]")}>{row.note}</td>
                           <td className={cn(tdClass, "pr-4")}>
-                            {row.googleSupported ? <Badge tone="green">Supported</Badge> : <InternalBadge label="OmniPlatform" />}
+                            {row.googleSupported ? <Badge tone="green">Supported</Badge> : <InternalBadge label="Media360" />}
                           </td>
                         </tr>
                       ))}
@@ -505,7 +505,7 @@ function LocationsSection() {
       id="locations"
       title="Locations"
       icon={MapPin}
-      description="Turn OmniPlatform management off for a location to keep it read-only here."
+      description="Turn Media360 management off for a location to keep it read-only here."
       actions={
         <Button size="sm" variant="secondary" href={gbRoutes.locations}>
           Open locations
@@ -529,7 +529,7 @@ function LocationsSection() {
               <Switch
                 checked={location.managed}
                 disabled={!can.canManageLocations.allowed || pending === location.locationId}
-                aria-label={`Manage ${location.profile.title} in OmniPlatform`}
+                aria-label={`Manage ${location.profile.title} in Media360`}
                 onCheckedChange={async (checked) => {
                   setPending(location.locationId);
                   await setLocationManaged(location.locationId, checked);
@@ -555,7 +555,7 @@ function PermissionsSection() {
       id="permissions"
       title="Permissions"
       icon={KeyRound}
-      description="Google permissions granted to OmniPlatform for this account."
+      description="Google permissions granted to Media360 for this account."
       actions={
         missing.includes("business.manage") ? (
           <Button
@@ -702,8 +702,8 @@ function ActivitySection() {
       id="activity"
       title="Activity log"
       icon={Activity}
-      badge={<InternalBadge label="OmniPlatform" />}
-      description="Every change made to this Google Business account through OmniPlatform."
+      badge={<InternalBadge label="Media360" />}
+      description="Every change made to this Google Business account through Media360."
       actions={
         <>
           <SelectMenu
@@ -801,7 +801,7 @@ function ActivitySection() {
                   )}
                 </td>
                 <td className={cn(tdClass, "pr-4")}>
-                  <Badge tone={event.source === "OmniPlatform" ? "violet" : "neutral"}>{event.source}</Badge>
+                  <Badge tone={event.source === "Media360" ? "violet" : "neutral"}>{event.source}</Badge>
                 </td>
               </tr>
             ))}
@@ -913,7 +913,7 @@ function DangerSection() {
         <div className="min-w-[240px] flex-1">
           <p className="text-[13px] font-medium text-[#202124]">Disconnect Google Business</p>
           <p className="mt-0.5 text-[12.5px] leading-5 text-[#5F6368]">
-            Stops syncing and revokes OmniPlatform access. Scheduled posts will not publish. Your Google Business Profile itself is not affected.
+            Stops syncing and revokes Media360 access. Scheduled posts will not publish. Your Google Business Profile itself is not affected.
           </p>
         </div>
         <Button variant="dangerSolid" icon={Unplug} gate={can.canManageConnection} disabled={connection.state === "disconnected"} disabledReason="No account is connected" onClick={() => setOpen(true)}>
@@ -924,11 +924,11 @@ function DangerSection() {
         open={open}
         onOpenChange={setOpen}
         title={`Disconnect ${account?.accountName ?? "this account"}?`}
-        description="OmniPlatform loses access to every location on this account until someone reconnects it."
+        description="Media360 loses access to every location on this account until someone reconnects it."
         affected={[
           "Sync stops and cached data freezes",
           "Scheduled posts and approvals are paused",
-          "Team members lose Google Business actions in OmniPlatform",
+          "Team members lose Google Business actions in Media360",
           "Locations, reviews and photos on Google are not deleted",
         ]}
         confirmText="DISCONNECT"

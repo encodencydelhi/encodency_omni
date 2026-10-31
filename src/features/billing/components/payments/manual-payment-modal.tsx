@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Record Manual Payment Modal
+ * Media360 - Record Manual Payment Modal
  * Safe offline/bank wire payment logging in Pending Verification state.
  */
 

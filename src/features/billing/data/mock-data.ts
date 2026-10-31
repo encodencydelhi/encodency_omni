@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Billing & Payments Seeded Dataset
+ * Media360 - Billing & Payments Seeded Dataset
  * Fully synchronized with platform tenants, plans, subscriptions, and financial activity.
  */
 
@@ -28,7 +28,7 @@ export const INITIAL_BILLING_POLICIES: BillingPolicies = {
   refundMaxInstantThresholdMinor: 500000, // ₹5,000.00
   requireTwoPersonApprovalForLargeRefunds: true,
   highImpactThresholdMinor: 10000000, // ₹1,00,000.00
-  disclaimerText: "EnCodency OmniPlatform Financial Simulator. All transactions and documents generated in this demo environment represent simulated financial events.",
+  disclaimerText: "Media360 Financial Simulator. All transactions and documents generated in this demo environment represent simulated financial events.",
 };
 
 export const INITIAL_BILLING_ACCOUNTS: BillingAccount[] = [
@@ -265,7 +265,7 @@ export const INITIAL_INVOICES: Invoice[] = [
     lineItems: [
       {
         id: "li_101_1",
-        description: "EnCodency OmniPlatform - Growth Plan (Sep 1 - Sep 30, 2026)",
+        description: "Media360 - Growth Plan (Sep 1 - Sep 30, 2026)",
         quantity: 1,
         unitPriceMinor: 999900,
         discountMinor: 0,
@@ -313,7 +313,7 @@ export const INITIAL_INVOICES: Invoice[] = [
     lineItems: [
       {
         id: "li_102_1",
-        description: "EnCodency OmniPlatform - Growth Tier (Monthly Subscription)",
+        description: "Media360 - Growth Tier (Monthly Subscription)",
         quantity: 1,
         unitPriceMinor: 999900,
         discountMinor: 0,
@@ -409,7 +409,7 @@ export const INITIAL_INVOICES: Invoice[] = [
     lineItems: [
       {
         id: "li_104_1",
-        description: "EnCodency OmniPlatform - Growth Tier",
+        description: "Media360 - Growth Tier",
         quantity: 1,
         unitPriceMinor: 14900,
         discountMinor: 0,

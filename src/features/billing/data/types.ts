@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Billing & Payments Data Types
+ * Media360 - Super Admin Billing & Payments Data Types
  * Enterprise-grade financial contracts, lifecycle states and multi-currency domain models.
  */
 

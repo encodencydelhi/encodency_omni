@@ -41,7 +41,7 @@ describe("mock data shape", () => {
     for (const item of snapshot.media) assert.ok(MEDIA_CATEGORIES.includes(item.category), `${item.category} is not a Google media category`);
   });
 
-  it("exercises every post state, including the OmniPlatform workflow ones", () => {
+  it("exercises every post state, including the Media360 workflow ones", () => {
     const states = new Set<PostState>(snapshot.posts.map((post) => post.state));
     for (const state of ["draft", "pending_approval", "scheduled", "published", "failed"] as PostState[]) {
       assert.ok(states.has(state), `no mock post is in the ${state} state`);
@@ -78,10 +78,10 @@ describe("mock data shape", () => {
     assert.ok(snapshot.team.some((member) => member.role === "owner"));
   });
 
-  it("stamps activity entries with a source so Google sync is distinguishable from OmniPlatform edits", () => {
+  it("stamps activity entries with a source so Google sync is distinguishable from Media360 edits", () => {
     assert.ok(snapshot.activity.length > 0);
     for (const event of snapshot.activity) {
-      assert.ok(["OmniPlatform", "Google sync"].includes(event.source));
+      assert.ok(["Media360", "Google sync"].includes(event.source));
       assert.ok(event.summary.length > 0);
       if (event.locationId) assert.ok(locationIds.has(event.locationId));
     }

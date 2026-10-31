@@ -6,7 +6,7 @@ import { AcceptStaffInvitationView } from "@/features/auth/components/accept-sta
 
 export const metadata: Metadata = {
   title: "Accept staff invitation",
-  description: "Create your EnCodency omniPlatform staff account from an invitation.",
+  description: "Create your Media360 staff account from an invitation.",
   // The URL carries a one-time token; keep it out of referrers.
   referrer: "no-referrer",
 };

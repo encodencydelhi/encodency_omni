@@ -287,7 +287,7 @@ function PermissionsSection() {
     setBusy(null);
   };
   return (
-    <Section id="permissions" title="Permissions" icon={KeyRound} description="Google permissions granted to OmniPlatform for this channel. Each can be granted on its own.">
+    <Section id="permissions" title="Permissions" icon={KeyRound} description="Google permissions granted to Media360 for this channel. Each can be granted on its own.">
       {missing.length > 0 && <Notice tone="amber" className="mb-3" title={`${missing.length} permission${missing.length > 1 ? "s" : ""} missing`}>Actions that need these permissions are disabled until you grant them. Granting one keeps the others.</Notice>}
       <ul className="grid gap-2 sm:grid-cols-2">
         {GRANTED_KEYS.map((key) => {
@@ -385,7 +385,7 @@ function DangerSection() {
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4">
         <div className="min-w-[240px] flex-1">
           <p className="text-[13px] font-semibold text-[#0F1B3D]">Disconnect YouTube</p>
-          <p className="mt-0.5 text-[12.5px] leading-5 text-[#6B7890]">Removes the company&apos;s YouTube connection, so every client that uses it loses access in OmniPlatform. Scheduled publishes from OmniPlatform won&apos;t run. Your videos on YouTube aren&apos;t affected.</p>
+          <p className="mt-0.5 text-[12.5px] leading-5 text-[#6B7890]">Removes the company&apos;s YouTube connection, so every client that uses it loses access in Media360. Scheduled publishes from Media360 won&apos;t run. Your videos on YouTube aren&apos;t affected.</p>
         </div>
         <Button variant="dangerSolid" icon={Unplug} gate={can.canManageConnection} disabled={connection.state === "disconnected"} disabledReason="No channel is connected" onClick={() => setOpen(true)}>Disconnect YouTube</Button>
       </div>
@@ -393,8 +393,8 @@ function DangerSection() {
         open={open}
         onOpenChange={setOpen}
         title={`Disconnect “${channel.title}”?`}
-        description="OmniPlatform loses access to this company's YouTube account until someone reconnects it."
-        affected={["Syncing, publishing and replies stop for every client using this connection", "Scheduled OmniPlatform publishes won't run", "Videos, comments and playlists on YouTube are not deleted"]}
+        description="Media360 loses access to this company's YouTube account until someone reconnects it."
+        affected={["Syncing, publishing and replies stop for every client using this connection", "Scheduled Media360 publishes won't run", "Videos, comments and playlists on YouTube are not deleted"]}
         confirmText="DISCONNECT"
         confirmLabel="Disconnect YouTube"
         onConfirm={disconnect}

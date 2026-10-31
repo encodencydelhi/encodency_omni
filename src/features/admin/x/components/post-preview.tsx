@@ -3,7 +3,7 @@
 /**
  * A familiar social-post preview: avatar, name, handle, body, media, then a
  * row of engagement placeholders. Deliberately not a pixel copy of X — it uses
- * OmniPlatform's type scale and surfaces so it reads as part of this product.
+ * Media360's type scale and surfaces so it reads as part of this product.
  */
 
 import { BarChart3, Bookmark, Heart, MessageCircle, Repeat2 } from "lucide-react";

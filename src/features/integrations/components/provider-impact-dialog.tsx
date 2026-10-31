@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Provider High-Impact Confirmation Dialog
  * Shows exact blast radius: Affected Companies, Clients, Connections, Operations
  */

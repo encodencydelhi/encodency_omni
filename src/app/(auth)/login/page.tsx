@@ -6,7 +6,7 @@ import { LoginView } from "@/features/auth/components/login-view";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Sign in to the EnCodency omniPlatform administration panels.",
+  description: "Sign in to the Media360 administration panels.",
 };
 
 /** Matches the card's footprint so the panel does not shift once hydrated. */

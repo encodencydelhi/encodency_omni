@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Platform integration policy.
  *
  * Only settings the server really applies are here: the background job reads the first two, and issue detection reads the

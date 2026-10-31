@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Directory filter state. Initial values may come from the URL so header shortcuts deep-link into a
  * pre-filtered list; edits stay local to the page.
  */

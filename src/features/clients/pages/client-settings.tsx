@@ -180,12 +180,12 @@ function SettingsBody({ data }: { data: ClientSettingsData }) {
         </Panel>
       </div>
 
-      <Panel title="Ownership" description="Two different roles: the company's own lead for this client, and the OmniPlatform staff member who reviews it.">
+      <Panel title="Ownership" description="Two different roles: the company's own lead for this client, and the Media360 staff member who reviews it.">
         <div className="divide-y divide-border">
           <Row label="Client lead (company)" hint="Someone from the parent company. Set above or in Edit Client.">
             <p className="text-[0.8125rem] text-foreground">{summary.lead?.name ?? <span className="text-warning">Not assigned</span>}</p>
           </Row>
-          <Row label="Platform internal reviewer" hint="OmniPlatform staff only. Never shown to the company.">
+          <Row label="Platform internal reviewer" hint="Media360 staff only. Never shown to the company.">
             <Select
               value={summary.platformReviewer?.id ?? NONE}
               disabled={!canManage || busy === "reviewer"}

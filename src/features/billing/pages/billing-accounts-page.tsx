@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Billing Accounts Directory
+ * Media360 - Billing Accounts Directory
  * Platform-wide directory of company billing accounts, legal identities, and terms.
  */
 

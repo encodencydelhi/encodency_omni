@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { OutgoingEndpointsPage } from "@/features/webhooks/components/outgoing-lists";
 
 export const metadata: Metadata = {
-  title: "Outgoing Endpoints | Webhooks | EnCodency OmniPlatform Super Admin",
+  title: "Outgoing Endpoints | Webhooks | Media360 Super Admin",
   description: "Outgoing webhook endpoints and event subscriptions.",
 };
 

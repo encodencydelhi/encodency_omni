@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Financial Money Utilities
+ * Media360 - Financial Money Utilities
  * Safe integer minor unit arithmetic, ISO currency formatters and multi-currency guards.
  */
 

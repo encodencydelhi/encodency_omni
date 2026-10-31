@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Financial Activity Page
+ * Media360 - Financial Activity Page
  * Platform-wide immutable audit log of billing events, allocations, adjustments and reviews.
  */
 

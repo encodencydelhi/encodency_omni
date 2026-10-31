@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Official Provider Brand Logos using React Icons (Font Awesome & Simple Icons)
  * High-fidelity brand marks for Meta, Instagram, Facebook, LinkedIn, Google Business, WhatsApp, YouTube, X, GA4, GSC, Cloudinary
  */

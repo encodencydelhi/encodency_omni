@@ -201,7 +201,7 @@ function SettingsBody() {
       )}
 
       {connected && (
-        <Section title="Disconnect" description="Stop OmniPlatform from using this Meta login.">
+        <Section title="Disconnect" description="Stop Media360 from using this Meta login.">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-rose-200 bg-rose-50 p-4">
             <p className="max-w-xl text-xs font-medium leading-relaxed text-rose-900">
               Disconnecting removes the saved login and unlinks every Page and Instagram account from this Company&apos;s Clients. Nothing is deleted from Meta. You can connect again at any time.
@@ -230,10 +230,10 @@ function SettingsBody() {
           </HelpItem>
           <HelpItem title="Why does Meta say it is limiting requests?">
             <p>
-              Every ad account has a request budget. Apps with <strong>development access</strong> get a very small one, and a large account (hundreds of campaigns and ads) can use it up with a few page loads. OmniPlatform already keeps a copy, never asks Meta twice for the same data within a few minutes and stops calling while Meta says to wait. The permanent fix is <strong>Standard access</strong> for the Ads API: in Meta for Developers → App Review → Permissions and features, request <code className="rounded bg-slate-100 px-1">ads_read</code> (and <code className="rounded bg-slate-100 px-1">ads_management</code> if you will manage ads), complete Business Verification, and submit a short screencast.
+              Every ad account has a request budget. Apps with <strong>development access</strong> get a very small one, and a large account (hundreds of campaigns and ads) can use it up with a few page loads. Media360 already keeps a copy, never asks Meta twice for the same data within a few minutes and stops calling while Meta says to wait. The permanent fix is <strong>Standard access</strong> for the Ads API: in Meta for Developers → App Review → Permissions and features, request <code className="rounded bg-slate-100 px-1">ads_read</code> (and <code className="rounded bg-slate-100 px-1">ads_management</code> if you will manage ads), complete Business Verification, and submit a short screencast.
             </p>
           </HelpItem>
-          <HelpItem title="What personal-profile data can OmniPlatform show?">
+          <HelpItem title="What personal-profile data can Media360 show?">
             <p>
               Your name, photo, user ID, which permissions you granted, how long the login stays valid, and (with <code className="rounded bg-slate-100 px-1">business_management</code>) your Business portfolios. Friends, personal posts, likes and birthday are never available to business apps without special Meta approval, so they are not shown.
             </p>

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Billing Account Detail Page
+ * Media360 - Billing Account Detail Page
  * Scoped view of company financial identity, preferences, invoices, payments, and credit ledger.
  */
 

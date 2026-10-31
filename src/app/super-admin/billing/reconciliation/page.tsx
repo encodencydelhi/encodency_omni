@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ReconciliationPage } from "@/features/billing";
 
 export const metadata: Metadata = {
-  title: "Reconciliation & Issues | EnCodency OmniPlatform Super Admin",
+  title: "Reconciliation & Issues | Media360 Super Admin",
   description: "Operational financial discrepancy and exception queue.",
 };
 

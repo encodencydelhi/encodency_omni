@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { BillingOverviewPage } from "@/features/billing";
 
 export const metadata: Metadata = {
-  title: "Billing & Payments Overview | EnCodency OmniPlatform Super Admin",
+  title: "Billing & Payments Overview | Media360 Super Admin",
   description: "Platform-wide company billing, invoices, payments, credits and financial reconciliation.",
 };
 

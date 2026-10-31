@@ -456,7 +456,7 @@ function TrendInsights({ metrics, reviewsCount, label }: { metrics: ReturnType<t
       <Card className="xl:col-span-7">
         <CardHeader
           title="What changed"
-          badge={<InternalBadge label="OmniPlatform Insight" hint="Written by OmniPlatform from the Google metrics above. Not a Google feature." />}
+          badge={<InternalBadge label="Media360 Insight" hint="Written by Media360 from the Google metrics above. Not a Google feature." />}
           description={`${label} vs the previous period`}
         />
         <ul className="space-y-2 px-4 pb-4">
@@ -499,7 +499,7 @@ function TrendInsights({ metrics, reviewsCount, label }: { metrics: ReturnType<t
           <p className="flex items-start gap-1.5 border-t border-[#F1F3F4] pt-3 text-[11.5px] leading-4 text-[#5F6368]">
             <Sparkles className="mt-px size-3 shrink-0 text-[#8430CE]" />
             <span>
-              OmniPlatform insight: profiles with more than 10 photos and a reply rate above 80% usually convert impressions into directions at a higher rate. You have {reviewsCount} reviews synced.
+              Media360 insight: profiles with more than 10 photos and a reply rate above 80% usually convert impressions into directions at a higher rate. You have {reviewsCount} reviews synced.
             </span>
           </p>
         </div>

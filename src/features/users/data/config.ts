@@ -104,7 +104,7 @@ export const ALLOWED_COMPANY_ROLES = (Object.keys(ORGANISATION_ROLE) as Organisa
  * Generates and triggers download of a clean CSV export.
  * Excludes sensitive credentials, hashes, or platform tokens.
  */
-export function exportUsersToCsv(users: UserAggregate[], filename = "omniplatform-users.csv") {
+export function exportUsersToCsv(users: UserAggregate[], filename = "media360-users.csv") {
   const headers = [
     "User ID",
     "Full Name",
@@ -144,7 +144,7 @@ export function exportUsersToCsv(users: UserAggregate[], filename = "omniplatfor
 }
 
 /** Generates and triggers download of a JSON export. */
-export function exportUsersToJson(users: UserAggregate[], filename = "omniplatform-users.json") {
+export function exportUsersToJson(users: UserAggregate[], filename = "media360-users.json") {
   const sanitized = users.map((u) => ({
     id: u.identity.id,
     name: u.identity.name,

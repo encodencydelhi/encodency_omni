@@ -661,10 +661,10 @@ function TemplateDetail({ snapshot, id }: { snapshot: NotificationSnapshot; id?:
         <Title title="E-mail Layout" />
         <div className="p-4">
           <div className="max-w-lg rounded-lg border border-slate-200 bg-white p-4">
-            <p className="text-[10px] font-bold tracking-wider text-[#2563EB]">ENCODENCY OMNIPLATFORM</p>
+            <p className="text-[10px] font-bold tracking-wider text-[#2563EB]">MEDIA360</p>
             <p className="mt-1 text-base font-bold normal-case text-[#111C3A]">{v?.subject}</p>
             <p className="mt-2 whitespace-pre-line text-sm normal-case text-slate-600">{v?.body}</p>
-            <span className="mt-3 inline-block rounded-md bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white">Open in OmniPlatform</span>
+            <span className="mt-3 inline-block rounded-md bg-[#2563EB] px-3 py-1.5 text-xs font-bold text-white">Open in Media360</span>
           </div>
         </div>
       </Card>

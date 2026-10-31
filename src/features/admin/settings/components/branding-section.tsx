@@ -560,7 +560,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
             </div>
             <div>
               <h3 className="text-[13px] font-bold text-[#0F172A]">Live Branding Preview</h3>
-              <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">Real-time preview of your brand elements applied to OmniPlatform outputs.</p>
+              <p className="text-[10.5px] text-[#64748B] font-normal leading-relaxed">Real-time preview of your brand elements applied to Media360 outputs.</p>
             </div>
           </div>
 
@@ -608,7 +608,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
                 </div>
                 <div className="min-w-0">
                   <div className="text-[11px] font-bold truncate">{data.brandName || "Your Brand"}</div>
-                  <div className="text-[8.5px] text-slate-300 font-semibold">OmniPlatform Workspace</div>
+                  <div className="text-[8.5px] text-slate-300 font-semibold">Media360 Workspace</div>
                 </div>
               </div>
               <div className="space-y-1 text-[10px]">
@@ -714,7 +714,7 @@ export function BrandingSection({ data, onChange }: BrandingSectionProps) {
               </span>
             </div>
             <p className="text-[9.5px] text-amber-900 mt-0.5 leading-snug font-normal">
-              Hosting OmniPlatform on your own domain (for example <code className="bg-amber-100 px-1 rounded font-mono font-bold">portal.yourcompany.com</code>) is not self-serve yet. Raise a ticket from Help &amp; Support to ask for it.
+              Hosting Media360 on your own domain (for example <code className="bg-amber-100 px-1 rounded font-mono font-bold">portal.yourcompany.com</code>) is not self-serve yet. Raise a ticket from Help &amp; Support to ask for it.
             </p>
           </div>
         </div>

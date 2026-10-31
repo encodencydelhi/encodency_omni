@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Feature Root
+ * Media360 - Super Admin Integrations Feature Root
  */
 
 export * from "./data";

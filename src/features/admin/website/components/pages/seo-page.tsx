@@ -179,7 +179,7 @@ export function WebsiteSeoPage() {
           {tab === "overview" ? (
             <div className="space-y-1">
               <div className="grid gap-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-                <Card title="OmniPlatform SEO score" icon={Search} subtitle="Composite of every on-page check we run" bodyClassName="p-2.5">
+                <Card title="Media360 SEO score" icon={Search} subtitle="Composite of every on-page check we run" bodyClassName="p-2.5">
                   <div className="grid grid-cols-[1fr_1fr] items-stretch gap-2.5 h-full">
                     <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-[#E6EBF4] bg-gradient-to-br from-[#FAFCFF] to-[#F1F5F9] p-2.5 shadow-sm h-full">
                       {seo.data.overview.score === null ? (

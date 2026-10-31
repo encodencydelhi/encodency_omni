@@ -78,7 +78,7 @@ export function UsageOverviewPage() {
     <div className="space-y-3">
       <PageHeader
         title="Usage & Limits"
-        description="Monitor resource consumption, quota utilization, company limits and metering health across OmniPlatform."
+        description="Monitor resource consumption, quota utilization, company limits and metering health across Media360."
         meta={USAGE_MOCK_MODE ? <DemoTag>Demo usage data - nothing here is measured or enforced</DemoTag> : undefined}
         actions={
           <>

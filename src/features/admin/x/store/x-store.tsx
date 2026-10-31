@@ -104,7 +104,7 @@ export interface GuardRegistration {
 interface PerformOptions {
   pending: string;
   success: string;
-  /** Reads and OmniPlatform-only writes still work on an expired token. */
+  /** Reads and Media360-only writes still work on an expired token. */
   requiresX?: boolean;
   retry?: () => void;
 }
@@ -285,7 +285,7 @@ export function XProvider({ children }: { children: ReactNode }) {
             id: uid("ac"),
             at: nowIso(),
             actor: event.actor ?? live.current.currentUser.name,
-            source: event.source ?? "OmniPlatform",
+            source: event.source ?? "Media360",
             ...event,
           },
           ...current.activity,
@@ -423,7 +423,7 @@ export function XProvider({ children }: { children: ReactNode }) {
       const ok = await perform(
         {
           pending: input.intent === "publish" ? "Publishing to X…" : "Saving…",
-          // Saving a draft is entirely OmniPlatform's — it must work offline.
+          // Saving a draft is entirely Media360's — it must work offline.
           requiresX: input.intent === "publish",
           success: `${verb}${input.text.trim() ? `: “${postSummary(input.text, 44)}”` : ""}`,
         },
@@ -680,13 +680,13 @@ export function XProvider({ children }: { children: ReactNode }) {
       return perform(
         { pending: archived ? "Archiving…" : "Restoring…", success: archived ? "Archived" : "Restored", requiresX: false },
         async () => {
-          // Archive is OmniPlatform-only; the post is untouched on X.
+          // Archive is Media360-only; the post is untouched on X.
           const patch = await repository.updatePost(id, {
             status: archived ? "archived" : before.publishedAt ? "published" : "draft",
             archivedAt: archived ? nowIso() : null,
           });
           updatePostState(id, patch);
-          log({ action: "post_edited", summary: archived ? "Archived in OmniPlatform" : "Restored from archive", entity: { type: "post", id, label: postSummary(before.text, 48) } });
+          log({ action: "post_edited", summary: archived ? "Archived in Media360" : "Restored from archive", entity: { type: "post", id, label: postSummary(before.text, 48) } });
         },
       );
     },

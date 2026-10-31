@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Reactive In-Memory Billing Store
+ * Media360 - Reactive In-Memory Billing Store
  * Single source of truth managing all financial records, derived calculations, and mutations.
  */
 
@@ -695,7 +695,7 @@ class BillingStore {
     this.logActivity(
       "policy_updated",
       "platform",
-      "OmniPlatform Governance",
+      "Media360 Governance",
       "POL-BILLING",
       "Platform billing governance and invoicing policies updated",
     );

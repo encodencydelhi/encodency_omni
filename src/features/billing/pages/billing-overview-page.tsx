@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Billing Overview Page
+ * Media360 - Super Admin Billing Overview Page
  * High-density financial operations dashboard with live KPI aggregations.
  */
 

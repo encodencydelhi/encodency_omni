@@ -245,7 +245,7 @@ function PermissionsStep({ provider }: { provider: IntegrationProvider }) {
   return (
     <div className="mx-auto max-w-[620px] p-5">
       <p className="text-[13px] font-semibold text-[#0F1B3D]">Review permissions</p>
-      <p className="mt-0.5 text-[12.5px] text-[#6B7890]">What OmniPlatform will ask {provider.name} for, and why. You can decline optional ones on the provider&apos;s own screen.</p>
+      <p className="mt-0.5 text-[12.5px] text-[#6B7890]">What Media360 will ask {provider.name} for, and why. You can decline optional ones on the provider&apos;s own screen.</p>
       <ul className="mt-3 divide-y divide-[#EEF1F5] rounded-sm border border-[#E4E9F0]">
         {provider.permissions.map((definition) => (
           <li key={definition.key} className="flex items-start gap-3 px-3 py-2.5">
@@ -284,7 +284,7 @@ function AuthorizeStep({ provider, busy }: { provider: IntegrationProvider; busy
       <ProviderLogo providerId={provider.id} className="size-14" />
       <p className="mt-4 text-[14px] font-semibold text-[#0F1B3D]">{busy ? `Opening ${provider.name}…` : `Authorize with ${provider.name}`}</p>
       <p className="mt-1 text-[12.5px] leading-5 text-[#6B7890]">
-        You will be sent to {provider.name} to sign in and approve access, then brought back here to choose which accounts to use and which client each belongs to. Sign in with a login that manages them. OmniPlatform never sees your password.
+        You will be sent to {provider.name} to sign in and approve access, then brought back here to choose which accounts to use and which client each belongs to. Sign in with a login that manages them. Media360 never sees your password.
       </p>
     </div>
   );

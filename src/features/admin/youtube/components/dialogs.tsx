@@ -680,7 +680,7 @@ export function HealthDetailSheet({ open, onOpenChange, analytics }: { open: boo
       <SheetContent className="w-full max-w-[560px] sm:max-w-[560px]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 text-[15px] text-[#0F1B3D]">Channel Health</SheetTitle>
-          <SheetDescription className="text-[12.5px]">An OmniPlatform score built from your synced channel data. It isn&apos;t a YouTube metric and doesn&apos;t affect how YouTube ranks your videos.</SheetDescription>
+          <SheetDescription className="text-[12.5px]">An Media360 score built from your synced channel data. It isn&apos;t a YouTube metric and doesn&apos;t affect how YouTube ranks your videos.</SheetDescription>
         </SheetHeader>
         <SheetBody className="space-y-4">
           <div className="flex items-center gap-4 rounded-[10px] border border-[#EEF1F5] bg-[#F8FAFC] p-4">

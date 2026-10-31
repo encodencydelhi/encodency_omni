@@ -21,7 +21,7 @@ export async function GET(
     // Call official Indian Postal Pincode API
     const res = await fetch(`https://api.postalpincode.in/pincode/${rawCode}`, {
       signal: controller.signal,
-      headers: { "User-Agent": "omniPlatform/1.0" },
+      headers: { "User-Agent": "Media360/1.0" },
       cache: "force-cache",
     });
     clearTimeout(timeout);

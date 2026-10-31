@@ -500,7 +500,7 @@ function SetupBody({ event, stream, onGoLive }: { event: LiveEvent; stream: YouT
         ) : (
           <Notice tone="amber" title="Stream Key Hidden">{can.canViewStreamKey.reason}</Notice>
         )}
-        <p className="text-[12px] leading-5 text-[#6B7890]">Paste these into OBS, Streamlabs or your hardware encoder. Never share the stream key — anyone with it can stream to your channel. It&apos;s fetched only when you ask and is never saved by OmniPlatform.</p>
+        <p className="text-[12px] leading-5 text-[#6B7890]">Paste these into OBS, Streamlabs or your hardware encoder. Never share the stream key — anyone with it can stream to your channel. It&apos;s fetched only when you ask and is never saved by Media360.</p>
       </div>
 
       <div className="divide-y divide-[#EEF1F5] rounded-[10px] border border-[#E4E9F0]">

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * In-memory demo store.
  *
  * Holds the demo configuration for the lifetime of the browser session so that the wizard, endpoint

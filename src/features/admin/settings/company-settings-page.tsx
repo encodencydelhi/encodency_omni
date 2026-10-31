@@ -143,7 +143,7 @@ function CompanySettingsInner() {
 
   return (
     <div className="space-y-2 pb-16">
-      {/* PAGE HEADER: ELEGANT OMNIPLATFORM STYLE */}
+      {/* PAGE HEADER: ELEGANT MEDIA360 STYLE */}
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-white rounded-xl border border-[#DDE4ED] p-3 shadow-xs">
         <div>
           <p className="text-[9.5px] font-bold uppercase tracking-wider text-[#64748B]">Management / Workspace</p>

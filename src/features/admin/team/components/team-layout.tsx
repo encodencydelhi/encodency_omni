@@ -33,7 +33,7 @@ function TeamFrame({ children }: { children: ReactNode }) {
     const blob = new Blob([text], { type }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = name; link.click(); URL.revokeObjectURL(url);
   };
   const exportData = () => {
-    if (!TEAM_LIVE) { download("team-export.txt", "Team export generated from OmniPlatform", "text/plain"); return; }
+    if (!TEAM_LIVE) { download("team-export.txt", "Team export generated from Media360", "text/plain"); return; }
     const header = ["Name", "Email", "Role", "Job title", "Department", "Groups", "Clients", "Joined"];
     const rows = members.map((m) => [m.name, m.email, m.roleName, m.jobTitle ?? "", m.department ?? "", m.groups.map((g) => g.name).join("; "), m.isOrgAdmin ? "All" : m.clientAccess.map((c) => c.clientName).join("; "), m.joinedAt.slice(0, 10)]);
     download("team-members.csv", [header, ...rows].map((row) => row.map((cell) => csvCell(String(cell))).join(",")).join("\n"), "text/csv");

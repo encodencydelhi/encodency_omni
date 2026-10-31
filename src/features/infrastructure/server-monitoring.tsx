@@ -99,7 +99,7 @@ export function MonitoringSetupDialog({ assetId, assetName, status, open, onOpen
     }
   };
   const runCmd = `OMNI_URL="${ingest}" \\\nOMNI_TOKEN="${token ?? "<your token>"}" \\\npython3 omni-collector.py --once`;
-  const unit = `[Unit]\nDescription=OmniPlatform collector\nAfter=network-online.target\n\n[Service]\nUser=nobody\nEnvironment=OMNI_URL=${ingest}\nEnvironment=OMNI_TOKEN=${token ?? "<your token>"}\nExecStart=/usr/bin/python3 /opt/omni/omni-collector.py\nRestart=always\nNoNewPrivileges=true\nProtectSystem=strict\nProtectHome=true\n\n[Install]\nWantedBy=multi-user.target`;
+  const unit = `[Unit]\nDescription=Media360 collector\nAfter=network-online.target\n\n[Service]\nUser=nobody\nEnvironment=OMNI_URL=${ingest}\nEnvironment=OMNI_TOKEN=${token ?? "<your token>"}\nExecStart=/usr/bin/python3 /opt/omni/omni-collector.py\nRestart=always\nNoNewPrivileges=true\nProtectSystem=strict\nProtectHome=true\n\n[Install]\nWantedBy=multi-user.target`;
 
   return (
     <Modal open={open} onOpenChange={(o) => { if (!o) { setToken(null); setReveal(false); } onOpenChange(o); }} wide title={`Monitoring setup · ${assetName}`} description="Optional and opt-in. Nothing is installed or changed on the server by this app: you run the collector yourself.">

@@ -2,7 +2,7 @@
 
 /**
  * Chart primitives for the X workspace. Same visual language as the other
- * OmniPlatform channel modules: thin grid lines, no chart junk, one accent per
+ * Media360 channel modules: thin grid lines, no chart junk, one accent per
  * series, and a tooltip that always states the comparison.
  */
 

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Credits & Refunds Workspace
+ * Media360 - Credits & Refunds Workspace
  * 3-Tab financial control center: Credit Notes, Account Credit Ledger, and Refunds.
  */
 

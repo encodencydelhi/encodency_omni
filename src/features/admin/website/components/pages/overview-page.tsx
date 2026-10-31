@@ -3,7 +3,7 @@
 /**
  * Overview — is this website healthy, and what needs attention first?
  *
- * Scores shown here are OmniPlatform's own composites. They are labelled as
+ * Scores shown here are Media360's own composites. They are labelled as
  * such everywhere: nothing on this screen is presented as a Google score,
  * because none of it comes from Google.
  */
@@ -283,7 +283,7 @@ export function WebsiteOverviewPage() {
                       value={summary.data.scores.health}
                       tone={scoreBand(summary.data.scores.health)}
                       size={76}
-                      label={`OmniPlatform Website Health ${summary.data.scores.health}`}
+                      label={`Media360 Website Health ${summary.data.scores.health}`}
                     />
                   )}
                   <div className="flex flex-col items-center text-center">
@@ -332,7 +332,7 @@ export function WebsiteOverviewPage() {
                           value={score.value}
                           tone={scoreBand(score.value)}
                           size={52}
-                          label={`OmniPlatform ${score.label} score ${score.value}`}
+                          label={`Media360 ${score.label} score ${score.value}`}
                         />
                       )}
                       <span className="w-full text-center text-[10.5px] font-bold tracking-tight text-[#475569] truncate">
@@ -404,7 +404,7 @@ export function WebsiteOverviewPage() {
       <div className="grid gap-1 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <Card
           title="Website health trend"
-          subtitle="OmniPlatform composite scores over time"
+          subtitle="Media360 composite scores over time"
           icon={History}
           action={
             <div className="flex items-center gap-2.5">
@@ -492,7 +492,7 @@ export function WebsiteOverviewPage() {
                 </div>
               </div>
               <p className="mt-1 text-[10px] text-[#94A3B8]">
-                All four series share one 0–100 axis. Uptime is a percentage, the other three are OmniPlatform scores.
+                All four series share one 0–100 axis. Uptime is a percentage, the other three are Media360 scores.
               </p>
             </>
           )}

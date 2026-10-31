@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * A small confirm dialog that asks for a reason (at least 3 characters) before an audited action.
  */
 

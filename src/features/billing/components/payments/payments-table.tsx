@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Payments Directory Table
+ * Media360 - Payments Directory Table
  * Transaction ledger with allocation status, multi-currency filtering and quick preview.
  */
 

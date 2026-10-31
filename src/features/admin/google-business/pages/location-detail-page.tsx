@@ -150,7 +150,7 @@ function LocationHeader({ location }: { location: Location }) {
     { label: "Business Profile Manager", icon: ExternalLink, href: gbRoutes.businessProfileManager, external: true },
     "separator",
     {
-      label: location.managed ? "Stop managing here" : "Manage in OmniPlatform",
+      label: location.managed ? "Stop managing here" : "Manage in Media360",
       icon: Store,
       danger: location.managed,
       gate: can.canManageLocations,
@@ -471,7 +471,7 @@ function LocationOverview({ location, onOpenTab }: { location: Location; onOpenT
             <CardHeader
               title="Profile health"
               icon={Store}
-              badge={<InternalBadge label="OmniPlatform score" hint="Calculated by OmniPlatform from your Google profile data. Google does not publish a profile score." />}
+              badge={<InternalBadge label="Media360 score" hint="Calculated by Media360 from your Google profile data. Google does not publish a profile score." />}
               className="border-b border-[#F1F3F4] pb-3"
             />
             <div className="flex items-center gap-1 px-4 py-4">
@@ -568,8 +568,8 @@ function LocationActivity({ location }: { location: Location }) {
       <CardHeader
         title="Activity"
         icon={Activity}
-        badge={<InternalBadge label="OmniPlatform" />}
-        description="Changes made to this location through OmniPlatform, plus what Google sync reported."
+        badge={<InternalBadge label="Media360" />}
+        description="Changes made to this location through Media360, plus what Google sync reported."
         actions={
           <Button
             size="sm"
@@ -627,7 +627,7 @@ function LocationActivity({ location }: { location: Location }) {
                       )}
                     </td>
                     <td className={cn(tdClass, "pr-4")}>
-                      <Badge tone={event.source === "OmniPlatform" ? "violet" : "neutral"}>{event.source}</Badge>
+                      <Badge tone={event.source === "Media360" ? "violet" : "neutral"}>{event.source}</Badge>
                     </td>
                   </tr>
                 ))}

@@ -37,7 +37,7 @@ function BillingPage() {
               title="Billing data unavailable"
               description={
                 <>
-                  {loadError?.message ?? "OmniPlatform couldn't load your billing details."}
+                  {loadError?.message ?? "Media360 couldn't load your billing details."}
                   <span className="mt-2 block text-[12px] text-[#98A2B3]">{loadError?.hint}</span>
                 </>
               }

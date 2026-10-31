@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Collections Requiring Attention Queue
+ * Media360 - Collections Requiring Attention Queue
  * Actionable exceptions requiring operations intervention with direct drilldown links.
  */
 

@@ -383,7 +383,7 @@ export function computeProfileHealth(
       "media",
       "Photos and video",
       Math.min(100, (locationMedia.length / 8) * 100),
-      `${locationMedia.length} media items in OmniPlatform. Profiles with more photos get more direction requests.`,
+      `${locationMedia.length} media items in Media360. Profiles with more photos get more direction requests.`,
       locationMedia.length >= 8 ? null : ["Add photos", `${gbRoutes.media}?location=${location.locationId}`],
     ),
     factor(
@@ -556,7 +556,7 @@ export function computeAttention(
         severity: "low",
         locationId: location.locationId,
         title: `Photos are out of date for ${location.profile.title}`,
-        description: latestMedia ? `The newest photo is ${differenceInDays(now, new Date(latestMedia))} days old.` : "This location has no photos in OmniPlatform.",
+        description: latestMedia ? `The newest photo is ${differenceInDays(now, new Date(latestMedia))} days old.` : "This location has no photos in Media360.",
         actionLabel: "Add photos",
         href: `${gbRoutes.media}?location=${location.locationId}`,
       });

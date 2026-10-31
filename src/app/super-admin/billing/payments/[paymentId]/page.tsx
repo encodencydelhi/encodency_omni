@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { PaymentDetailPage } from "@/features/billing";
 
 export const metadata: Metadata = {
-  title: "Payment Transaction Detail | EnCodency OmniPlatform Super Admin",
+  title: "Payment Transaction Detail | Media360 Super Admin",
   description: "Gateway payment details, invoice allocations, and refund history.",
 };
 

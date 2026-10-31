@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Capability Detail Drawer
  * Deep dive into technical support, connector readiness, required scopes, and restrictions
  */
@@ -159,7 +159,7 @@ export function CapabilityDetailDrawer({
             </div>
           </div>
 
-          {/* Affected OmniPlatform Modules */}
+          {/* Affected Media360 Modules */}
           <div className="space-y-2 text-xs">
             <div className="font-bold text-slate-800 uppercase tracking-wider">
               Dependent Platform Modules

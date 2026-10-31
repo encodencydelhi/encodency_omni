@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Void Invoice Dialog
+ * Media360 - Void Invoice Dialog
  * Impact-aware confirmation modal for canceling an issued invoice.
  */
 

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Payment Detail Page
+ * Media360 - Payment Detail Page
  * Detailed inspection of gateway transaction, settlements, invoice allocations, and refunds.
  */
 

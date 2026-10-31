@@ -32,7 +32,7 @@ const RULES: Record<CapabilityKey, Rule> = {
   canReadAnalytics: { scopes: ["tweet.read"], permission: "view_analytics", worksOffline: true, noun: "view analytics" },
   canSchedulePost: { scopes: ["tweet.write"], permission: "schedule_content", worksOffline: true, noun: "schedule posts" },
 
-  /* ---- OmniPlatform internal (no X scope) -------------------------- */
+  /* ---- Media360 internal (no X scope) -------------------------- */
   canManageConnection: { scopes: [], permission: "manage_connection", worksOffline: true, noun: "manage the connection" },
   canApprove: { scopes: [], permission: "approve_content", worksOffline: true, noun: "approve content" },
   canManageSettings: { scopes: [], permission: "manage_settings", worksOffline: true, noun: "change X settings" },
@@ -62,7 +62,7 @@ function evaluate(rule: Rule, input: CapabilityInput): Capability {
     if (input.connection === "needs_reconnect") {
       return {
         allowed: false,
-        reason: `X needs you to re-authorise OmniPlatform before you can ${rule.noun}.`,
+        reason: `X needs you to re-authorise Media360 before you can ${rule.noun}.`,
         fix: "reconnect",
       };
     }
@@ -82,7 +82,7 @@ function evaluate(rule: Rule, input: CapabilityInput): Capability {
     const name = Array.isArray(missing) ? missing[0] : missing;
     return {
       allowed: false,
-      reason: `OmniPlatform wasn't granted the "${name}" permission on X. Reconnect the account to ${rule.noun}.`,
+      reason: `Media360 wasn't granted the "${name}" permission on X. Reconnect the account to ${rule.noun}.`,
       fix: "reconnect",
     };
   }

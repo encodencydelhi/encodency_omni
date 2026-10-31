@@ -213,7 +213,7 @@ function AccountCard({ className }: { className?: string }) {
           <Stat label="Followers" value={compact(account.followers)} href={xRoutes.audience} />
           <Stat label="Following" value={compact(account.following)} href={xRoutes.audience} />
           <Stat label="Posts on X" value={compact(account.posts)} href={xRoutes.content} />
-          <Stat label="In OmniPlatform" value={compact(published)} href={`${xRoutes.content}?status=published`} internal />
+          <Stat label="In Media360" value={compact(published)} href={`${xRoutes.content}?status=published`} internal />
           <Stat label="Unanswered mentions" value={compact(counts.unanswered)} href={`${xRoutes.mentions}?status=unanswered`} alert={counts.needsAttention > 0} />
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <SyncStatus />
@@ -237,7 +237,7 @@ function Stat({ label, value, href, internal, alert }: { label: string; value: s
       <span className="flex items-baseline gap-1.5">
         <b className={cn("text-[15px] font-semibold tabular-nums", alert ? "text-[#C81E2B]" : "text-[#0F1B3D]")}>{value}</b>
         <span className="text-[12px] text-[#6B7890] group-hover:text-[#2563EB]">{label}</span>
-        {internal && <InternalBadge label="Internal" hint="Counted from the posts OmniPlatform knows about, not X's lifetime total." />}
+        {internal && <InternalBadge label="Internal" hint="Counted from the posts Media360 knows about, not X's lifetime total." />}
       </span>
     </Link>
   );
@@ -257,7 +257,7 @@ function HealthCard({ className }: { className?: string }) {
     <Card className={cn("flex flex-col", className)}>
       <CardHeader
         title="X account health"
-        badge={<InternalBadge hint="Computed by OmniPlatform from your connection, posting cadence, inbox and queue. X does not provide this score." />}
+        badge={<InternalBadge hint="Computed by Media360 from your connection, posting cadence, inbox and queue. X does not provide this score." />}
         description="Six internal signals for this channel"
         actions={
           <Button size="xs" variant="secondary" onClick={() => setOpen(true)}>
@@ -640,7 +640,7 @@ function MentionsCard({ className }: { className?: string }) {
       <CardHeader
         title="Mentions needing attention"
         description={counts.unanswered ? `${counts.unanswered} unanswered · ${counts.needsAttention} high priority` : "Inbox is clear"}
-        badge={<SourceBadge hint="Mentions come from X. Priority and assignment are OmniPlatform's." />}
+        badge={<SourceBadge hint="Mentions come from X. Priority and assignment are Media360's." />}
         actions={<ViewLink href={`${xRoutes.mentions}?status=unanswered`}>Open inbox</ViewLink>}
       />
       {!ready ? (
@@ -706,7 +706,7 @@ function ScheduledCard({ actions }: { actions: ReturnType<typeof usePostActions>
     <Card>
       <CardHeader
         title="Scheduled content"
-        badge={<InternalBadge label="OmniPlatform scheduler" hint="The queue lives in OmniPlatform. Posts are sent to X at their scheduled time." />}
+        badge={<InternalBadge label="Media360 scheduler" hint="The queue lives in Media360. Posts are sent to X at their scheduled time." />}
         description={queue.length ? `Next ${queue.length} of ${scheduledPosts(posts).length} queued` : "Nothing queued"}
         actions={
           <div className="flex flex-wrap items-center gap-1.5">

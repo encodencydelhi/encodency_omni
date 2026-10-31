@@ -56,7 +56,7 @@ export const REASON_LABEL: Record<ReconnectReason, string> = {
   token_expired: "The access token expired",
   access_revoked: "Access was revoked on the provider's side",
   scope_changed: "The provider changed the permissions it grants",
-  permission_missing: "A permission OmniPlatform needs was not granted",
+  permission_missing: "A permission Media360 needs was not granted",
   expiring: "The access token is about to expire",
 };
 

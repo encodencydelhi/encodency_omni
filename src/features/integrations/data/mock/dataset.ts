@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Deterministic Initial Dataset
  */
 
@@ -219,7 +219,7 @@ export function buildInitialIntegrationsDataset(): IntegrationsRawDataset {
       externalApiAccess: "approved",
       operationalHealth: "operational",
       supportedResourceTypes: ["gsc_site"],
-      appReviewNotes: "Verified under OmniPlatform Google Developer account.",
+      appReviewNotes: "Verified under Media360 Google Developer account.",
       createdAt: "2024-09-01T00:00:00Z",
       updatedAt: "2026-08-15T15:00:00Z",
       activeConnectionsCount: 21,
@@ -933,7 +933,7 @@ export function buildInitialIntegrationsDataset(): IntegrationsRawDataset {
       lastAttemptedSyncAt: "2026-09-18T10:00:00Z",
       recentFailureCount: 5,
       rateLimitResetAt: null,
-      latestErrorMessage: "User has revoked permissions for the OmniPlatform app in Facebook Security Settings.",
+      latestErrorMessage: "User has revoked permissions for the Media360 app in Facebook Security Settings.",
     },
   ];
 

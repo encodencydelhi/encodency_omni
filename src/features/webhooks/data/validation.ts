@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Preliminary frontend validation.
  *
  * IMPORTANT: this is a usability check, not a security control. Passing it does NOT make a
@@ -69,7 +69,7 @@ export function checkDestinationUrl(raw: string, environment: WebhookEnvironment
   try {
     url = new URL(value);
   } catch {
-    errors.push("Enter a valid absolute URL, for example https://hooks.example.com/omniplatform.");
+    errors.push("Enter a valid absolute URL, for example https://hooks.example.com/media360.");
     return empty;
   }
 

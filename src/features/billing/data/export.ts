@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Financial CSV Export Utility
+ * Media360 - Financial CSV Export Utility
  * Generates and triggers download of RFC 4180 compliant CSV files.
  */
 

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Create Refund Request Modal
+ * Media360 - Create Refund Request Modal
  * Submits structured refund request for finance review without claiming live external processing.
  */
 

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Status registries, labels, reference definitions and demo constants.
  *
  * Each state vocabulary has its own registry. They are intentionally not merged.

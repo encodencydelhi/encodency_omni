@@ -332,7 +332,7 @@ export function PostsWorkspace({ lockedLocationId }: { lockedLocationId?: string
         description={
           confirmDelete?.state === "published"
             ? "The post is removed from your Google Business Profile immediately. Its views and clicks stay in past reports."
-            : "The draft is removed from OmniPlatform. Nothing changes on Google."
+            : "The draft is removed from Media360. Nothing changes on Google."
         }
         affected={confirmDelete ? [confirmDelete.event?.title ?? confirmDelete.summary.slice(0, 80), `${confirmDelete.locationIds.length} location(s)`] : []}
         confirmLabel="Delete post"
@@ -469,7 +469,7 @@ function PostDetailDrawer({
 
           <div className="rounded-lg border border-[#E8EAED] p-3.5">
             <p className="flex items-center gap-2 text-[13px] font-medium text-[#202124]">
-              Approval <InternalBadge hint="OmniPlatform workflow, separate from the Google post status." />
+              Approval <InternalBadge hint="Media360 workflow, separate from the Google post status." />
             </p>
             {(reviewable || canSubmit) && (
               <div className="mt-2">

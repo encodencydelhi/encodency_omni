@@ -1,7 +1,7 @@
 /**
  * The integrations repository is the only boundary the UI talks to:
  *
- *   UI → IntegrationsRepository → OmniPlatform integrations API
+ *   UI → IntegrationsRepository → Media360 integrations API
  *
  * Everything shown comes from the backend: connections with their real condition, the checks that were really run, the audit
  * trail, the company's settings and which providers can be connected. There is no sample data in this module. Wording that
@@ -86,7 +86,7 @@ function activeCompanyId(): string {
 export function toServiceError(error: unknown, fallback: string): IntegrationServiceError {
   if (error instanceof IntegrationServiceError) return error;
   if (ApiError.isApiError(error)) {
-    if (error.status === 0) return new IntegrationServiceError("network", "OmniPlatform could not be reached.", "Check your connection and try again.");
+    if (error.status === 0) return new IntegrationServiceError("network", "Media360 could not be reached.", "Check your connection and try again.");
     if (error.status === 403) return new IntegrationServiceError("forbidden", "Your role can't do this.", "Only Owners and Admins can change integrations.");
     if (error.status >= 500) return new IntegrationServiceError("service_unavailable", fallback, "Something went wrong on our side. Nothing was changed. Try again in a moment.");
     return new IntegrationServiceError("provider_error", error.message || fallback, error.status === 409 ? "" : "Nothing was changed.");
@@ -129,7 +129,7 @@ const CHECK_HINT: Record<string, string> = {
   reconnect_required: "Reconnect the integration to renew access.",
   provider_rate_limited: "No action needed. Try again a little later.",
   provider_quota_exceeded: "No action needed. The provider quota resets on its own.",
-  provider_permission_denied: "Reconnect and approve the permissions OmniPlatform asks for.",
+  provider_permission_denied: "Reconnect and approve the permissions Media360 asks for.",
   provider_not_configured: "Ask your platform administrator to finish setting this provider up.",
   provider_maintenance: "Try again once the platform team has finished maintenance.",
 };

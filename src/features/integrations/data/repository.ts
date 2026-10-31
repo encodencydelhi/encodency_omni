@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Integrations Repository Interface & Async Implementation
  *
  *   Mock mode:   UI → hooks → integrationsRepository → mock store (in-memory, demo)

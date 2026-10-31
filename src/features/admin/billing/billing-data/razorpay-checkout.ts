@@ -1,6 +1,6 @@
 /**
  * Razorpay Checkout, the browser half of an online payment. The server creates the order and later verifies the signed result; this only opens Razorpay's own
- * payment window (card, UPI and net banking details are typed there and never reach OmniPlatform) and hands back what Razorpay returns.
+ * payment window (card, UPI and net banking details are typed there and never reach Media360) and hands back what Razorpay returns.
  */
 import { useSyncExternalStore } from "react";
 
@@ -112,7 +112,7 @@ export async function collectPayment(order: CheckoutOrder, prefill: { name: stri
       order_id: order.orderId,
       amount: order.amount,
       currency: order.currency,
-      name: "OmniPlatform",
+      name: "Media360",
       description: order.description,
       prefill: { name: prefill.name || undefined, email: prefill.email || undefined },
       theme: { color: "#E5202E" },

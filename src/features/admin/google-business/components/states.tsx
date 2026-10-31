@@ -234,7 +234,7 @@ export function LoadErrorState({ message, onRetry }: { message: string | null; o
       <EmptyState
         icon={TriangleAlert}
         title="We could not load your Google Business data"
-        description={message ?? "OmniPlatform could not reach its Google Business service. Your profile is not affected."}
+        description={message ?? "Media360 could not reach its Google Business service. Your profile is not affected."}
         action={
           <Button variant="primary" icon={RefreshCw} onClick={onRetry}>
             Try again

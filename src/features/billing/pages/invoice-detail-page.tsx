@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Invoice Detail Page
+ * Media360 - Invoice Detail Page
  * Route-level deep inspection of invoice line items, adjustments, allocations and document history.
  */
 

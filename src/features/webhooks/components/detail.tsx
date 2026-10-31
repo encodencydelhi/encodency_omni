@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Detail-page scaffolding: header, URL-synced tabs, collapsed technical context.
  */
 

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { AccessSecurityPage } from "@/features/users/pages/access-security-page";
 
 export const metadata: Metadata = {
-  title: "Access & Security | OmniPlatform Super Admin",
+  title: "Access & Security | Media360 Super Admin",
   description: "Platform-wide user credential security, 2FA compliance and session controls.",
 };
 

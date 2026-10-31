@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Reconciliation Exception Detail Drawer
+ * Media360 - Reconciliation Exception Detail Drawer
  * Inspection and operational investigation of financial discrepancies.
  */
 

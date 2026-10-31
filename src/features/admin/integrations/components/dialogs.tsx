@@ -112,7 +112,7 @@ function ReconnectBody({ connection, open, onOpenChange }: { connection: Integra
 
         <p className="flex items-start gap-2 text-[12px] leading-4 text-[#6B7890]">
           <ExternalLink className="mt-px size-3.5 shrink-0" />
-          You&apos;ll be sent to {provider.name} to approve access again, then brought back here. OmniPlatform never sees your password. Nothing is changed or deleted while you reconnect.
+          You&apos;ll be sent to {provider.name} to approve access again, then brought back here. Media360 never sees your password. Nothing is changed or deleted while you reconnect.
         </p>
       </div>
 
@@ -172,7 +172,7 @@ function DisconnectBody({ connection, open, onOpenChange }: { connection: Integr
         {impact.dependencies.length === 0 ? (
           <div className="flex items-start gap-2.5 rounded-sm border border-[#E4E9F0] bg-[#F8FAFC] p-3">
             <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[#12B76A]" />
-            <p className="text-[12.5px] leading-5 text-[#3C4A66]">Nothing in OmniPlatform is waiting on this integration right now, so disconnecting it won&apos;t interrupt any work.</p>
+            <p className="text-[12.5px] leading-5 text-[#3C4A66]">Nothing in Media360 is waiting on this integration right now, so disconnecting it won&apos;t interrupt any work.</p>
           </div>
         ) : (
           <>
@@ -491,7 +491,7 @@ function AddAccountsBody({ connection, onOpenChange, defaultClientId }: { connec
           <div className="py-8 text-center">
             <p className="text-[13.5px] font-semibold text-[#0F1B3D]">No accounts found</p>
             <p className="mt-1 text-[12.5px] text-[#6B7890]">
-              The {provider.name} login doesn&apos;t manage any {provider.resourceTypes.map((type) => type.label.toLowerCase()).join(" or ")} that OmniPlatform can use. Reconnect with a login that does.
+              The {provider.name} login doesn&apos;t manage any {provider.resourceTypes.map((type) => type.label.toLowerCase()).join(" or ")} that Media360 can use. Reconnect with a login that does.
             </p>
           </div>
         ) : data.clients.length === 0 ? (

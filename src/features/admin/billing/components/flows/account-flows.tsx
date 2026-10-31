@@ -183,7 +183,7 @@ export function DetailsSheet() {
               {input("taxId")}
             </FormField>
           )}
-          <p className="text-[11.5px] text-[#6B7890]">GST is applied by OmniPlatform at the rate that applies to your organization. It can&apos;t be changed here.</p>
+          <p className="text-[11.5px] text-[#6B7890]">GST is applied by Media360 at the rate that applies to your organization. It can&apos;t be changed here.</p>
         </Group>
       </div>
     </FlowShell>

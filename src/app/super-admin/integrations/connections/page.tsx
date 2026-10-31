@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ConnectionsPage } from "@/features/integrations";
 
 export const metadata: Metadata = {
-  title: "Tenant Connections Directory | EnCodency OmniPlatform Super Admin",
+  title: "Tenant Connections Directory | Media360 Super Admin",
   description: "Platform-wide directory of company account authorizations and external connected resources.",
 };
 

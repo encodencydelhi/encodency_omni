@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Delivery Detail: Overview, Attempts & Responses, Event Payload, Retry & Recovery, Timeline, Technical Context.
  */
 

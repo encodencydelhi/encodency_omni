@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Connections Directory Table Component
  * Compact, interactive, with search, filters, quick preview drawer and CSV export
  */

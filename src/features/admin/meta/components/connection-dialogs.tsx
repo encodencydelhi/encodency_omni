@@ -34,7 +34,7 @@ export function DisconnectDialog({ open, onOpenChange }: { open: boolean; onOpen
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2 text-xs leading-relaxed text-slate-600">
-              <p>OmniPlatform will forget the Meta login{meta.connection?.accountName ? ` (${meta.connection.accountName})` : ""} for this Company.</p>
+              <p>Media360 will forget the Meta login{meta.connection?.accountName ? ` (${meta.connection.accountName})` : ""} for this Company.</p>
               <ul className="list-disc space-y-1 pl-4">
                 <li>Meta Ads, Facebook and Instagram stop loading until you connect again.</li>
                 <li>

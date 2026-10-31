@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Shared environment / time-range context. Lives in the module layout so it survives tab navigation.
  */
 

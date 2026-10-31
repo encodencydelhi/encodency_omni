@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Top KPI Cards (Stylish, compact, equal height, gap-1)
  */
 

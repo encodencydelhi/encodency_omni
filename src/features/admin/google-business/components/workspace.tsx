@@ -467,7 +467,7 @@ function DisconnectedState() {
         </span>
         <h3 className="mt-3 text-[14px] font-medium text-[#202124]">Connect your Google Business account</h3>
         <p className="mt-1 max-w-[420px] text-[12.5px] leading-5 text-[#5F6368]">
-          Connect an account to manage locations, reviews, posts, photos and performance from OmniPlatform. You will sign in with Google and choose which permissions to grant.
+          Connect an account to manage locations, reviews, posts, photos and performance from Media360. You will sign in with Google and choose which permissions to grant.
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Button

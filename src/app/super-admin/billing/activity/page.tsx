@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { FinancialActivityPage } from "@/features/billing";
 
 export const metadata: Metadata = {
-  title: "Financial Activity Audit Log | EnCodency OmniPlatform Super Admin",
+  title: "Financial Activity Audit Log | Media360 Super Admin",
   description: "Platform-wide audit log of invoice operations, payment allocations, and adjustments.",
 };
 

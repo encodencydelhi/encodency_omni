@@ -208,7 +208,7 @@ export function EndpointWizard({ open, onOpenChange }: { open: boolean; onOpenCh
                 It does not make a destination safe to call. A backend must enforce SSRF protection, DNS resolution checks, redirect policy, private-address blocking and egress controls.
               </Notice>
               <Field label="Destination HTTPS URL" htmlFor="ep-url" required error={errors.destinationUrl}>
-                <Input id="ep-url" value={draft.destinationUrl} onChange={(e) => patch({ destinationUrl: e.target.value })} aria-invalid={Boolean(errors.destinationUrl)} placeholder="https://hooks.example.com/omniplatform" inputMode="url" autoComplete="off" />
+                <Input id="ep-url" value={draft.destinationUrl} onChange={(e) => patch({ destinationUrl: e.target.value })} aria-invalid={Boolean(errors.destinationUrl)} placeholder="https://hooks.example.com/media360" inputMode="url" autoComplete="off" />
               </Field>
               {draft.destinationUrl.trim() ? (
                 <div className="space-y-1.5 rounded-sm border border-border p-3" aria-live="polite">

@@ -142,15 +142,15 @@ function Mentions() {
         <Kpi
           label="Avg. response time"
           value={counts.avgResponseMinutes === null ? "—" : minutes(counts.avgResponseMinutes)}
-          hint="Average time between a mention arriving and our first reply. Measured by OmniPlatform."
+          hint="Average time between a mention arriving and our first reply. Measured by Media360."
           internal
         />
-        <Kpi label="Replies sent" value={compact(counts.repliesSent)} hint="Replies sent from OmniPlatform in this workspace." internal />
+        <Kpi label="Replies sent" value={compact(counts.repliesSent)} hint="Replies sent from Media360 in this workspace." internal />
         <Kpi
           label="Resolved rate"
           value={percent(counts.resolvedRate, 0)}
           tone={counts.resolvedRate >= 70 ? "green" : "amber"}
-          hint="Share of actionable mentions marked resolved. Resolution is an OmniPlatform concept."
+          hint="Share of actionable mentions marked resolved. Resolution is an Media360 concept."
           internal
         />
       </div>
@@ -582,7 +582,7 @@ function MentionDetail({ mention }: { mention: XMention }) {
             <p className="mt-2 flex items-center gap-1.5 text-[11.5px] text-[#98A2B3]">
               <Timer className="size-3.5" />
               First replied in {minutes(mention.responseMinutes)}
-              <InternalBadge label="Internal" hint="Response time is measured by OmniPlatform." />
+              <InternalBadge label="Internal" hint="Response time is measured by Media360." />
             </p>
           )}
         </div>
@@ -704,7 +704,7 @@ function MentionDetail({ mention }: { mention: XMention }) {
               <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[#3C4A66]">
                 <Switch checked={resolveAfter} onCheckedChange={setResolveAfter} aria-label="Resolve after replying" />
                 Mark resolved after replying
-                <InternalBadge label="Internal" hint="Resolution status lives in OmniPlatform." />
+                <InternalBadge label="Internal" hint="Resolution status lives in Media360." />
               </label>
               <Button
                 variant="primary"

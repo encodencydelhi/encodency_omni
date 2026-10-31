@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Overview: KPIs, activity trend, source and endpoint summaries, failures, recent deliveries, activity.
  */
 

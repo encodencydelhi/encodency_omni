@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { InvitationsPage } from "@/features/users/pages/invitations-page";
 
 export const metadata: Metadata = {
-  title: "User Invitations | OmniPlatform Super Admin",
+  title: "User Invitations | Media360 Super Admin",
   description: "Platform-wide company user onboarding invitations.",
 };
 

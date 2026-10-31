@@ -94,7 +94,7 @@ export function ScheduleDialog({
           </FormField>
           <p className="flex items-start gap-2 rounded-sm border border-[#E2D8FD] bg-[#F9F7FF] px-2.5 py-2 text-[11.5px] leading-4 text-[#3C4A66]">
             <Sparkles className="mt-px size-3.5 shrink-0 text-[#6D28D9]" />
-            OmniPlatform holds the post and publishes it to X at this time. The account must be connected when it fires.
+            Media360 holds the post and publishes it to X at this time. The account must be connected when it fires.
           </p>
         </div>
 
@@ -157,7 +157,7 @@ export function ApprovalDialog({
           <DialogTitle className="flex items-center gap-2 text-[15px] text-[#0F1B3D]">
             <ListChecks className="size-4 text-[#6D28D9]" />
             {meta.title}
-            <InternalBadge hint="Approvals are an OmniPlatform workflow — X has no equivalent." />
+            <InternalBadge hint="Approvals are an Media360 workflow — X has no equivalent." />
           </DialogTitle>
           <DialogDescription className="mt-1 text-[12.5px] leading-5 text-[#3C4A66]">“{postSummary(post.text, 70)}”</DialogDescription>
         </DialogHeader>
@@ -391,10 +391,10 @@ export function HealthDetailSheet({ open, onOpenChange }: { open: boolean; onOpe
         <SheetHeader className="border-[#EEF1F5]">
           <SheetTitle className="flex items-center gap-2 text-[15px] text-[#0F1B3D]">
             X account health
-            <InternalBadge hint="Computed by OmniPlatform from your connection, content and inbox. X does not provide this score." />
+            <InternalBadge hint="Computed by Media360 from your connection, content and inbox. X does not provide this score." />
           </SheetTitle>
           <SheetDescription className="text-[12.5px] text-[#6B7890]">
-            Six signals OmniPlatform tracks for this channel, each with what it measures and what to do next.
+            Six signals Media360 tracks for this channel, each with what it measures and what to do next.
           </SheetDescription>
         </SheetHeader>
         <SheetBody>
@@ -469,7 +469,7 @@ export function AssignDialog({
         <DialogHeader className="px-5 pt-5">
           <DialogTitle className="flex items-center gap-2 text-[15px] text-[#0F1B3D]">
             {title}
-            <InternalBadge hint="Assignment is internal to OmniPlatform." />
+            <InternalBadge hint="Assignment is internal to Media360." />
           </DialogTitle>
           <DialogDescription className="mt-1 text-[12.5px] text-[#3C4A66]">{description}</DialogDescription>
         </DialogHeader>
@@ -520,7 +520,7 @@ export function ActivityLogSheet({ open, onOpenChange }: { open: boolean; onOpen
         <SheetHeader className="border-[#EEF1F5]">
           <SheetTitle className="flex items-center gap-2 text-[15px] text-[#0F1B3D]">
             Activity log
-            <InternalBadge hint="Recorded by OmniPlatform. Actions made directly on X appear only after a sync." />
+            <InternalBadge hint="Recorded by Media360. Actions made directly on X appear only after a sync." />
           </SheetTitle>
           <SheetDescription className="text-[12.5px] text-[#6B7890]">Everything that happened in this channel, newest first.</SheetDescription>
         </SheetHeader>

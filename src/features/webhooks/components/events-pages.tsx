@@ -86,7 +86,7 @@ export function EventCataloguePage() {
     <div className="space-y-1">
       <EventsNav view="catalogue" />
       <EventsSummary />
-      <Notice tone="info">{isMockMode ? "Demo event examples only; no business event is sent from mock mode." : "Choose an event to decide which real OmniPlatform action should notify this endpoint. Last produced is based on persisted delivery records."} This catalogue is separate from Feature Flags and the plan catalogue.</Notice>
+      <Notice tone="info">{isMockMode ? "Demo event examples only; no business event is sent from mock mode." : "Choose an event to decide which real Media360 action should notify this endpoint. Last produced is based on persisted delivery records."} This catalogue is separate from Feature Flags and the plan catalogue.</Notice>
       <TablePanel
         title="Event Catalogue"
         description="Outgoing platform event types, their schema versions and who subscribes."

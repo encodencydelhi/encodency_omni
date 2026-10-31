@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Printable Demo Invoice Document
+ * Media360 - Printable Demo Invoice Document
  * Structured financial document layout with Issuer, Bill-To, Line Items, and Print trigger.
  */
 
@@ -98,7 +98,7 @@ export function InvoiceDocumentModal({
                   EO
                 </div>
                 <div className="text-xl font-extrabold tracking-tight text-slate-900">
-                  EnCodency OmniPlatform
+                  Media360
                 </div>
               </div>
               <p className="text-xs text-slate-500 mt-1 max-w-xs leading-relaxed">
@@ -238,10 +238,10 @@ export function InvoiceDocumentModal({
           {isMockMode ? (
             <div className="border-t border-slate-200 pt-4 text-xs text-slate-500 leading-relaxed text-center">
               <p className="font-semibold text-slate-700">
-                SIMULATED DEMO DOCUMENT — ENCODENCY OMNIPLATFORM FINANCIAL GOVERNANCE
+                SIMULATED DEMO DOCUMENT — MEDIA360 FINANCIAL GOVERNANCE
               </p>
               <p className="mt-0.5">
-                This document was generated for demonstration, testing, and operational reconciliation inside EnCodency OmniPlatform.
+                This document was generated for demonstration, testing, and operational reconciliation inside Media360.
               </p>
             </div>
           ) : policies.disclaimerText.trim() ? (

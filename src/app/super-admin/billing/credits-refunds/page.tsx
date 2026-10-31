@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { CreditsRefundsPage } from "@/features/billing";
 
 export const metadata: Metadata = {
-  title: "Credits & Refunds Workspace | EnCodency OmniPlatform Super Admin",
+  title: "Credits & Refunds Workspace | Media360 Super Admin",
   description: "Credit note adjustments, account balance ledger, and refund requests.",
 };
 

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Billing Header
+ * Media360 - Super Admin Billing Header
  * Main module header with actions, currency/period filters, and more menu.
  */
 
@@ -73,7 +73,7 @@ export function BillingHeader({
           </span>
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 max-w-2xl">
-          Manage company billing, invoices, payments, credits and financial reconciliation across OmniPlatform.
+          Manage company billing, invoices, payments, credits and financial reconciliation across Media360.
         </p>
       </div>
 

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Capability Effective Availability Resolver
  */
 
@@ -61,7 +61,7 @@ export function resolveCapabilityEffectiveAvailability(
       status: "disabled_by_platform",
       label: "Platform Disabled",
       badgeTone: "danger",
-      reason: "Provider has been administratively disabled on OmniPlatform.",
+      reason: "Provider has been administratively disabled on Media360.",
       isAvailable: false,
     };
   }

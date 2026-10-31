@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - React Hooks for Billing & Payments
+ * Media360 - React Hooks for Billing & Payments
  * Connected to reactive billingStore via useSyncExternalStore for instant updates.
  */
 

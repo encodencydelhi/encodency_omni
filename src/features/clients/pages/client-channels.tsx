@@ -101,7 +101,7 @@ function ConnectionDrawer({ summary, connection, canAsk, onClose }: { summary: C
 
               {asking ? (
                 <AlertBanner tone="info" title="Ask the company to reconnect?">
-                  Reconnecting needs someone from {summary.company.name} to authorise the account again. OmniPlatform never refreshes a connection silently. This demo records the request in the client&apos;s activity; it sends nothing.
+                  Reconnecting needs someone from {summary.company.name} to authorise the account again. Media360 never refreshes a connection silently. This demo records the request in the client&apos;s activity; it sends nothing.
                   <span className="mt-2 flex gap-1.5">
                     <Button size="sm" onClick={() => void request()} disabled={pending}>Record request</Button>
                     <Button size="sm" variant="outline" onClick={() => setAsking(false)} disabled={pending}>Cancel</Button>

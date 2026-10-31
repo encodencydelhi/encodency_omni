@@ -163,7 +163,7 @@ export interface ClientDetailRecord {
   onboarding: ClientOnboardingConfig;
   operations: ClientOperations;
   lifecycle: ClientLifecycle;
-  /** Internal OmniPlatform staff reviewing this workspace - never a company membership. */
+  /** Internal Media360 staff reviewing this workspace - never a company membership. */
   platformReviewerId: string | null;
   activity: ClientActivity[];
 }

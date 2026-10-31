@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Billing Navigation Tabs
+ * Media360 - Super Admin Billing Navigation Tabs
  * Compact, URL-addressable horizontal sub-navigation.
  */
 

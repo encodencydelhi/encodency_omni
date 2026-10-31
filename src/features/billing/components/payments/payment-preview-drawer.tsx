@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Payment Quick Preview Drawer
+ * Media360 - Payment Quick Preview Drawer
  * Slide-out panel for fast payment transaction inspection and quick allocation.
  */
 

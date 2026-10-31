@@ -102,7 +102,7 @@ describe("evaluateCapabilities", () => {
     assert.equal(documented.length, evaluated.length);
   });
 
-  it("marks the approval workflow as an OmniPlatform feature, not a Google one", () => {
+  it("marks the approval workflow as an Media360 feature, not a Google one", () => {
     const approval = CAPABILITY_DOCS.find((row) => row.key === "canApproveContent");
     assert.equal(approval?.googleSupported, false);
   });

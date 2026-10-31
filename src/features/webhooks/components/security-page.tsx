@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Webhooks Module
+ * Media360 - Super Admin Webhooks Module
  * Security & Verification: incoming authenticity, outgoing signing, destination safety, replay protection
  * and payload privacy. Visibility only. This is not a policy editor and does not duplicate Global Settings.
  */

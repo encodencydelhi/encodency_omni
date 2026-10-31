@@ -3,7 +3,7 @@
 /**
  * Design system for the X workspace.
  *
- * Deliberately the same surface language as the rest of OmniPlatform — light
+ * Deliberately the same surface language as the rest of Media360 — light
  * greys, navy type, restrained shadows — with blue as the single interactive
  * accent. X's black is used only for the brand mark and "open on X" links, so
  * the module reads as part of the product rather than a skin of X.
@@ -107,7 +107,7 @@ const VARIANTS = {
   ghost: "text-[#3C4A66] hover:bg-[#F1F4F8] hover:text-[#0F1B3D] active:bg-[#E9EDF3]",
   danger: "border border-[#F5C2C7] bg-white text-[#C81E2B] hover:bg-[#FEF1F2]",
   dangerSolid: "bg-[#C81E2B] text-white hover:bg-[#A91824]",
-  /** Reserved for actions that leave OmniPlatform for X itself. */
+  /** Reserved for actions that leave Media360 for X itself. */
   dark: "bg-[#0F1419] text-white hover:bg-[#272C30]",
   link: "px-0 text-[#2563EB] hover:text-[#1D4ED8] hover:underline",
 } as const;
@@ -441,10 +441,10 @@ export function VerifiedMark({ kind, className }: { kind: VerifiedKind; classNam
 }
 
 /**
- * Marks data and features OmniPlatform owns, so an internal workflow is never
+ * Marks data and features Media360 owns, so an internal workflow is never
  * mistaken for something X provides.
  */
-export function InternalBadge({ label = "OmniPlatform", hint }: { label?: string; hint?: string }) {
+export function InternalBadge({ label = "Media360", hint }: { label?: string; hint?: string }) {
   const badge = (
     <span className="inline-flex h-5 items-center gap-1 whitespace-nowrap rounded-sm bg-[#F4F0FF] px-1.5 text-[10.5px] font-semibold text-[#6D28D9] ring-1 ring-inset ring-[#E2D8FD]">
       <Sparkles className="size-3" />

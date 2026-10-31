@@ -161,12 +161,12 @@ const pdfMoney = (amount: number) => {
 };
 
 const FOOTER = BILLING_MOCK_MODE
-  ? "Sample document generated in OmniPlatform mock mode. Not a valid tax invoice."
+  ? "Sample document generated in Media360 mock mode. Not a valid tax invoice."
   : "Computer-generated document. No signature required.";
 
 function letterhead(doc: PdfDocument, title: string, subtitle: string) {
   doc.fill(MARGIN, doc.y - 4, 4, 22, ACCENT);
-  doc.text("OmniPlatform", MARGIN + 12, { size: 15, bold: true, color: INK }, doc.y + 2);
+  doc.text("Media360", MARGIN + 12, { size: 15, bold: true, color: INK }, doc.y + 2);
   doc.text("EnCodency Pvt. Ltd.", MARGIN + 12, { size: 8.5, color: MUTED }, doc.y - 11);
   doc.text(title, RIGHT, { size: 15, bold: true, color: INK, align: "right" }, doc.y + 2);
   doc.text(subtitle, RIGHT, { size: 9, color: MUTED, align: "right" }, doc.y - 11);

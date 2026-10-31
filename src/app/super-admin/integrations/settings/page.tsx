@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { SettingsPage } from "@/features/integrations";
 
 export const metadata: Metadata = {
-  title: "Integration Platform Settings | EnCodency OmniPlatform Super Admin",
+  title: "Integration Platform Settings | Media360 Super Admin",
   description: "Platform-wide governance policies, health monitoring intervals, and background sync defaults.",
 };
 

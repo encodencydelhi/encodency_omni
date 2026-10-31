@@ -246,7 +246,7 @@ export interface IntegrationIssue {
   /** What the admin should do. */
   todo: string;
   action: IssueAction;
-  /** Nothing in OmniPlatform uses this login (no account mapped, nothing scheduled), so it may simply be removed. */
+  /** Nothing in Media360 uses this login (no account mapped, nothing scheduled), so it may simply be removed. */
   unused?: boolean;
   detectedAt: ISODate;
 }

@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Super Admin Integrations Module
+ * Media360 - Super Admin Integrations Module
  * Real Frontend Export Utilities (CSV & JSON)
  * Safe metadata only: NEVER exports secrets, tokens, or raw credentials.
  */
@@ -57,7 +57,7 @@ export function exportProvidersToCsv(providers: IntegrationProvider[]): void {
   const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
   downloadFile(
     csvContent,
-    `omniplatform-providers-${new Date().toISOString().slice(0, 10)}.csv`,
+    `media360-providers-${new Date().toISOString().slice(0, 10)}.csv`,
     "text/csv;charset=utf-8;"
   );
 }
@@ -98,7 +98,7 @@ export function exportConnectionsToCsv(connections: ProviderAuthorization[]): vo
   const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
   downloadFile(
     csvContent,
-    `omniplatform-connections-${new Date().toISOString().slice(0, 10)}.csv`,
+    `media360-connections-${new Date().toISOString().slice(0, 10)}.csv`,
     "text/csv;charset=utf-8;"
   );
 }
@@ -137,7 +137,7 @@ export function exportIssuesToCsv(issues: IntegrationIssue[]): void {
   const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
   downloadFile(
     csvContent,
-    `omniplatform-integration-issues-${new Date().toISOString().slice(0, 10)}.csv`,
+    `media360-integration-issues-${new Date().toISOString().slice(0, 10)}.csv`,
     "text/csv;charset=utf-8;"
   );
 }
@@ -168,7 +168,7 @@ export function exportActivitiesToCsv(activities: IntegrationActivity[]): void {
   const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
   downloadFile(
     csvContent,
-    `omniplatform-integration-activity-${new Date().toISOString().slice(0, 10)}.csv`,
+    `media360-integration-activity-${new Date().toISOString().slice(0, 10)}.csv`,
     "text/csv;charset=utf-8;"
   );
 }

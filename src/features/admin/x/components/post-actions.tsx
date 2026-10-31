@@ -201,7 +201,7 @@ export function usePostActions(): PostActionsApi {
             confirm.archived ? (
               <>
                 “{postSummary(confirm.post.text, 70)}” will be hidden from the default content views. It stays live on X — archiving only
-                affects OmniPlatform.
+                affects Media360.
               </>
             ) : (
               <>“{postSummary(confirm.post.text, 70)}” will appear in the content views again.</>
@@ -224,7 +224,7 @@ export function usePostActions(): PostActionsApi {
                 recovered.
               </>
             ) : (
-              <>This permanently deletes the draft from OmniPlatform. It was never published, so nothing changes on X.</>
+              <>This permanently deletes the draft from Media360. It was never published, so nothing changes on X.</>
             )
           ) : null
         }

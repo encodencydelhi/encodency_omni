@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { InvoiceDetailPage } from "@/features/billing";
 
 export const metadata: Metadata = {
-  title: "Invoice Detail | EnCodency OmniPlatform Super Admin",
+  title: "Invoice Detail | Media360 Super Admin",
   description: "Financial invoice breakdown, allocations, adjustments and printable document view.",
 };
 

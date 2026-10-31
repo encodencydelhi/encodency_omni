@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Financial KPI Card
+ * Media360 - Financial KPI Card
  * Compact, modern, equal-height card with rounded-sm, minimum 12px text, and subtle hover.
  */
 

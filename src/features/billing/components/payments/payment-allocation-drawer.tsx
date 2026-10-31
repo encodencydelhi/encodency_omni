@@ -1,5 +1,5 @@
 /**
- * EnCodency OmniPlatform - Payment Allocation Drawer
+ * Media360 - Payment Allocation Drawer
  * Many-to-many payment allocation interface with integer validation and live balance recalculations.
  */
 

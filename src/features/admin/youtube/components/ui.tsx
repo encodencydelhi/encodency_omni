@@ -339,8 +339,8 @@ export function TypeBadge({ type }: { type: ContentType }) {
   return <Badge tone={TYPE_TONE[type]}>{TYPE_LABEL[type]}</Badge>;
 }
 
-/** Marks OmniPlatform-owned data so it's never mistaken for YouTube's own. */
-export function InternalBadge({ label = "OmniPlatform", hint }: { label?: string; hint?: string }) {
+/** Marks Media360-owned data so it's never mistaken for YouTube's own. */
+export function InternalBadge({ label = "Media360", hint }: { label?: string; hint?: string }) {
   const badge = (
     <span className="inline-flex h-5 items-center gap-1 rounded-sm bg-[#F4F0FF] px-1.5 text-[10.5px] font-semibold text-[#6D28D9] ring-1 ring-inset ring-[#E2D8FD]">
       <Sparkles className="size-3" />
