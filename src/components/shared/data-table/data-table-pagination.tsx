@@ -17,12 +17,15 @@ interface DataTablePaginationProps {
   pagination: PaginationMeta;
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  /** Server cursors can only step to the next or previous page, so the jump-to-first/last controls and the page count are hidden. */
+  cursorMode?: boolean;
 }
 
 export function DataTablePagination({
   pagination,
   onPageChange,
   onPageSizeChange,
+  cursorMode = false,
 }: DataTablePaginationProps) {
   const { page, pageSize, total, totalPages, hasNextPage, hasPreviousPage } = pagination;
 
@@ -58,17 +61,19 @@ export function DataTablePagination({
 
         <div className="flex items-center gap-1">
           <span className="mr-2 text-2xs text-muted-foreground">
-            Page {page} of {totalPages}
+            {cursorMode ? `Page ${page}` : `Page ${page} of ${totalPages}`}
           </span>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            onClick={() => onPageChange(1)}
-            disabled={!hasPreviousPage}
-            aria-label="First page"
-          >
-            <ChevronsLeftIcon />
-          </Button>
+          {cursorMode ? null : (
+            <Button
+              variant="outline"
+              size="icon-sm"
+              onClick={() => onPageChange(1)}
+              disabled={!hasPreviousPage}
+              aria-label="First page"
+            >
+              <ChevronsLeftIcon />
+            </Button>
+          )}
           <Button
             variant="outline"
             size="icon-sm"
@@ -87,15 +92,17 @@ export function DataTablePagination({
           >
             <ChevronRightIcon />
           </Button>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            onClick={() => onPageChange(totalPages)}
-            disabled={!hasNextPage}
-            aria-label="Last page"
-          >
-            <ChevronsRightIcon />
-          </Button>
+          {cursorMode ? null : (
+            <Button
+              variant="outline"
+              size="icon-sm"
+              onClick={() => onPageChange(totalPages)}
+              disabled={!hasNextPage}
+              aria-label="Last page"
+            >
+              <ChevronsRightIcon />
+            </Button>
+          )}
         </div>
       </div>
     </div>

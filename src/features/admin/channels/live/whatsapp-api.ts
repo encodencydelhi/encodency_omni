@@ -264,6 +264,7 @@ export interface WhatsAppAnalyticsQuery {
 }
 
 export interface WhatsAppOverviewAnalytics {
+  agentResponses?: {userId:string;averageResponseMs:number;samples:number}[];
   range?: string;
   total: number;
   sent: number;

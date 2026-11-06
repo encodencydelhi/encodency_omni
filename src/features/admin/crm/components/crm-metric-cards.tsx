@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import type { CrmDealsSummary, CrmTasksStats } from "../data/crm-api";
 import {
   Users, UserPlus, TrendingUp, TrendingDown, Clock, Building2, Target,
   CheckCircle2, AlertCircle, ListTodo, CalendarClock, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { MetricDelta } from "@/types/common";
-import type { Lead, Contact, Deal, CrmTask } from "../types";
+import type { Lead, Contact } from "../types";
 import { formatInr } from "../lib/crm-records";
 
 /* ------------------------------------------------------------------ */
@@ -345,18 +346,17 @@ export function ContactMetricCards({ contacts }: { contacts: Contact[] }) {
 /* Pipeline KPIs                                                      */
 /* ------------------------------------------------------------------ */
 
-export function PipelineMetricCards({ deals }: { deals: Deal[] }) {
-  const openDeals = deals.filter((d) => d.stage !== "won" && d.stage !== "lost");
-  const wonDeals = deals.filter((d) => d.stage === "won");
-  const lostDeals = deals.filter((d) => d.stage === "lost");
-  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
-  const wonThisMonth = wonDeals.filter((d) => new Date(d.updatedAt).getTime() >= monthStart.getTime());
-  const totalValue = openDeals.reduce((sum, d) => sum + d.value, 0);
-  const weightedValue = openDeals.reduce((sum, d) => sum + (d.value * d.probability) / 100, 0);
-  const wonValue = wonThisMonth.reduce((sum, d) => sum + d.value, 0);
-  const closedDeals = wonDeals.length + lostDeals.length;
-  const winRate = closedDeals > 0 ? ((wonDeals.length / closedDeals) * 100).toFixed(1) : "0";
-  const avgDeal = openDeals.length > 0 ? Math.round(totalValue / openDeals.length) : 0;
+export function PipelineMetricCards({ summary }: { summary: CrmDealsSummary | null }) {
+  const open = summary?.metrics.open ?? { count: 0, value: 0, weighted: 0 };
+  const wonThisMonth = summary?.metrics.wonThisMonth ?? { count: 0, value: 0 };
+  const closedDeals = (summary?.metrics.won.count ?? 0) + (summary?.metrics.lost.count ?? 0);
+  const winRate = closedDeals > 0 ? (((summary?.metrics.won.count ?? 0) / closedDeals) * 100).toFixed(1) : "0";
+  const totalValue = open.value;
+  const weightedValue = open.weighted;
+  const wonValue = wonThisMonth.value;
+  const avgDeal = open.count > 0 ? Math.round(open.value / open.count) : 0;
+  const openDeals = { length: open.count };
+  const wonThisMonthDeals = { length: wonThisMonth.count };
 
   return (
     <div className="grid gap-2.5 sm:gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -382,7 +382,7 @@ export function PipelineMetricCards({ deals }: { deals: Deal[] }) {
         icon={CheckCircle2}
         tone="emerald"
         delta={null}
-        hint={`${wonThisMonth.length} Deal${wonThisMonth.length === 1 ? "" : "s"} Closed`}
+        hint={`${wonThisMonthDeals.length} Deal${wonThisMonthDeals.length === 1 ? "" : "s"} Closed`}
       />
       <CrmStatCard
         label="Win Rate"
@@ -400,19 +400,12 @@ export function PipelineMetricCards({ deals }: { deals: Deal[] }) {
 /* Tasks KPIs                                                         */
 /* ------------------------------------------------------------------ */
 
-export function TaskMetricCards({ tasks }: { tasks: CrmTask[] }) {
-  const total = tasks.length;
-  const completed = tasks.filter((t) => t.status === "completed").length;
-  const pending = tasks.filter((t) => t.status === "pending" || t.status === "in_progress").length;
-  const overdue = tasks.filter((t) => {
-    if (t.status === "completed" || t.status === "cancelled") return false;
-    return new Date(t.dueDate) < new Date();
-  }).length;
-  const dueToday = tasks.filter((t) => {
-    if (t.status === "completed" || t.status === "cancelled") return false;
-    const today = new Date().toISOString().split("T")[0];
-    return t.dueDate === today;
-  }).length;
+export function TaskMetricCards({ stats }: { stats: CrmTasksStats }) {
+  const total = stats.total;
+  const completed = stats.byStatus.completed ?? 0;
+  const pending = (stats.byStatus.pending ?? 0) + (stats.byStatus.in_progress ?? 0);
+  const overdue = stats.overdue;
+  const dueToday = stats.dueToday;
   const completionRate = total > 0 ? ((completed / total) * 100).toFixed(1) : "0";
 
   return (
@@ -422,7 +415,7 @@ export function TaskMetricCards({ tasks }: { tasks: CrmTask[] }) {
         value={String(total)}
         icon={ListTodo}
         tone="blue"
-        delta={{ changePercent: 5, direction: "up-is-good" }}
+        delta={null}
         hint="All Time"
       />
       <CrmStatCard
@@ -430,7 +423,7 @@ export function TaskMetricCards({ tasks }: { tasks: CrmTask[] }) {
         value={String(completed)}
         icon={CheckCircle2}
         tone="emerald"
-        delta={{ changePercent: 12, direction: "up-is-good" }}
+        delta={null}
         hint={`${completionRate}% Rate`}
       />
       <CrmStatCard
@@ -446,7 +439,7 @@ export function TaskMetricCards({ tasks }: { tasks: CrmTask[] }) {
         value={String(overdue)}
         icon={AlertCircle}
         tone={overdue > 0 ? "rose" : "amber"}
-        delta={overdue > 0 ? { changePercent: 8, direction: "down-is-good" } : null}
+        delta={null}
         hint={`${dueToday} Due Today`}
         emphasis={overdue > 0 ? "danger" : "default"}
       />

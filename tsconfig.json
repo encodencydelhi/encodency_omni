@@ -42,7 +42,9 @@
     ".next-ui/types/**/*.ts",
     ".next-ui/dev/types/**/*.ts",
     ".next-prodcheck/types/**/*.ts",
-    ".next-prodcheck/dev/types/**/*.ts"
+    ".next-prodcheck/dev/types/**/*.ts",
+    ".next-engineering-validation/types/**/*.ts",
+    ".next-engineering-validation/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

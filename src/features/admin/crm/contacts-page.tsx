@@ -8,6 +8,7 @@ import {
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -48,6 +49,8 @@ import {
   contacts as seedContacts, activities as seedActivities, contactGroups as seedGroups, deals as seedDeals,
 } from "./data/crm-data";
 import { crmApi } from "./data/crm-api";
+import { useCrmCursor } from "./lib/use-crm-cursor";
+import { CrmCursorPagination } from "./components/crm-cursor-pagination";
 import { exportContactsCsv, listValues } from "./lib/csv";
 import {
   BUILTIN_PIPELINE, resolvePipelines, CONTACT_STATUSES, CONTACT_STATUS_LABELS, DEAL_STAGE_LABELS, errorMessage, formatInr,
@@ -111,14 +114,11 @@ function telLink(phone: string): string | null {
 export default function ContactsPage() {
   const { scope, isReady, assignees, activities, setActivities, logActivity } = useCrmWorkspace("contact");
 
-  const [contacts, setContacts] = useState<Contact[]>(isMockMode ? seedContacts : []);
   const [groups, setGroups] = useState<ContactGroup[]>(isMockMode ? seedGroups : []);
   const [deals, setDeals] = useState<Deal[]>(isMockMode ? seedDeals : []);
   const [customPipelines, setCustomPipelines] = useState<Pipeline[]>([]);
   const [tasks, setTasks] = useState<CrmTask[]>([]);
-  const [isLoading, setIsLoading] = useState(!isMockMode);
   const [isSaving, setIsSaving] = useState(false);
-  const [loadError, setLoadError] = useState<unknown>(null);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -146,48 +146,39 @@ export default function ContactsPage() {
   const [dealTarget, setDealTarget] = useState<Contact | null>(null);
   const [logTarget, setLogTarget] = useState<Contact | null>(null);
   const [formKey, setFormKey] = useState(0);
+  const [externalDetail, setExternalDetail] = useState<Contact | null>(null);
+  const cursor = useCrmCursor<Contact>({ kind: "contact", scope, ready: isReady, normalize: normalizeContact,
+    query: { search: search.trim() || undefined, status: statusFilter ?? undefined, group: groupFilter ?? undefined, ownerId: ownerFilter ?? undefined, tag: tagFilter ?? undefined, limit: pageSize },
+    preview: isMockMode ? seedContacts : undefined });
+  const { rows: contacts, setRows: setContacts, isLoading, error: loadError, reload: reloadCursor, isCurrent: isCurrentCursor } = cursor;
+  useEffect(() => { const timer = setTimeout(() => { setSelected([]); setDetailId(null); setExternalDetail(null); }, 0); return () => clearTimeout(timer); }, [cursor.key]);
 
   /* ---- Loading ---- */
   const load = useCallback(async () => {
-    if (isMockMode) {
-      setActivities(seedActivities);
-      setIsLoading(false);
-      return;
-    }
-    if (!isReady || !scope) {
-      if (isReady) { setLoadError(new Error("Select a Client to view CRM contacts.")); setIsLoading(false); }
-      return;
-    }
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const rows = await crmApi.list<Contact>("contact", scope);
-      setContacts(rows.map(normalizeContact));
-      setSelected([]);
-    } catch (error) {
-      setLoadError(error);
-      setIsLoading(false);
-      return;
-    }
-    const [groupRows, activityRows, dealRows, pipelineRows, taskRows] = await Promise.allSettled([
+    setSelected([]);
+    await reloadCursor();
+  }, [reloadCursor]);
+
+  useEffect(() => {
+    if (isMockMode) { const timer = setTimeout(() => setActivities(seedActivities), 0); return () => clearTimeout(timer); }
+    if (!scope) return;
+    let cancelled = false;
+    void Promise.allSettled([
       crmApi.list<ContactGroup>("group", scope), crmApi.list<Parameters<typeof normalizeActivity>[0]>("activity", scope),
       crmApi.list<Deal>("deal", scope), crmApi.list<Pipeline>("pipeline", scope), crmApi.list<CrmTask>("task", scope),
-    ]);
+    ]).then(([groupRows, activityRows, dealRows, pipelineRows, taskRows]) => {
+    if (cancelled) return;
     if (taskRows.status === "fulfilled") setTasks(taskRows.value);
     if (groupRows.status === "fulfilled") setGroups(groupRows.value.map(normalizeGroup));
     if (activityRows.status === "fulfilled") setActivities(activityRows.value.map(normalizeActivity));
     if (dealRows.status === "fulfilled") setDeals(dealRows.value.map(normalizeDeal));
     if (pipelineRows.status === "fulfilled") setCustomPipelines(pipelineRows.value.map(normalizePipeline));
-    setIsLoading(false);
-  }, [isReady, scope, setActivities]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(timer);
-  }, [load]);
+    });
+    return () => { cancelled = true; };
+  }, [scope, setActivities]);
 
   /* ---- Derived ---- */
-  const detail = useMemo(() => contacts.find((c) => c.id === detailId) ?? null, [contacts, detailId]);
+  const detail = useMemo(() => contacts.find((c) => c.id === detailId) ?? (externalDetail?.id === detailId ? externalDetail : null), [contacts, detailId, externalDetail]);
 
   const groupNames = useMemo(() => {
     const names = new Set(groups.map((g) => g.name));
@@ -204,13 +195,15 @@ export default function ContactsPage() {
   const tagOptions = useMemo(() => Array.from(new Set(contacts.flatMap((c) => c.tags))).sort((a, b) => a.localeCompare(b)), [contacts]);
   const ownerOptions = useMemo(() => {
     const byId = new Map<string, string>();
+    assignees.forEach(member => byId.set(member.id, member.name));
     contacts.forEach((c) => { if (c.ownerId) byId.set(c.ownerId, c.ownerName); });
     return Array.from(byId, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
-  }, [contacts]);
+  }, [contacts, assignees]);
 
   const allPipelines = useMemo(() => resolvePipelines(customPipelines), [customPipelines]);
 
   const filtered = useMemo(() => {
+    if (!isMockMode) return contacts;
     let rows = contacts;
     if (search.trim()) {
       const q = search.trim().toLowerCase();
@@ -235,11 +228,13 @@ export default function ContactsPage() {
 
   useOpenParam(!isLoading && isReady, useCallback((id: string) => {
     if (contacts.some((c) => c.id === id)) setDetailId(id);
-  }, [contacts]));
+    else if (!isMockMode && scope) void crmApi.get<Contact>("contact", id, scope).then(row => { if (isCurrentCursor()) { setExternalDetail(normalizeContact(row)); setDetailId(id); } }).catch(error => toast.error(errorMessage(error)));
+  }, [contacts, scope, isCurrentCursor]));
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const paginated = useMemo(() => {
+    if (!isMockMode) return filtered;
     const start = (currentPage - 1) * pageSize;
     return filtered.slice(start, start + pageSize);
   }, [filtered, currentPage, pageSize]);
@@ -258,8 +253,9 @@ export default function ContactsPage() {
     const saved = results.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
     const byId = new Map(saved.map((c) => [c.id, c]));
     setContacts((rows) => rows.map((row) => byId.get(row.id) ?? row));
+    if (isCurrentCursor()) setExternalDetail(current => current ? byId.get(current.id) ?? current : null);
     return { saved, failed: items.length - saved.length };
-  }, [scope]);
+  }, [scope, setContacts, isCurrentCursor]);
 
   const buildContact = (form: ContactFormValues, base: Contact | null): Contact => {
     const owner = assignees.find((m) => m.id === form.ownerId);
@@ -426,7 +422,10 @@ export default function ContactsPage() {
       setGroups((rows) => rows.filter((g) => g.id !== group.id));
       const members = contacts.filter((c) => c.groups.includes(group.name))
         .map((c) => ({ ...c, groups: c.groups.filter((g) => g !== group.name), updatedAt: new Date().toISOString() }));
-      if (members.length) await persistContacts(members);
+      if (members.length) {
+        if (isMockMode) await persistContacts(members);
+        else setContacts(rows => rows.map(contact => contact.groups.includes(group.name) ? { ...contact, groups: contact.groups.filter(name => name !== group.name) } : contact));
+      }
       setGroupFilter((current) => (current === group.name ? null : current));
       toast.success(`Group “${group.name}” deleted`);
     } catch (error) { toast.error(errorMessage(error)); }
@@ -678,7 +677,7 @@ export default function ContactsPage() {
           <div className="flex flex-wrap items-center gap-2">
             <CrmRecycleDialog kind="contact" scope={scope} onRestored={() => void load()} />
             <Button variant="outline" size="sm" onClick={() => setShowImport(true)}><Upload className="size-3.5" /> Import</Button>
-            <Button variant="outline" size="sm" onClick={handleExport}><Download className="size-3.5" /> Export</Button>
+            <Button variant="outline" size="sm" onClick={handleExport}><Download className="size-3.5" /> {isMockMode ? "Export" : "Export Page / Selection"}</Button>
             <Button variant="outline" size="sm" onClick={() => setShowGroups(true)}><FolderCog className="size-3.5" /> Groups</Button>
             <Button variant="outline" size="sm" onClick={openMerge} disabled={selected.length !== 2} title={selected.length === 2 ? "Merge the two selected contacts" : "Select exactly 2 contacts to merge"}>
               <Merge className="size-3.5" /> Merge
@@ -688,6 +687,7 @@ export default function ContactsPage() {
         }
       />
 
+      {!isMockMode && <p className="px-1 text-xs text-slate-500">Statistics describe this results page. Search and filters apply to all records. Results use a stable creation order; export includes the current page or selection.</p>}
       <ContactMetricCards contacts={contacts} />
 
       <FilterBar
@@ -716,7 +716,7 @@ export default function ContactsPage() {
                 {ownerOptions.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
               </SelectContent>
             </Select>
-            {tagOptions.length > 0 ? (
+            {!isMockMode ? <><Input value={tagFilter ?? ""} onChange={event => { setTagFilter(event.target.value || null); setPage(1); }} aria-label="Filter all contacts by tag" placeholder="Tag (all records)" list="crm-contact-tags" className="h-8 w-44 text-xs" /><datalist id="crm-contact-tags">{tagOptions.map(tag => <option key={tag} value={tag} />)}</datalist></> : tagOptions.length > 0 ? (
               <Select value={tagFilter ?? ALL} onValueChange={(v) => { setTagFilter(v === ALL ? null : v); setPage(1); }}>
                 <SelectTrigger size="sm" className="w-auto min-w-[7rem]"><SelectValue placeholder="Tag" /></SelectTrigger>
                 <SelectContent>
@@ -749,7 +749,7 @@ export default function ContactsPage() {
       {viewMode === "list" ? (
         <DataTable
           columns={columns} rows={paginated} getRowId={(r) => r.id} isLoading={isLoading} error={loadError}
-          onRetry={() => void load()} sort={sort} onToggleSort={handleSort} pagination={pagination}
+          onRetry={() => void load()} sort={isMockMode ? sort : null} onToggleSort={isMockMode ? handleSort : undefined} pagination={isMockMode ? pagination : undefined}
           onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
           selection={selection} onRowClick={(r) => setDetailId(r.id)} enableColumnVisibility emptyState={emptyState}
         />
@@ -792,7 +792,7 @@ export default function ContactsPage() {
               );
             })}
           </div>
-          {filtered.length > 0 ? (
+          {isMockMode && filtered.length > 0 ? (
             <div className="flex flex-wrap items-center justify-between gap-2 text-[12px] text-slate-500">
               <span>{(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filtered.length)} of {filtered.length}</span>
               <div className="flex items-center gap-2">
@@ -807,6 +807,8 @@ export default function ContactsPage() {
           ) : null}
         </div>
       )}
+
+      {!isMockMode && <CrmCursorPagination count={contacts.length} page={cursor.pageNumber} size={pageSize} loading={isLoading} error={loadError} hasMore={cursor.hasMore} hasPrevious={cursor.hasPrevious} onNext={() => { setSelected([]); setDetailId(null); void cursor.next(); }} onPrevious={() => { setSelected([]); setDetailId(null); void cursor.previous(); }} onSize={setPageSize} />}
 
       {/* ---- Contact Detail Sheet ---- */}
       <Sheet open={!!detail} onOpenChange={(open) => { if (!open) setDetailId(null); }}>
@@ -946,7 +948,7 @@ export default function ContactsPage() {
 
       {/* ---- Groups ---- */}
       <ManageGroupsDialog
-        open={showGroups} onClose={() => setShowGroups(false)} groups={groups} counts={groupCounts}
+        open={showGroups} onClose={() => setShowGroups(false)} groups={groups} counts={groupCounts} countScope={isMockMode ? "all" : "page"}
         isSaving={isSaving} onCreate={handleCreateGroup} onDelete={handleDeleteGroup}
       />
       <AssignGroupsDialog

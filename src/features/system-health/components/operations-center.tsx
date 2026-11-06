@@ -1,4 +1,5 @@
 "use client";
+import { confirmAction } from "@/lib/ui-dialog-store";
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -628,8 +629,8 @@ function CreateIncidentModal({ snapshot, open, onClose, onCreate }: { snapshot: 
   const [error, setError] = useState("");
   const dirty = title.trim().length > 0 || summary.trim().length > 0;
   useBeforeUnload(open && dirty);
-  function closeWithGuard() {
-    if (dirty && !window.confirm("Discard this incident draft?")) return;
+  async function closeWithGuard() {
+    if (dirty && !await confirmAction("Discard this incident draft?")) return;
     setTitle(""); setSummary(""); setError(""); onClose();
   }
   async function submit() {
@@ -671,8 +672,8 @@ function AddImpactModal({ snapshot, incident, open, onClose, onAdd }: { snapshot
   const [error, setError] = useState("");
   const dirty = [area, companyName, clientName, workflow, evidence].some((value) => value.trim().length > 0);
   useBeforeUnload(open && dirty);
-  function closeWithGuard() {
-    if (dirty && !window.confirm("Discard this impact draft?")) return;
+  async function closeWithGuard() {
+    if (dirty && !await confirmAction("Discard this impact draft?")) return;
     setArea(""); setCompanyName(""); setClientName(""); setWorkflow(""); setEvidence(""); setError(""); onClose();
   }
   async function submit() {

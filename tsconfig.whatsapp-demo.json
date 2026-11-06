@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": [
+    "next-env.d.ts",
+    "src/app/admin/whatsapp/**/*.tsx",
+    "src/features/admin/channels/demo/**/*.ts",
+    "src/features/admin/channels/demo/**/*.tsx",
+    "src/features/admin/channels/components/whatsapp-channel-page.tsx"
+  ],
+  "exclude": ["node_modules"]
+}

@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "typecheck:whatsapp": "tsc --project tsconfig.whatsapp-demo.json --incremental false",
     "test": "node --import ./scripts/ts-test-hooks.mjs --test \"src/**/*.test.ts\""
   },
   "dependencies": {

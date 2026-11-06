@@ -226,6 +226,8 @@ export interface CreditBalance {
   included: number;
   /** Used this period (plan credits are spent before purchased ones). */
   used: number;
+  /** Pending provider work or unresolved outcomes; held separately from consumed credits. */
+  reserved?: number;
   /** Bought in packs; roll over until used or until they expire. */
   purchased: number;
   purchasedExpireAt: string | null;

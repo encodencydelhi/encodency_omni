@@ -36,6 +36,8 @@ export interface BackendBillingSummary {
   startedAt?: string | null;
   limits: { maxClients: number; maxAiTokens: number };
   usage: { currentClients: number; currentAiTokens: number };
+  /** Held for requests that are in flight or awaiting reconciliation; not consumed usage. */
+  reservedAiTokens?: number;
 }
 
 /** `GET /billing/invoices`. Amounts are in paise. */
@@ -308,7 +310,7 @@ export function buildLiveSnapshot(input: LiveSnapshotInput): BillingSnapshot {
 
   const usage: UsageMetric[] = [
     { key: "clients", used: hasSubscription ? summary.usage.currentClients : 0, resets: false },
-    { key: "aiCredits", used: hasSubscription ? summary.usage.currentAiTokens : 0, resets: true },
+    { key: "aiCredits", used: summary.usage.currentAiTokens, resets: true },
     ...(input.teamMembers === null ? [] : [{ key: "teamMembers" as const, used: input.teamMembers, resets: false }]),
   ];
 
@@ -342,7 +344,7 @@ export function buildLiveSnapshot(input: LiveSnapshotInput): BillingSnapshot {
     payments: toPayments(invoices),
     profile: toBillingProfile(organization),
     contacts: toContacts(organization, input.contacts),
-    credits: { included: summary.limits.maxAiTokens, used: hasSubscription ? summary.usage.currentAiTokens : 0, purchased: 0, purchasedExpireAt: null, resetsAt: periodEnd },
+    credits: { included: summary.limits.maxAiTokens, used: summary.usage.currentAiTokens, reserved: summary.reservedAiTokens ?? 0, purchased: 0, purchasedExpireAt: null, resetsAt: periodEnd },
     creditPacks: [],
     addOnCatalog: [],
     addOns: [],

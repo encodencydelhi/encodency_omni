@@ -1,4 +1,5 @@
 "use client";
+import { confirmAction } from "@/lib/ui-dialog-store";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Copy, Loader2, Pencil, Plus, Send, Trash2, Webhook, XCircle } from "lucide-react";
@@ -45,7 +46,7 @@ export function CompanyWebhooksPage() {
                 <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", endpoint.enabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600")}>{endpoint.enabled ? "Enabled" : "Disabled"}</span>
                 <Button variant="outline" size="sm" disabled={test.isPending} onClick={() => test.mutate(endpoint.id)}><Send className="size-3.5" />Test</Button>
                 <Button variant="ghost" size="icon-sm" aria-label="Edit endpoint" onClick={() => setEditing(endpoint)}><Pencil className="size-3.5" /></Button>
-                <Button variant="ghost" size="icon-sm" aria-label="Delete endpoint" disabled={remove.isPending} onClick={() => { if (window.confirm("Delete this webhook endpoint and its delivery history?")) remove.mutate(endpoint.id); }}><Trash2 className="size-3.5 text-destructive" /></Button>
+                <Button variant="ghost" size="icon-sm" aria-label="Delete endpoint" disabled={remove.isPending} onClick={async () => { if (await confirmAction("Delete this webhook endpoint and its delivery history?")) remove.mutate(endpoint.id); }}><Trash2 className="size-3.5 text-destructive" /></Button>
               </div>
             </div>)}
           </div>

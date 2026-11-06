@@ -1,4 +1,5 @@
 "use client";
+import { confirmAction } from "@/lib/ui-dialog-store";
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -557,9 +558,9 @@ function Announcements({ snapshot }: { snapshot: NotificationSnapshot }) {
     }
     return [...groups.values()];
   }, [snapshot]);
-  const submit = () => {
+  const submit = async () => {
     const who = audience === "company" ? (snapshot.companies ?? []).find((c) => c.id === companyId)?.name ?? "this company" : snapshot.audiences.find((a) => a.id === audience)?.name;
-    if (window.confirm(`Send “${title.trim()}” now to ${who}${size != null ? ` (${size} people)` : ""}? It cannot be unsent.`)) send.mutate();
+    if (await confirmAction(`Send “${title.trim()}” now to ${who}${size != null ? ` (${size} people)` : ""}? It cannot be unsent.`)) send.mutate();
   };
   return (
     <div className="grid gap-1 xl:grid-cols-[1fr_0.8fr]">

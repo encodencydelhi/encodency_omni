@@ -40,7 +40,9 @@ import { TaskMetricCards } from "./components/crm-metric-cards";
 import { tasks as initialTasks } from "./data/crm-data";
 import type { CrmTask, TaskStatus, TaskPriority, TaskType, TaskViewMode } from "./types";
 import { formatDate } from "@/lib/utils/format";
-import { crmApi, type CrmScope } from "./data/crm-api";
+import { crmApi, type CrmScope, type CrmTasksStats } from "./data/crm-api";
+import { useCrmCursor, type CrmPageFilters } from "./lib/use-crm-cursor";
+import { emptyTasksStats, statsFromTasks } from "./data/tasks-stats";
 import { crmLink, useOpenParam } from "./lib/use-open-param";
 import type { Contact, Deal, Lead } from "./types";
 
@@ -148,65 +150,50 @@ function getErrorMessage(error: unknown): string {
 /* Task type donut                                                      */
 /* ------------------------------------------------------------------ */
 
-function computeTypeDistribution(tasks: CrmTask[]): DonutSegment[] {
-  const counts: Record<string, number> = {};
-  tasks.forEach((t) => { counts[t.type] = (counts[t.type] || 0) + 1; });
+const BOARD_PAGE_SIZE = 25;
+
+/** The viewer's local calendar date (YYYY-MM-DD), so "due today" and "overdue" follow their day, not the server's. */
+function localToday(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function computeTypeDistribution(stats: CrmTasksStats): DonutSegment[] {
   const colors: Record<string, string> = {
     call: "#2563EB", email: "#8B5CF6", meeting: "#F59E0B", follow_up: "#078359",
     demo: "#0866FF", proposal: "#EA580C", internal: "#6B7280", other: "#AAB5C6",
   };
-  return Object.entries(counts).map(([key, value]) => ({
+  return Object.entries(stats.byType).map(([key, value]) => ({
     key, label: TYPE_LABELS[key as TaskType] ?? key, value, color: colors[key] ?? "#AAB5C6",
   }));
 }
 
-function computePriorityDistribution(tasks: CrmTask[]): DonutSegment[] {
-  const counts: Record<string, number> = {};
-  tasks.forEach((t) => { counts[t.priority] = (counts[t.priority] || 0) + 1; });
+function computePriorityDistribution(stats: CrmTasksStats): DonutSegment[] {
   const colors: Record<string, string> = { high: "#DC2626", medium: "#F59E0B", low: "#6B7280" };
-  return Object.entries(counts).map(([key, value]) => ({
+  return Object.entries(stats.byPriority).map(([key, value]) => ({
     key, label: key.charAt(0).toUpperCase() + key.slice(1), value, color: colors[key] ?? "#AAB5C6",
   }));
 }
 
-function computeAssigneeDistribution(tasks: CrmTask[]): DonutSegment[] {
-  const counts: Record<string, number> = {};
-  tasks.forEach((t) => { counts[t.assigneeName] = (counts[t.assigneeName] || 0) + 1; });
+function computeAssigneeDistribution(stats: CrmTasksStats): DonutSegment[] {
   const colors = ["#2563EB", "#059669", "#7C3AED", "#D97706", "#DC2626", "#0891B2"];
-  return Object.entries(counts).map(([key, value], i) => ({
-    key, label: key, value, color: colors[i % colors.length] ?? "#AAB5C6",
+  return stats.byAssignee.map(({ name, count }, i) => ({
+    key: name, label: name, value: count, color: colors[i % colors.length] ?? "#AAB5C6",
   }));
 }
 
-function computeTasksTrend(tasks: CrmTask[]): TrendSeries[] {
-  const byDate: Record<string, { created: number; completed: number }> = {};
-  tasks.forEach((t) => {
-    const cd = t.createdAt.split("T")[0] ?? "";
-    if (!byDate[cd]) byDate[cd] = { created: 0, completed: 0 };
-    byDate[cd].created++;
-    if (t.completedAt) {
-      const compd = t.completedAt.split("T")[0] ?? "";
-      if (!byDate[compd]) byDate[compd] = { created: 0, completed: 0 };
-      byDate[compd].completed++;
-    }
-  });
-  const pts = Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b));
+function computeTasksTrend(stats: CrmTasksStats): TrendSeries[] {
+  const created = new Map(stats.created.map((point) => [point.date, point.count]));
+  const completed = new Map(stats.completed.map((point) => [point.date, point.count]));
+  const dates = [...new Set([...created.keys(), ...completed.keys()])].sort();
   return [
-    { key: "created", label: "Created", color: "#2563EB", data: pts.map(([date, v]) => ({ date, value: v.created })) },
-    { key: "completed", label: "Completed", color: "#059669", data: pts.map(([date, v]) => ({ date, value: v.completed })) },
+    { key: "created", label: "Created", color: "#2563EB", data: dates.map((date) => ({ date, value: created.get(date) ?? 0 })) },
+    { key: "completed", label: "Completed", color: "#059669", data: dates.map((date) => ({ date, value: completed.get(date) ?? 0 })) },
   ];
 }
 
-function computeMonthlyTasks(tasks: CrmTask[]): MonthlyPoint[] {
-  const counts: Record<string, number> = {};
-  tasks.forEach((t) => {
-    const d = new Date(t.createdAt);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    counts[key] = (counts[key] || 0) + 1;
-  });
-  return Object.entries(counts)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([month, count]) => ({ month, value: count }));
+function computeMonthlyTasks(stats: CrmTasksStats): MonthlyPoint[] {
+  return stats.monthly.map(({ month, count }) => ({ month, value: count }));
 }
 
 /* ------------------------------------------------------------------ */
@@ -248,21 +235,9 @@ export default function TasksPage() {
       }
       return;
     }
-    setIsLoading(true);
     setLoadError(null);
     try {
-      const [taskRows, memberRows] = await Promise.all([
-        crmApi.list<CrmTask>("task", scope),
-        teamApi.listMembers(scope.companyId).catch(() => []),
-      ]);
-      setTasks(taskRows.map(normalizeTask));
-      void Promise.allSettled([
-        crmApi.list<Lead>("lead", scope), crmApi.list<Contact>("contact", scope), crmApi.list<Deal>("deal", scope),
-      ]).then(([leadRows, contactRows, dealRows]) => {
-        if (leadRows.status === "fulfilled") setLeadOptions(leadRows.value);
-        if (contactRows.status === "fulfilled") setContactOptions(contactRows.value);
-        if (dealRows.status === "fulfilled") setDealOptions(dealRows.value);
-      });
+      const memberRows = await teamApi.listMembers(scope.companyId).catch(() => []);
       if (memberRows.length) {
         setAssignees(memberRows.filter((member) => !member.suspendedAt).map((member) => ({ id: member.user.id, name: member.user.name?.trim() || member.user.email })));
       }
@@ -278,13 +253,101 @@ export default function TasksPage() {
     return () => window.clearTimeout(timer);
   }, [loadTasks]);
 
+  /* ---- Live data: the server filters, sorts, counts and pages; nothing loads the whole task list ---- */
+  const listQuery = useMemo<CrmPageFilters>(() => ({
+    search: search.trim() || undefined, status: statusFilter ?? undefined, priority: priorityFilter ?? undefined,
+    sort: sort?.field, dir: sort?.direction, limit: pageSize,
+  }), [search, statusFilter, priorityFilter, sort, pageSize]);
+  const [listTotal, setListTotal] = useState<{ sig: string; total: number } | null>(null);
+  const fetchTasks = useCallback(async (pageScope: CrmScope, query: CrmPageFilters, cursorValue: string | undefined) => {
+    const result = await crmApi.tasksPage<CrmTask>({ cursor: cursorValue, limit: query.limit, search: query.search, status: query.status, priority: query.priority, sort: query.sort, dir: query.dir }, pageScope);
+    setListTotal({ sig: JSON.stringify([pageScope.companyId, pageScope.clientId, query]), total: result.total });
+    return result;
+  }, []);
+  const cursor = useCrmCursor<CrmTask>({ kind: "task", scope, ready: isReady && !isMockMode, normalize: normalizeTask, fetchPage: fetchTasks, query: listQuery });
+
+  const [liveStats, setLiveStats] = useState<CrmTasksStats>(emptyTasksStats);
+  const [statsVersion, setStatsVersion] = useState(0);
+  useEffect(() => {
+    if (isMockMode || !isReady || !scope) return;
+    let active = true;
+    crmApi.tasksStats(localToday(), scope).then((value) => { if (active) setLiveStats(value); }).catch(() => undefined);
+    return () => { active = false; };
+  }, [isReady, scope, statsVersion]);
+  const mockStats = useMemo(() => statsFromTasks(tasks, localToday()), [tasks]);
+  const stats = isMockMode ? mockStats : liveStats;
+
+  // Board: each status column is its own server query (25 at a time, "Load more" appends the next page).
+  const [board, setBoard] = useState<{ rows: Record<string, CrmTask[]>; next: Record<string, string | null>; totals: Record<string, number> }>({ rows: {}, next: {}, totals: {} });
+  const [boardError, setBoardError] = useState<string | null>(null);
+  const [boardVersion, setBoardVersion] = useState(0);
+  const boardQuery = (status: TaskStatus, cursorValue?: string) => ({ cursor: cursorValue, status, search: search.trim() || undefined, priority: priorityFilter ?? undefined, limit: BOARD_PAGE_SIZE, sort: "createdAt", dir: "desc" as const });
+  useEffect(() => {
+    if (isMockMode || viewMode !== "board" || !isReady || !scope) return;
+    let active = true;
+    const timer = window.setTimeout(() => {
+      const columnQuery = (status: TaskStatus) => ({ status, search: search.trim() || undefined, priority: priorityFilter ?? undefined, limit: BOARD_PAGE_SIZE, sort: "createdAt", dir: "desc" as const });
+      Promise.all(BOARD_COLUMNS.map((column) => statusFilter && statusFilter !== column.status
+        ? Promise.resolve({ items: [] as CrmTask[], page: { hasMore: false, nextCursor: null as string | null }, total: 0 })
+        : crmApi.tasksPage<CrmTask>(columnQuery(column.status), scope)))
+        .then((pages) => {
+          if (!active) return;
+          setBoard({
+            rows: Object.fromEntries(BOARD_COLUMNS.map((column, index) => [column.status, pages[index]!.items.map(normalizeTask)])),
+            next: Object.fromEntries(BOARD_COLUMNS.map((column, index) => [column.status, pages[index]!.page.nextCursor])),
+            totals: Object.fromEntries(BOARD_COLUMNS.map((column, index) => [column.status, pages[index]!.total])),
+          });
+          setBoardError(null);
+        })
+        .catch((error) => { if (active) setBoardError(getErrorMessage(error)); });
+    }, 200);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [viewMode, isReady, scope, search, statusFilter, priorityFilter, boardVersion]);
+
+  const loadMoreBoard = async (status: TaskStatus) => {
+    const next = board.next[status];
+    if (!next || !scope) return;
+    try {
+      const page = await crmApi.tasksPage<CrmTask>(boardQuery(status, next), scope);
+      setBoard((current) => {
+        const known = new Set((current.rows[status] ?? []).map((task) => task.id));
+        return { ...current, rows: { ...current.rows, [status]: [...(current.rows[status] ?? []), ...page.items.map(normalizeTask).filter((task) => !known.has(task.id))] }, next: { ...current.next, [status]: page.page.nextCursor } };
+      });
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  // Linked-record choices in the create/edit dialog are searched on demand (25 at a time), never loaded as full lists.
+  const [relatedSearch, setRelatedSearch] = useState("");
+  useEffect(() => {
+    if (isMockMode || !showCreate || draft.relatedKind === "none" || !scope) return;
+    const kind = draft.relatedKind;
+    let active = true;
+    const timer = window.setTimeout(() => {
+      crmApi.listPage<unknown>(kind, { limit: 25, search: relatedSearch.trim() || undefined }, scope).then((result) => {
+        if (!active) return;
+        if (kind === "lead") setLeadOptions(result.items as Lead[]);
+        else if (kind === "contact") setContactOptions(result.items as Contact[]);
+        else setDealOptions(result.items as Deal[]);
+      }).catch(() => undefined);
+    }, 250);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [showCreate, draft.relatedKind, relatedSearch, scope]);
+
   useOpenParam(!isLoading && isReady, useCallback((id: string) => {
-    const task = tasks.find((t) => t.id === id);
-    if (task) setDetailTask(task);
-  }, [tasks]));
+    if (isMockMode) {
+      const task = tasks.find((t) => t.id === id);
+      if (task) setDetailTask(task);
+      return;
+    }
+    if (!scope) return;
+    void crmApi.get<CrmTask>("task", id, scope).then((task) => setDetailTask(normalizeTask(task))).catch(() => undefined);
+  }, [tasks, scope]));
 
   /* ---- Derived data ---- */
   const filtered = useMemo(() => {
+    if (!isMockMode) return [];
     let result = tasks;
     if (search) {
       const q = search.toLowerCase();
@@ -307,18 +370,22 @@ export default function TasksPage() {
     return filtered.slice(start, start + pageSize);
   }, [filtered, page, pageSize]);
 
-  const pagination: PaginationMeta = useMemo(() => ({
-    page, pageSize, total: filtered.length,
-    totalPages: Math.ceil(filtered.length / pageSize),
-    hasNextPage: page < Math.ceil(filtered.length / pageSize),
-    hasPreviousPage: page > 1,
-  }), [page, pageSize, filtered.length]);
+  const liveTotal = listTotal && listTotal.sig === JSON.stringify([companyId, clientId, listQuery]) ? listTotal.total : cursor.rows.length;
+  const listRows = isMockMode ? paginated : cursor.rows;
+  const pagination: PaginationMeta = isMockMode
+    ? { page, pageSize, total: filtered.length, totalPages: Math.ceil(filtered.length / pageSize), hasNextPage: page < Math.ceil(filtered.length / pageSize), hasPreviousPage: page > 1 }
+    : { page: cursor.pageNumber, pageSize, total: liveTotal, totalPages: Math.max(1, Math.ceil(liveTotal / pageSize)), hasNextPage: cursor.hasMore, hasPreviousPage: cursor.hasPrevious };
+  const handlePageChange = (next: number) => {
+    if (isMockMode) { setPage(next); return; }
+    if (next > cursor.pageNumber) void cursor.next();
+    else if (next < cursor.pageNumber) void cursor.previous();
+  };
 
-  const typeDistribution = useMemo(() => computeTypeDistribution(tasks), [tasks]);
-  const priorityDistribution = useMemo(() => computePriorityDistribution(tasks), [tasks]);
-  const assigneeDistribution = useMemo(() => computeAssigneeDistribution(tasks), [tasks]);
-  const tasksTrend = useMemo(() => computeTasksTrend(tasks), [tasks]);
-  const monthlyTasks = useMemo(() => computeMonthlyTasks(tasks), [tasks]);
+  const typeDistribution = useMemo(() => computeTypeDistribution(stats), [stats]);
+  const priorityDistribution = useMemo(() => computePriorityDistribution(stats), [stats]);
+  const assigneeDistribution = useMemo(() => computeAssigneeDistribution(stats), [stats]);
+  const tasksTrend = useMemo(() => computeTasksTrend(stats), [stats]);
+  const monthlyTasks = useMemo(() => computeMonthlyTasks(stats), [stats]);
 
   /* ---- Actions ---- */
   const handleSort = useCallback((field: string) => {
@@ -329,19 +396,45 @@ export default function TasksPage() {
     );
   }, []);
 
+  const findTask = (id: string): CrmTask | undefined => isMockMode
+    ? tasks.find((item) => item.id === id)
+    : cursor.rows.find((item) => item.id === id) ?? Object.values(board.rows).flat().find((item) => item.id === id) ?? (detailTask?.id === id ? detailTask : undefined);
+
   const replaceTask = (task: CrmTask) => {
-    setTasks((current) => current.map((item) => item.id === task.id ? task : item));
+    if (isMockMode) {
+      setTasks((current) => current.map((item) => item.id === task.id ? task : item));
+    } else {
+      cursor.setRows((current) => current.map((item) => item.id === task.id ? task : item));
+      setBoard((current) => {
+        const from = Object.keys(current.rows).find((status) => current.rows[status]!.some((item) => item.id === task.id));
+        if (!from) return current;
+        if (from === task.status) return { ...current, rows: { ...current.rows, [from]: current.rows[from]!.map((item) => item.id === task.id ? task : item) } };
+        return {
+          ...current,
+          rows: { ...current.rows, [from]: current.rows[from]!.filter((item) => item.id !== task.id), [task.status]: [task, ...(current.rows[task.status] ?? [])] },
+          totals: { ...current.totals, [from]: Math.max(0, (current.totals[from] ?? 1) - 1), [task.status]: (current.totals[task.status] ?? 0) + 1 },
+        };
+      });
+    }
     setDetailTask((current) => current?.id === task.id ? task : current);
   };
 
+  /** After a create or delete the server owns the order and the counts, so re-read the list, board and figures. */
+  const refreshLive = () => {
+    void cursor.reload();
+    setStatsVersion((value) => value + 1);
+    setBoardVersion((value) => value + 1);
+  };
+
   const updateTask = async (task: CrmTask, successMessage: string) => {
-    const previous = tasks.find((item) => item.id === task.id);
+    const previous = findTask(task.id);
     if (!previous) return;
     const optimistic = normalizeTask({ ...task, updatedAt: new Date().toISOString() });
     replaceTask(optimistic);
     try {
       const saved = isMockMode ? optimistic : normalizeTask(await crmApi.update("task", task.id, optimistic, scope ?? undefined));
       replaceTask(saved);
+      if (!isMockMode) setStatsVersion((value) => value + 1);
       toast.success(successMessage);
     } catch (error) {
       replaceTask(previous);
@@ -350,7 +443,7 @@ export default function TasksPage() {
   };
 
   const handleToggleComplete = (taskId: string) => {
-    const task = tasks.find((item) => item.id === taskId);
+    const task = findTask(taskId);
     if (!task) return;
     const completed = task.status !== "completed";
     void updateTask(
@@ -360,7 +453,7 @@ export default function TasksPage() {
   };
 
   const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
-    const task = tasks.find((item) => item.id === taskId);
+    const task = findTask(taskId);
     if (!task) return;
     void updateTask(
       { ...task, status: newStatus, completedAt: newStatus === "completed" ? task.completedAt ?? new Date().toISOString() : undefined },
@@ -371,7 +464,8 @@ export default function TasksPage() {
   const handleDelete = async (taskId: string) => {
     try {
       if (!isMockMode) await crmApi.remove("task", taskId, scope ?? undefined);
-      setTasks((prev) => prev.filter((task) => task.id !== taskId));
+      if (isMockMode) setTasks((prev) => prev.filter((task) => task.id !== taskId));
+      else refreshLive();
       toast.success("Task deleted");
       setDetailTask(null);
     } catch (error) {
@@ -382,11 +476,13 @@ export default function TasksPage() {
   const openCreate = () => {
     setEditingTask(null);
     setDraft(emptyTaskDraft());
+    setRelatedSearch("");
     setShowCreate(true);
   };
 
   const openEdit = (task: CrmTask) => {
     setEditingTask(task);
+    setRelatedSearch("");
     const relatedKind = task.relatedDealId ? "deal" : task.relatedContactId ? "contact" : task.relatedLeadId ? "lead" : "none";
     const relatedId = task.relatedDealId ?? task.relatedContactId ?? task.relatedLeadId ?? "";
     setDraft({ title: task.title, description: task.description, type: task.type, priority: task.priority, dueDate: task.dueDate, dueTime: task.dueTime, assigneeId: task.assigneeId, relatedKind, relatedId });
@@ -438,7 +534,8 @@ export default function TasksPage() {
         toast.success("Task updated");
       } else {
         const saved = isMockMode ? task : normalizeTask(await crmApi.create("task", task, scope ?? undefined));
-        setTasks((current) => [saved, ...current]);
+        if (isMockMode) setTasks((current) => [saved, ...current]);
+        else refreshLive();
         toast.success("Task created");
       }
       setShowCreate(false);
@@ -560,6 +657,8 @@ export default function TasksPage() {
     });
     return map;
   }, [filtered]);
+  const columnTasks = (status: string): CrmTask[] => isMockMode ? tasksByStatus[status] ?? [] : board.rows[status] ?? [];
+  const columnCount = (status: string): number => isMockMode ? (tasksByStatus[status] ?? []).length : board.totals[status] ?? 0;
 
   return (
     <div className="space-y-2">
@@ -576,7 +675,7 @@ export default function TasksPage() {
         }
       />
 
-      <TaskMetricCards tasks={tasks} />
+      <TaskMetricCards stats={stats} />
 
       <FilterBar
         search={<SearchInput value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Search tasks..." />}
@@ -612,15 +711,16 @@ export default function TasksPage() {
       {viewMode === "list" ? (
         <DataTable
           columns={columns}
-          rows={paginated}
+          rows={listRows}
           getRowId={(r) => r.id}
-          isLoading={isLoading}
-          error={loadError}
-          onRetry={() => void loadTasks()}
+          isLoading={isMockMode ? isLoading : isLoading || cursor.isLoading}
+          error={isMockMode ? loadError : cursor.error ?? loadError}
+          onRetry={() => void (isMockMode ? loadTasks() : cursor.reload())}
           sort={sort}
           onToggleSort={handleSort}
           pagination={pagination}
-          onPageChange={setPage}
+          onPageChange={handlePageChange}
+          paginationMode={isMockMode ? "pages" : "cursor"}
           onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
           onRowClick={(r) => setDetailTask(r)}
           enableColumnVisibility
@@ -646,14 +746,14 @@ export default function TasksPage() {
               <div className="flex items-center justify-between px-3 py-2 border-b border-[#E8EDF3]">
                 <h3 className="text-[12px] font-semibold text-[#27375D]">{col.label}</h3>
                 <span className="flex size-6 items-center justify-center rounded-sm bg-white text-[12px] font-semibold text-[#27375D] border border-[#E8EDF3]">
-                  {(tasksByStatus[col.status] ?? []).length}
+                  {columnCount(col.status)}
                 </span>
               </div>
               <div className="p-2 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto scrollbar-thin">
-                {(tasksByStatus[col.status] ?? []).length === 0 ? (
-                  <div className="flex items-center justify-center h-20 text-[12px] text-[#75829D]">No tasks</div>
+                {columnTasks(col.status).length === 0 ? (
+                  <div className="flex items-center justify-center h-20 text-[12px] text-[#75829D]">{!isMockMode && boardError ? "Tasks could not be loaded." : "No tasks"}</div>
                 ) : (
-                  (tasksByStatus[col.status] ?? []).map((task) => (
+                  columnTasks(col.status).map((task) => (
                     <div
                       key={task.id}
                       draggable
@@ -676,6 +776,7 @@ export default function TasksPage() {
                     </div>
                   ))
                 )}
+                {!isMockMode && board.next[col.status] ? <Button variant="outline" size="sm" className="w-full" onClick={() => void loadMoreBoard(col.status)}>Load more</Button> : null}
               </div>
             </div>
           ))}
@@ -693,7 +794,7 @@ export default function TasksPage() {
         <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
           <h2 className="border-b border-[#E8EDF3] px-3 py-2 text-[12px] font-semibold">Task Type Distribution</h2>
           <div className="flex items-center gap-3 p-4">
-            <DonutChart segments={typeDistribution} centerValue={String(tasks.length)} centerLabel="Total Tasks" size={130} />
+            <DonutChart segments={typeDistribution} centerValue={String(stats.total)} centerLabel="Total Tasks" size={130} />
             <ul className="flex-1 space-y-0.5">
               {typeDistribution.map((src) => (
                 <li key={src.key} className="flex items-center gap-2 rounded-sm px-2 py-0.5">
@@ -708,7 +809,7 @@ export default function TasksPage() {
         <section className="overflow-hidden rounded-sm border border-[#DDE4ED] bg-white shadow-xs">
           <h2 className="border-b border-[#E8EDF3] px-3 py-2 text-[12px] font-semibold">Priority Distribution</h2>
           <div className="flex items-center gap-3 p-4">
-            <DonutChart segments={priorityDistribution} centerValue={String(tasks.length)} centerLabel="Total Tasks" size={130} />
+            <DonutChart segments={priorityDistribution} centerValue={String(stats.total)} centerLabel="Total Tasks" size={130} />
             <ul className="flex-1 space-y-0.5">
               {priorityDistribution.map((src) => (
                 <li key={src.key} className="flex items-center gap-2 rounded-sm px-2 py-0.5">
@@ -823,7 +924,7 @@ export default function TasksPage() {
               <Input type="time" placeholder="Due Time" value={draft.dueTime} onChange={(event) => setDraft((current) => ({ ...current, dueTime: event.target.value }))} />
             </div>
             <div className="grid grid-cols-[8.5rem_1fr] gap-2">
-              <Select value={draft.relatedKind} onValueChange={(value) => setDraft((current) => ({ ...current, relatedKind: value as TaskDraft["relatedKind"], relatedId: "" }))}>
+              <Select value={draft.relatedKind} onValueChange={(value) => { setRelatedSearch(""); setDraft((current) => ({ ...current, relatedKind: value as TaskDraft["relatedKind"], relatedId: "" })); }}>
                 <SelectTrigger aria-label="Linked to"><SelectValue placeholder="Linked to" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Linked to: None</SelectItem>
@@ -846,11 +947,14 @@ export default function TasksPage() {
                       (draft.relatedKind === "lead" && leadOptions.some((l) => l.id === draft.relatedId)) ||
                       (draft.relatedKind === "contact" && contactOptions.some((c) => c.id === draft.relatedId)) ||
                       (draft.relatedKind === "deal" && dealOptions.some((d) => d.id === draft.relatedId))
-                    ) ? <SelectItem value={draft.relatedId}>Current link</SelectItem> : null}
+                    ) ? <SelectItem value={draft.relatedId}>{(draft.relatedKind === "lead" ? editingTask?.relatedLeadName : draft.relatedKind === "contact" ? editingTask?.relatedContactName : editingTask?.relatedDealName) || "Current link"}</SelectItem> : null}
                   </SelectContent>
                 </Select>
               )}
             </div>
+            {draft.relatedKind !== "none" && !isMockMode ? (
+              <Input aria-label="Search linked records" placeholder={`Search ${draft.relatedKind}s by name`} value={relatedSearch} onChange={(event) => setRelatedSearch(event.target.value)} />
+            ) : null}
             <Select value={draft.assigneeId || "__unassigned__"} onValueChange={(value) => setDraft((current) => ({ ...current, assigneeId: value === "__unassigned__" ? "" : value }))}>
               <SelectTrigger><SelectValue placeholder="Assignee" /></SelectTrigger>
               <SelectContent>

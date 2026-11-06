@@ -1,4 +1,5 @@
 "use client";
+import { confirmAction } from "@/lib/ui-dialog-store";
 
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,7 +29,7 @@ export function useMetaAdsWrites() {
         toast.error("Set a daily budget before activating this item.");
         return false;
       }
-      const approved = window.confirm(`Activate “${name}”? Spend can begin immediately with a daily budget of ${moneyPrecise(dailyBudget)}.`);
+      const approved = await confirmAction(`Activate “${name}”? Spend can begin immediately with a daily budget of ${moneyPrecise(dailyBudget)}.`);
       if (!approved) return false;
     }
     setBusyId(id);

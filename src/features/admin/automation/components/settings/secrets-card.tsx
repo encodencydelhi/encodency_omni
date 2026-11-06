@@ -1,4 +1,5 @@
 "use client";
+import { confirmAction } from "@/lib/ui-dialog-store";
 
 import { useCallback, useEffect, useState } from "react";
 import { KeyRound, Trash2 } from "lucide-react";
@@ -49,7 +50,7 @@ export function SecretsCard() {
   };
 
   const remove = async (secret: AutomationSecretInfo) => {
-    if (!window.confirm(`Delete the secret “${secret.name}”? Steps that still use it will fail.`)) return;
+    if (!await confirmAction(`Delete the secret “${secret.name}”? Steps that still use it will fail.`)) return;
     setBusy(true);
     try {
       await automationApi.deleteSecret(secret.name);

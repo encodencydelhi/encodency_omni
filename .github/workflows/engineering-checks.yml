@@ -1,0 +1,56 @@
+name: Engineering checks
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: engineering-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      # Public data mode is explicit; CI must never silently select a mock preview.
+      NEXT_PUBLIC_DATA_SOURCE: api
+      NEXT_PUBLIC_ALLOW_MOCK_PREVIEW: 'false'
+      NEXT_PUBLIC_X_MOCK_MODE: 'false'
+      NEXT_PUBLIC_API_BASE_URL: /api/v1
+      BACKEND_ORIGIN: http://127.0.0.1:1
+      APP_BASE_URL: https://app.example.invalid
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+        timeout-minutes: 5
+      - name: Generate Next route types without building or starting the app
+        run: node node_modules/next/dist/bin/next typegen
+        env:
+          NODE_ENV: production
+        timeout-minutes: 3
+      - name: Typecheck without output or incremental cache
+        run: node node_modules/typescript/bin/tsc --noEmit --incremental false --pretty false
+        env:
+          NODE_ENV: production
+        timeout-minutes: 5
+      - name: Lint
+        run: npm run lint
+        timeout-minutes: 5
+      - name: Bounded source unit tests
+        run: node --import ./scripts/ts-test-hooks.mjs --test --test-concurrency=2 --test-timeout=30000 "src/**/*.test.ts"
+        timeout-minutes: 8
+      - name: Build production artifact without starting it
+        run: npm run build
+        timeout-minutes: 8
+      # No application server, live API, deployment or paid provider job runs here.

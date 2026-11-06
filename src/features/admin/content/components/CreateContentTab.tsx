@@ -457,7 +457,7 @@ export function CreateContentTab({ seed, initialPlatforms = ["instagram", "faceb
         if (instagramError) items.push({ field: "media", level: "error", message: instagramError });
         const image = masterContent.media.find(media => media.type === "image");
         if (image?.width && image.height && (image.width < 320 || image.width > 1440 || image.width / image.height < 0.8 || image.width / image.height > 1.91)) {
-          items.push({ field: "media", level: "error", message: "Instagram requires an image 320?1440 px wide with an aspect ratio between 4:5 and 1.91:1. Upload a compatible image; preview framing does not resize it." });
+          items.push({ field: "media", level: "error", message: "Instagram requires an image 320–1440 px wide with an aspect ratio between 4:5 and 1.91:1. Upload a compatible image; preview framing does not resize it." });
         }
       } else if (mediaCount > 0 && !MEDIA_CAPABLE_PLATFORMS.includes(p)) {
         items.push({ field: "media", level: "error", message: `${PLATFORM_META[p].label} is text-only here — scheduling with media is refused` });

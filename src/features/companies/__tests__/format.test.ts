@@ -11,6 +11,7 @@ describe("MRR display", () => {
   it("abbreviates only from one lakh up, and writes a dash for no revenue", () => {
     assert.match(formatMrr(15_000_000, "INR", true), /^₹1\.5L$|^₹150K$/);
     assert.equal(formatMrr(0, "INR", true), "-");
-    assert.equal(formatMrr(499_900, "INR"), "₹4,999");
+    // Not compact: the shared currency contract keeps two decimals (see plans-subscriptions money.test.ts).
+    assert.equal(formatMrr(499_900, "INR"), "₹4,999.00");
   });
 });

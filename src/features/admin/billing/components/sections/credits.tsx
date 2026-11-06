@@ -48,6 +48,9 @@ export function CreditsCard() {
             <dd className="font-semibold text-[#0F1B3D]">{flags.cancelled ? "Paused" : shortDate(credits.resetsAt)}</dd>
           </div>
         </dl>
+        {(credits.reserved ?? 0) > 0 && (
+          <p className="mt-2 text-[12px] text-[#6B7890]">{count(credits.reserved ?? 0)} credits are reserved for pending requests and excluded from the remaining balance.</p>
+        )}
         {credits.purchased > 0 && (
           <p className="mt-2 rounded-sm bg-[#ECFAF3] px-2.5 py-1.5 text-[12px] text-[#067647]">
             Includes {count(credits.purchased)} purchased credits{credits.purchasedExpireAt ? `, valid until ${shortDate(credits.purchasedExpireAt)}` : ""}. Plan credits are used first.

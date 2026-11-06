@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { actionGates, evaluateCapabilities } from "../billing-data/capability-provider";
-import { attentionItems, nextPayment, outstandingInvoice, subscriptionFlags, usageRows } from "../billing-data/selectors";
+import { attentionItems, creditsRemaining, nextPayment, outstandingInvoice, subscriptionFlags, usageRows } from "../billing-data/selectors";
 import { billingRoleOf, buildLiveSnapshot, mapPlans, toBackendContact, toBillingContact, toBillingProfile, toInvoices, toOrganizationPatch, toPayments, type LiveSnapshotInput } from "../billing-data/live-snapshot";
 
 const input = (over: Partial<LiveSnapshotInput> = {}): LiveSnapshotInput => ({
@@ -94,6 +94,24 @@ describe("live billing snapshot", () => {
     assert.equal(snapshot.plans[0]!.name, "No active plan");
     assert.equal(snapshot.subscription.status, "cancelled");
     assert.equal(usageRows(snapshot).find((r) => r.key === "clients")!.used, 0);
+  });
+  it("preserves actual starter-allowance usage without a subscription and separates pending reservations", () => {
+    const snapshot = buildLiveSnapshot(input({ summary: {
+      ...input().summary, subscriptionId: null, limits: { maxClients: 10, maxAiTokens: 10000 },
+      usage: { currentClients: 0, currentAiTokens: 2500 }, reservedAiTokens: 2000,
+    } }));
+    assert.equal(snapshot.credits.used, 2500);
+    assert.equal(snapshot.credits.reserved, 2000);
+    assert.equal(snapshot.usage.find(metric => metric.key === "aiCredits")!.used, 2500);
+    assert.equal(creditsRemaining(snapshot), 5500);
+    const row = usageRows(snapshot).find(metric => metric.key === "aiCredits")!;
+    assert.equal(row.used, 2500);
+    assert.equal(row.remaining, 5500);
+  });
+  it("keeps older server responses compatible when no pending usage field exists", () => {
+    const snapshot = buildLiveSnapshot(input());
+    assert.equal(snapshot.credits.reserved, 0);
+    assert.equal(creditsRemaining(snapshot), 97500);
   });
 
   for (const [backend, ui] of [["PAST_DUE", "past_due"], ["INCOMPLETE", "payment_due"], ["SUSPENDED", "cancelled"], ["CANCELED", "cancelled"]] as const) {

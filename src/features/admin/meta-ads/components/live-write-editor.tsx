@@ -1,4 +1,5 @@
 "use client";
+import { confirmAction } from "@/lib/ui-dialog-store";
 
 import Link from "next/link";
 import { accountDisplayName } from "@/features/admin/meta-ads/account-name";
@@ -67,7 +68,7 @@ function LiveMetaAdsWriteEditorReady() {
       toast.error("Enter a valid daily budget.");
       return;
     }
-    if (editing && budgetEditable && dailyBudgetMinor !== editingBudget && !window.confirm(`Change the daily budget for “${name.trim()}” from ${moneyPrecise(editingBudget ?? 0)} to ${moneyPrecise(dailyBudgetMinor!)}? This changes the budget in Meta.`)) return;
+    if (editing && budgetEditable && dailyBudgetMinor !== editingBudget && !await confirmAction(`Change the daily budget for “${name.trim()}” from ${moneyPrecise(editingBudget ?? 0)} to ${moneyPrecise(dailyBudgetMinor!)}? This changes the budget in Meta.`)) return;
     setSaving(true);
     try {
       if (editingCampaign && mode === "campaign") {

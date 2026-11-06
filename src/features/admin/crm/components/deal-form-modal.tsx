@@ -18,6 +18,8 @@ interface DealFormModalProps {
   submitLabel: string;
   initial?: DealFormValues;
   contacts: Contact[];
+  /** When given, a search box asks the caller for matching contacts instead of expecting every contact up front. */
+  onContactSearch?: (query: string) => void;
   pipelines: Pipeline[];
   assignees: Array<{ id: string; name: string }>;
   isSaving?: boolean;
@@ -29,7 +31,7 @@ const NONE = "__none__";
 
 /** Create / edit deal. Mount with a changing `key` to re-seed from `initial`. */
 export function DealFormModal({
-  open, onOpenChange, title, submitLabel, initial, contacts, pipelines, assignees, isSaving = false, onSubmit,
+  open, onOpenChange, title, submitLabel, initial, contacts, onContactSearch, pipelines, assignees, isSaving = false, onSubmit,
 }: DealFormModalProps) {
   const [form, setForm] = useState<DealFormValues>(() => ({
     pipelineId: pipelines[0]?.id ?? "", stage: "new", probability: "20", priority: "medium", source: "manual", ...(initial ?? {}),
@@ -109,10 +111,12 @@ export function DealFormModal({
             <h3 className="text-[13px] font-semibold text-slate-800">Company &amp; Contact</h3>
             <label className={FIELD}>
               Primary contact
+              {onContactSearch ? <Input aria-label="Search contacts" placeholder="Search contacts by name" onChange={(event) => onContactSearch(event.target.value)} /> : null}
               <Select value={form.primaryContactId || NONE} onValueChange={pickContact}>
                 <SelectTrigger><SelectValue placeholder="Select a contact" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>No contact</SelectItem>
+                  {form.primaryContactId && !contacts.some((c) => c.id === form.primaryContactId) ? <SelectItem value={form.primaryContactId}>{form.primaryContactName || "Current contact"}</SelectItem> : null}
                   {contacts.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{`${c.firstName} ${c.lastName}`.trim() || c.email}{c.company ? ` · ${c.company}` : ""}</SelectItem>
                   ))}
