@@ -108,6 +108,7 @@ export interface JobRecord {
 }
 
 export interface QueueDefinition {
+  controlMode?: 'module';
   id: string;
   name: string;
   category: string;

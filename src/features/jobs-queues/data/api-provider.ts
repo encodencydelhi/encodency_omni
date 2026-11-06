@@ -40,6 +40,12 @@ import type {
 } from "./types";
 
 const QUEUE_META: Record<string, { name: string; category: string; purpose: string }> = {
+  'automation-runs': { name: 'Automation', category: 'Workflows', purpose: 'Runs saved workflows. Review failures and recovery in Automation.' },
+  whatsapp: { name: 'WhatsApp (AiSensy)', category: 'Communication', purpose: 'Delivers WhatsApp messages. Manage recovery in WhatsApp.' },
+  'native-whatsapp-meta': { name: 'WhatsApp (Meta)', category: 'Communication', purpose: 'Processes WhatsApp messages and campaigns. Manage recovery in WhatsApp.' },
+  'native-whatsapp-mock': { name: 'WhatsApp Simulations', category: 'Communication', purpose: 'Runs WhatsApp simulations. Manage them in WhatsApp.' },
+  infrastructure: { name: 'Infrastructure', category: 'Infrastructure', purpose: 'Checks servers and domains. Manage recovery in Infrastructure.' },
+  'competitor-analyzer': { name: 'Competitor Analysis', category: 'Research', purpose: 'Runs competitor studies. Review results and recovery in Competitor Analyzer.' },
   notifications: { name: "Notifications", category: "Communication", purpose: "Delivers platform notifications (email, in-app, integration alerts)." },
   publishing: { name: "Publishing", category: "Publishing", purpose: "Executes scheduled social and content publishing jobs." },
   crawler: { name: "Crawler", category: "SEO", purpose: "Runs SEO site crawls and incremental audits." },
@@ -117,6 +123,7 @@ export function toQueueDefinition(q: WireQueueOverview): QueueDefinition {
   const counts = q.reachable && q.counts ? q.counts : { waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0 };
   return {
     id: q.queue,
+    ...(q.controlMode === 'module' ? { controlMode: 'module' as const } : {}),
     name: meta.name,
     category: meta.category,
     purpose: q.reachable ? meta.purpose : q.error ? `Queue unreachable: ${q.error}` : "Queue unreachable. Its numbers are unavailable.",
@@ -126,7 +133,7 @@ export function toQueueDefinition(q: WireQueueOverview): QueueDefinition {
     concurrencyReference: NOT_EXPOSED,
     timeoutPolicy: NOT_EXPOSED,
     retryPolicy: q.maxAttempts && q.maxAttempts > 1 ? `Up to ${q.maxAttempts} attempts` : "Single attempt unless a job sets its own",
-    deadLetterPolicy: "No dead-letter queue: a job that used all its attempts stays in Failed",
+    deadLetterPolicy: q.controlMode === 'module' ? 'Review failures and recovery in the owning module.' : "No dead-letter queue: a job that used all its attempts stays in Failed",
     workerGroup: `${meta.name} workers`,
     environment: "—",
     waiting: counts.waiting,

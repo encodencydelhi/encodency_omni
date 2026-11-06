@@ -171,6 +171,7 @@ export const TRIGGER_OPTIONS = [
   { id: "deal_stage_changed", label: "Deal Stage Changed" },
   { id: "task_completed", label: "Task Completed" },
   { id: "payment_failed", label: "Payment Failed" },
+  { id: "platform_event", label: "Business Event" },
   { id: "invoice_paid", label: "Invoice Paid" },
   { id: "whatsapp_failed", label: "WhatsApp Failed" },
   { id: "manual", label: "Manual Trigger" },

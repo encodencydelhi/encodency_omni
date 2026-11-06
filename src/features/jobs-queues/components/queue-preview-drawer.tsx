@@ -46,7 +46,7 @@ export function QueuePreviewDrawer({
   if (!queue) return null;
 
   const stateMeta = QUEUE_STATE_META[queue.operationalState];
-  const canPauseResume = queue.operationalState === "running" || queue.operationalState === "paused";
+  const canPauseResume = queue.controlMode !== "module" && (queue.operationalState === "running" || queue.operationalState === "paused");
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>

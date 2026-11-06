@@ -135,7 +135,7 @@ export function QueueTable({ queues, onOpenQueue, isLoading }: QueueTableProps) 
                           </TooltipTrigger>
                           <TooltipContent className="text-xs">Open Queue</TooltipContent>
                         </Tooltip>
-                        {q.operationalState === "running" ? (
+                        {q.controlMode !== "module" && q.operationalState === "running" ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -149,7 +149,7 @@ export function QueueTable({ queues, onOpenQueue, isLoading }: QueueTableProps) 
                             </TooltipTrigger>
                             <TooltipContent className="text-xs">Pause Queue</TooltipContent>
                           </Tooltip>
-                        ) : q.operationalState === "paused" ? (
+                        ) : q.controlMode !== "module" && q.operationalState === "paused" ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button

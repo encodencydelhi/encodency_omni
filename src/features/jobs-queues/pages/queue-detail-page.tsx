@@ -83,7 +83,7 @@ export function QueueDetailPage() {
   }
 
   const stateMeta = QUEUE_STATE_META[queue.operationalState];
-  const canPauseResume = queue.operationalState === "running" || queue.operationalState === "paused";
+  const canPauseResume = queue.controlMode !== "module" && (queue.operationalState === "running" || queue.operationalState === "paused");
 
   const pausing = queue.operationalState === "running";
   const queueWorkers = allWorkers.filter((w) => w.assignedQueues.includes(queue.id));

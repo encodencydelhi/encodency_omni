@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useQuery } from '@tanstack/react-query';
 import { Bot, Check, Copy, Settings, Braces } from "lucide-react";
 import { toast } from "sonner";
 import type { AutomationNode } from "../../data/types";
@@ -20,6 +21,13 @@ export interface BuilderResources {
 }
 
 const VARIABLES = [
+  { token: '{{trigger.eventType}}', label: 'Business event type' },
+  { token: '{{trigger.resourceId}}', label: 'Business event resource ID' },
+  { token: '{{trigger.outcome}}', label: 'Business event outcome' },
+  { token: '{{trigger.occurredAt}}', label: 'Business event time' },
+  { token: '{{variables.current.found}}', label: 'Resource lookup named current: record found' },
+  { token: '{{variables.current.resource.status}}', label: 'Resource lookup named current: latest status' },
+  { token: '{{variables.report.reportId}}', label: 'Generated report result named report: report ID' },
   { token: "{{lead.firstName}}", label: "Lead / contact first name" },
   { token: "{{lead.lastName}}", label: "Last name" },
   { token: "{{lead.email}}", label: "Email" },
@@ -64,6 +72,13 @@ const VARIABLES = [
 ];
 
 const CONDITION_FIELDS = [
+  { value: 'trigger.eventType', label: 'Business event type' },
+  { value: 'trigger.outcome', label: 'Business event outcome' },
+  { value: 'trigger.status', label: 'Message / resource status' },
+  { value: 'variables.current.found', label: 'Current resource found' },
+  { value: 'variables.current.resource.status', label: 'Current resource status' },
+  { value: 'variables.invoice.found', label: 'Invoice lookup: found' },
+  { value: 'variables.invoice.resource.status', label: 'Invoice lookup: current status' },
   { value: "lead.source", label: "Lead source" },
   { value: "lead.stage", label: "Lead stage" },
   { value: "lead.leadScore", label: "Lead score" },
@@ -140,6 +155,8 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
   const [tab, setTab] = useState<"configure" | "variables">("configure");
   const [copied, setCopied] = useState(false);
   const secretNames = useSecretNames();
+  const events = useQuery({ queryKey: ['automation', 'event-catalog'], queryFn: automationApi.eventCatalog, enabled: node.actionId === 'platform_event', staleTime: 300_000 });
+  const resourceTypes = useQuery({ queryKey: ['automation', 'resource-catalog'], queryFn: automationApi.resourceCatalog, enabled: node.actionId === 'lookup_resource', staleTime: 300_000 });
   const item = libraryItem(node.actionId, node.label);
   const Icon = item?.icon ?? Bot;
   const config = node.config ?? {};
@@ -211,6 +228,35 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
             <Field title="Step name">
               <input className={input} value={node.label} maxLength={80} onChange={(e) => onChange({ label: e.target.value })} />
             </Field>
+
+            {node.actionId === 'platform_event' ? <>
+              <Field title="Business event" hint="Choose the activity that starts this workflow. Events carry resource IDs and outcome, without private message content.">
+                <select aria-label="Business event" className={input} value={config.eventType ?? ''} onChange={(e) => setConfig({ eventType: e.target.value })}>
+                  <option value="">{events.isLoading ? 'Loading events...' : 'Choose an event'}</option>
+                  {[...new Set((events.data ?? []).map((entry) => entry.module))].map((module) => <optgroup key={module} label={module.replaceAll('_', ' ')}>
+                    {events.data?.filter((entry) => entry.module === module).map((entry) => <option key={entry.event} value={entry.event}>{entry.label}</option>)}
+                  </optgroup>)}
+                </select>
+              </Field>
+              {events.error ? <p role="alert" className="text-xs text-red-700">Could not load business events. <button type="button" className="underline" onClick={() => void events.refetch()}>Retry</button></p> : null}
+              <label className="flex gap-2 text-xs text-slate-700"><input type="checkbox" checked={config.includeCompanyEvents === true} onChange={(e) => setConfig({ includeCompanyEvents: e.target.checked })} />Include company-wide activity (company owner or administrator only)</label>
+              <p className="text-[10px] text-slate-500">Client activity always stays within the selected client. Company-wide activity requires an explicit subscription and an active administrator owner.</p>
+            </> : null}
+
+            {node.actionId === 'lookup_resource' ? <>
+              <Field title="Resource type"><select aria-label="Resource type" className={input} value={config.resourceType ?? ''} onChange={(e) => setConfig({ resourceType: e.target.value })}><option value="">Choose a resource</option>{resourceTypes.data?.map((entry) => <option key={entry.id} value={entry.id}>{entry.label}</option>)}</select></Field>
+              {resourceTypes.error ? <p role="alert" className="text-xs text-red-700">Could not load resource types. <button type="button" className="underline" onClick={() => void resourceTypes.refetch()}>Retry</button></p> : null}
+              <Field title="Resource ID" hint="Use {{trigger.resourceId}} for a business event, or {{trigger.invoiceId}} for a payment event."><input className={input} value={config.resourceId ?? ''} onChange={(e) => setConfig({ resourceId: e.target.value })} /></Field>
+              <Field title="Result name" hint="For a result named current, use {{variables.current.found}} and {{variables.current.resource.status}}."><input className={input} value={config.saveAs ?? ''} onChange={(e) => setConfig({ saveAs: e.target.value })} /></Field>
+              <p className="text-[10px] text-slate-500">Current access for the workflow owner is checked each time this step executes. A missing record returns found=false.</p>
+            </> : null}
+
+            {node.actionId === 'generate_report' ? <>
+              <Field title="Report format"><select aria-label="Report format" className={input} value={config.format ?? 'pdf'} onChange={(e) => setConfig({ format: e.target.value })}><option value="pdf">PDF</option><option value="csv">CSV</option></select></Field>
+              <Field title="Reporting period"><select aria-label="Reporting period" className={input} value={config.rangeDays ?? 30} onChange={(e) => setConfig({ rangeDays: Number(e.target.value) })}>{[7, 14, 30, 60, 90].map((days) => <option key={days} value={days}>{days} days</option>)}</select></Field>
+              <Field title="Result name" hint="Use {{variables.report.reportId}} in a later notification when the result is named report."><input className={input} value={config.saveAs ?? ''} onChange={(e) => setConfig({ saveAs: e.target.value })} /></Field>
+              <p className="text-[10px] text-slate-500">Generates a report for the selected client. Simulation creates no file. Existing report schedules and deliveries remain managed from Reports.</p>
+            </> : null}
 
             {node.type === "trigger" && (node.actionId === "inbound_webhook" || node.actionId === "form_submission") ? (
               <>
@@ -609,8 +655,8 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
                   </select>
                 </Field>
                 <datalist id="condition-fields">{CONDITION_FIELDS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}</datalist>
-                {(config.conditions as Array<Record<string, any>>).map((row, index) => {
-                  const update = (patch: Record<string, unknown>) => setConfig({ conditions: (config.conditions as Array<Record<string, any>>).map((r, i) => (i === index ? { ...r, ...patch } : r)) });
+                {(config.conditions as Array<{ field?: string; operator?: string; value?: string | number }>).map((row, index) => {
+                  const update = (patch: Record<string, unknown>) => setConfig({ conditions: (config.conditions as Array<{ field?: string; operator?: string; value?: string | number }>).map((r, i) => (i === index ? { ...r, ...patch } : r)) });
                   return (
                     <div key={index} className="space-y-1.5 rounded-lg border border-[#E2E8F0] p-2">
                       <div className="flex gap-1.5">
