@@ -123,6 +123,8 @@ interface ChannelHeaderProps {
   dateRangeSubtext?: string;
   onExport?: () => void;
   onSync?: () => void;
+  disableSync?: boolean;
+  syncLabel?: string;
   onPrimaryAction?: () => void;
   primaryActionLabel?: string;
   hidePrimaryAction?: boolean;
@@ -142,6 +144,8 @@ export function ChannelHeader({
   dateRangeSubtext = "Mar 15, 2025 – Apr 14, 2025",
   onExport,
   onSync,
+  disableSync = false,
+  syncLabel = "Sync Live",
   onPrimaryAction,
   primaryActionLabel,
   hidePrimaryAction = false,
@@ -268,7 +272,7 @@ export function ChannelHeader({
             {/* Live Sync Action */}
             <button
               onClick={handleSyncClick}
-              disabled={isSyncing}
+              disabled={isSyncing || disableSync}
               title="Sync latest metrics"
               className={cn(
                 "flex h-[36px] shrink-0 items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-3 text-[11.5px] font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-98 cursor-pointer",
@@ -276,7 +280,7 @@ export function ChannelHeader({
               )}
             >
               <RefreshCw className={cn("size-3.5", channel === "whatsapp" ? "text-emerald-600" : "text-blue-600", isSyncing && "animate-spin")} />
-              <span>{isSyncing ? "Syncing..." : "Sync Live"}</span>
+              <span>{isSyncing ? "Syncing..." : syncLabel}</span>
             </button>
 
             {/* Date Range Selector */}

@@ -5,6 +5,7 @@ export type WireJobState = "waiting" | "active" | "delayed" | "completed" | "fai
 export type WireFailure = "transient_network" | "provider_rate_limit" | "provider_authorization" | "permanent_validation" | "dependency_unavailable" | "execution_timeout" | "resource_limit" | "duplicate_idempotency" | "unknown";
 
 export interface WireQueueOverview {
+  controlMode?: 'module';
   queue: string;
   reachable: boolean;
   error?: string;

@@ -1,4 +1,5 @@
 "use client";
+import { confirmAction } from "@/lib/ui-dialog-store";
 import { Download, FileText, Loader2, Mail, Pencil, Play, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -145,7 +146,7 @@ export function WorkspaceReportsTab({ clientId, clientName }: { clientId: string
                       <td className={cn("pr-3 text-[11px]", d.tone === "warn" ? "text-[#B54708]" : "text-[#5E6D89]")}>{f.scheduled ? d.text : "-"}</td>
                       <td className="whitespace-nowrap py-2 text-right">
                         {f.status === "completed" ? <button type="button" className={cn(small, "mr-1.5 inline-flex items-center gap-1")} onClick={() => void download(f.id)} disabled={busy === f.id}>{busy === f.id ? <Loader2 className="size-3 animate-spin" /> : <Download className="size-3" />}Download</button> : null}
-                        <button type="button" aria-label="Delete report" className={cn(small, "inline-grid place-items-center px-2")} onClick={() => { if (window.confirm("Delete this report file? This cannot be undone.")) void act(f.id, "delete", () => r.remove.mutateAsync(f.id), "Report deleted"); }}><Trash2 className="size-3" /></button>
+                        <button type="button" aria-label="Delete report" className={cn(small, "inline-grid place-items-center px-2")} onClick={async () => { if (await confirmAction("Delete this report file? This cannot be undone.")) void act(f.id, "delete", () => r.remove.mutateAsync(f.id), "Report deleted"); }}><Trash2 className="size-3" /></button>
                       </td>
                     </tr>
                   );
@@ -171,9 +172,9 @@ export function WorkspaceReportsTab({ clientId, clientName }: { clientId: string
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="flex items-center gap-1.5 text-[11px] text-[#5E6D89]"><Switch checked={s.enabled} aria-label={`${s.name} enabled`} disabled={busy === `toggle:${s.id}`} onCheckedChange={(enabled) => void act(s.id, "toggle", () => r.updateSchedule.mutateAsync({ id: s.id, body: { enabled } }), enabled ? "Schedule on" : "Schedule paused")} />{s.enabled ? "On" : "Paused"}</label>
-                  <button type="button" className={cn(small, "inline-flex items-center gap-1")} disabled={busy === `run:${s.id}`} onClick={() => { if (window.confirm(`Make this report now and email it to ${s.recipients.length} recipient(s)?`)) void act(s.id, "run", () => r.runSchedule.mutateAsync(s.id), "Report made and sent"); }}>{busy === `run:${s.id}` ? <Loader2 className="size-3 animate-spin" /> : <Play className="size-3" />}Send now</button>
+                  <button type="button" className={cn(small, "inline-flex items-center gap-1")} disabled={busy === `run:${s.id}`} onClick={async () => { if (await confirmAction(`Make this report now and email it to ${s.recipients.length} recipient(s)?`)) void act(s.id, "run", () => r.runSchedule.mutateAsync(s.id), "Report made and sent"); }}>{busy === `run:${s.id}` ? <Loader2 className="size-3 animate-spin" /> : <Play className="size-3" />}Send now</button>
                   <button type="button" aria-label="Edit schedule" className={cn(small, "inline-grid place-items-center px-2")} onClick={() => setEditing(s)}><Pencil className="size-3" /></button>
-                  <button type="button" aria-label="Delete schedule" className={cn(small, "inline-grid place-items-center px-2")} onClick={() => { if (window.confirm(`Delete the schedule "${s.name}"?`)) void act(s.id, "del", () => r.deleteSchedule.mutateAsync(s.id), "Schedule deleted"); }}><Trash2 className="size-3" /></button>
+                  <button type="button" aria-label="Delete schedule" className={cn(small, "inline-grid place-items-center px-2")} onClick={async () => { if (await confirmAction(`Delete the schedule "${s.name}"?`)) void act(s.id, "del", () => r.deleteSchedule.mutateAsync(s.id), "Schedule deleted"); }}><Trash2 className="size-3" /></button>
                 </div>
               </li>
             ))}

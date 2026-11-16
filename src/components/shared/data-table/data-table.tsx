@@ -60,6 +60,8 @@ export interface DataTableProps<TRow> {
   pagination?: PaginationMeta;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  /** Set when `pagination` is backed by a server cursor (previous/next only, no page jumps). */
+  paginationMode?: "pages" | "cursor";
 
   selection?: DataTableSelection;
   onRowClick?: (row: TRow) => void;
@@ -97,6 +99,7 @@ export function DataTable<TRow>({
   pagination,
   onPageChange,
   onPageSizeChange,
+  paginationMode = "pages",
   selection,
   onRowClick,
   enableColumnVisibility = false,
@@ -279,6 +282,7 @@ export function DataTable<TRow>({
           pagination={pagination}
           onPageChange={onPageChange}
           onPageSizeChange={onPageSizeChange}
+          cursorMode={paginationMode === "cursor"}
         />
       ) : null}
     </div>

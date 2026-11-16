@@ -39,9 +39,11 @@ import { LogActivityDialog, type LoggableActivity } from "./components/log-activ
 import { PipelineSettingsDialog } from "./components/pipeline-settings-dialog";
 import { deals as seedDeals, activities as seedActivities, contacts as seedContacts } from "./data/crm-data";
 import { crmApi } from "./data/crm-api";
+import { localDay, type BoardFilters } from "./data/pipeline-board";
+import { usePipelineBoard } from "./lib/use-pipeline-board";
 import { listValues } from "./lib/csv";
 import {
-  BUILTIN_PIPELINE, DEAL_PRIORITIES, DEAL_STAGES, DEAL_STAGE_LABELS, errorMessage, formatInr, newId, resolvePipelines,
+  BUILTIN_PIPELINE, DEAL_PRIORITIES, DEAL_STAGE_LABELS, errorMessage, formatInr, newId, resolvePipelines,
   normalizeActivity, normalizeContact, normalizeDeal, normalizePipeline, shortDate,
 } from "./lib/crm-records";
 import { useCrmWorkspace } from "./lib/use-crm-workspace";
@@ -121,10 +123,12 @@ function isOverdue(deal: Deal): boolean {
 export default function PipelinePage() {
   const { scope, isReady, assignees, activities, setActivities, logActivity } = useCrmWorkspace("deal");
 
-  const [deals, setDeals] = useState<Deal[]>(isMockMode ? seedDeals : []);
+  const [mockDeals, setMockDeals] = useState<Deal[]>(isMockMode ? seedDeals : []);
   const [customPipelines, setCustomPipelines] = useState<Pipeline[]>([]);
-  const [contacts, setContacts] = useState<Contact[]>(isMockMode ? seedContacts : []);
+  const [contactOptions, setContactOptions] = useState<Contact[]>(isMockMode ? seedContacts : []);
+  const [contactSearch, setContactSearch] = useState("");
   const [tasks, setTasks] = useState<CrmTask[]>([]);
+  const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
   const [isLoading, setIsLoading] = useState(!isMockMode);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState<unknown>(null);
@@ -150,7 +154,7 @@ export default function PipelinePage() {
   const [notesDraft, setNotesDraft] = useState<{ id: string; text: string } | null>(null);
   const [formKey, setFormKey] = useState(0);
 
-  /* ---- Loading ---- */
+  /* ---- Loading: the pipeline definitions only. Deals come from the board hook, a stage at a time. ---- */
   const load = useCallback(async () => {
     if (isMockMode) {
       setActivities(seedActivities);
@@ -161,24 +165,9 @@ export default function PipelinePage() {
       if (isReady) { setLoadError(new Error("Select a Client to view the CRM pipeline.")); setIsLoading(false); }
       return;
     }
-    setIsLoading(true);
     setLoadError(null);
-    try {
-      const rows = await crmApi.list<Deal>("deal", scope);
-      setDeals(rows.map(normalizeDeal));
-    } catch (error) {
-      setLoadError(error);
-      setIsLoading(false);
-      return;
-    }
-    const [pipelineRows, contactRows, activityRows, taskRows] = await Promise.allSettled([
-      crmApi.list<Pipeline>("pipeline", scope), crmApi.list<Contact>("contact", scope),
-      crmApi.list<Parameters<typeof normalizeActivity>[0]>("activity", scope), crmApi.list<CrmTask>("task", scope),
-    ]);
-    if (taskRows.status === "fulfilled") setTasks(taskRows.value);
-    if (pipelineRows.status === "fulfilled") setCustomPipelines(pipelineRows.value.map(normalizePipeline));
-    if (contactRows.status === "fulfilled") setContacts(contactRows.value.map(normalizeContact));
-    if (activityRows.status === "fulfilled") setActivities(activityRows.value.map(normalizeActivity));
+    const pipelineRows = await crmApi.list<Pipeline>("pipeline", scope).catch(() => null);
+    if (pipelineRows) setCustomPipelines(pipelineRows.map(normalizePipeline));
     setIsLoading(false);
   }, [isReady, scope, setActivities]);
 
@@ -191,79 +180,67 @@ export default function PipelinePage() {
   const pipelines = useMemo(() => resolvePipelines(customPipelines), [customPipelines]);
   const pipeline = useMemo(() => pipelines.find((p) => p.id === pipelineId) ?? pipelines[0] ?? BUILTIN_PIPELINE, [pipelines, pipelineId]);
 
-  const pipelineDeals = useMemo(() => deals.filter((d) => d.pipelineId === pipeline.id), [deals, pipeline.id]);
+  const filters = useMemo<BoardFilters>(() => ({
+    pipelineId: pipeline.id, search: search.trim() || undefined, ownerId: ownerFilter ?? undefined,
+    priority: priorityFilter ?? undefined, close: closeFilter ?? undefined, today: localDay(),
+  }), [pipeline.id, search, ownerFilter, priorityFilter, closeFilter]);
+  const mock = useMemo(() => (isMockMode ? { deals: mockDeals, setDeals: setMockDeals } : undefined), [mockDeals]);
+  const board = usePipelineBoard({ scope, ready: isReady, filters, pipelineStages: pipeline.stages, mock });
+  const { summary, displayStages, findDeal } = board;
+  const pageError = board.summaryError ? new Error(board.summaryError) : loadError;
 
-  const dealCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    deals.forEach((d) => { counts[d.pipelineId] = (counts[d.pipelineId] ?? 0) + 1; });
-    return counts;
-  }, [deals]);
-
-  /** Open stages from the pipeline, plus any stage a deal still carries, then Won / Lost. */
-  const displayStages = useMemo<DealStage[]>(() => {
-    const open = pipeline.stages.filter((s) => s !== "won" && s !== "lost");
-    const extra = Array.from(new Set(pipelineDeals.map((d) => d.stage)))
-      .filter((s) => s !== "won" && s !== "lost" && !open.includes(s));
-    const orderedExtra = DEAL_STAGES.filter((s) => extra.includes(s));
-    return [...open, ...orderedExtra, "won", "lost"];
-  }, [pipeline, pipelineDeals]);
-
-  const ownerOptions = useMemo(() => {
-    const byId = new Map<string, string>();
-    pipelineDeals.forEach((d) => { if (d.ownerId) byId.set(d.ownerId, d.ownerName); });
-    return Array.from(byId, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
-  }, [pipelineDeals]);
-
-  const filteredDeals = useMemo(() => {
-    const today = startOfToday();
-    const now = new Date();
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).getTime();
-    const in30 = today + 30 * 24 * 60 * 60 * 1000;
-    const q = search.trim().toLowerCase();
-    return pipelineDeals.filter((d) => {
-      if (q && !(d.name.toLowerCase().includes(q) || d.companyName.toLowerCase().includes(q) || d.primaryContactName.toLowerCase().includes(q))) return false;
-      if (ownerFilter && (ownerFilter === "__none__" ? d.ownerId : d.ownerId !== ownerFilter)) return false;
-      if (priorityFilter && d.priority !== priorityFilter) return false;
-      if (closeFilter) {
-        const close = d.expectedCloseDate ? new Date(d.expectedCloseDate).getTime() : NaN;
-        const has = Number.isFinite(close);
-        if (closeFilter === "none") return !has;
-        if (!has || !isOpen(d)) return false;
-        if (closeFilter === "overdue") return close < today;
-        if (closeFilter === "month") return close >= today && close <= monthEnd;
-        if (closeFilter === "30") return close >= today && close <= in30;
-      }
-      return true;
-    });
-  }, [pipelineDeals, search, ownerFilter, priorityFilter, closeFilter]);
-
-  const dealsByStage = useMemo(() => {
-    const map: Record<string, Deal[]> = {};
-    displayStages.forEach((s) => { map[s] = []; });
-    filteredDeals.forEach((d) => { (map[d.stage] ??= []).push(d); });
-    return map;
-  }, [filteredDeals, displayStages]);
+  const dealCounts = useMemo(() => summary?.pipelineCounts ?? {}, [summary]);
+  const ownerOptions = useMemo(() => summary?.owners ?? [], [summary]);
+  const stageFigures = (stage: string) => summary?.stages.find((entry) => entry.stage === stage) ?? { stage, total: 0, count: 0, value: 0 };
 
   const funnel = useMemo(() => {
     const stages = displayStages.filter((s) => s !== "lost");
-    const total = filteredDeals.filter((d) => d.stage !== "lost").length || 1;
+    const counts = new Map((summary?.stages ?? []).map((entry) => [entry.stage, entry.count]));
+    const total = stages.reduce((sum, s) => sum + (counts.get(s) ?? 0), 0) || 1;
     return stages.map((s) => {
-      const count = (dealsByStage[s] ?? []).length;
+      const count = counts.get(s) ?? 0;
       return { label: DEAL_STAGE_LABELS[s], count, value: `${count} deals`, conversionRate: Math.round((count / total) * 100) };
     });
-  }, [displayStages, filteredDeals, dealsByStage]);
+  }, [displayStages, summary]);
 
-  const detail = useMemo(() => deals.find((d) => d.id === detailId) ?? null, [deals, detailId]);
+  const detail = detailDeal && detailDeal.id === detailId ? detailDeal : null;
   const detailTasks = detail ? tasks.filter((t) => t.relatedDealId === detail.id) : [];
+  const openDetail = (deal: Deal) => { setDetailDeal(deal); setDetailId(deal.id); };
 
   useOpenParam(!isLoading && isReady, useCallback((id: string) => {
-    const deal = deals.find((d) => d.id === id);
-    if (!deal) return;
-    setPipelineId(deal.pipelineId);
-    setDetailId(id);
-  }, [deals]));
+    const open = (deal: Deal) => { setPipelineId(deal.pipelineId); setDetailDeal(deal); setDetailId(id); };
+    const local = findDeal(id);
+    if (local) { open(local); return; }
+    if (isMockMode || !scope) return;
+    void crmApi.get<Deal>("deal", id, scope).then((raw) => open(normalizeDeal(raw))).catch(() => undefined);
+  }, [findDeal, scope]));
   const detailActivity = detail ? activities.filter((a) => a.entityId === detail.id) : [];
   const activeFilterCount = [ownerFilter, priorityFilter, closeFilter].filter(Boolean).length + (search.trim() ? 1 : 0);
+
+  // The open deal's tasks and activity are read for that deal only, never as whole lists.
+  useEffect(() => {
+    if (isMockMode || !detailId || !scope) return;
+    let active = true;
+    crmApi.tasksPage<CrmTask>({ relatedDealId: detailId, limit: 50 }, scope)
+      .then((page) => { if (active) setTasks((rows) => [...page.items, ...rows.filter((t) => t.relatedDealId !== detailId)]); })
+      .catch(() => undefined);
+    crmApi.listPage<Parameters<typeof normalizeActivity>[0]>("activity", { entityId: detailId, limit: 50 }, scope)
+      .then((page) => { if (active) setActivities((rows) => [...page.items.map(normalizeActivity), ...rows.filter((a) => a.entityId !== detailId)]); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [detailId, scope, setActivities]);
+
+  // Contacts for the deal form are searched on demand (25 at a time) instead of loaded in full.
+  useEffect(() => {
+    if (isMockMode || !(showCreate || editTarget) || !scope) return;
+    let active = true;
+    const timer = window.setTimeout(() => {
+      crmApi.listPage<Parameters<typeof normalizeContact>[0]>("contact", { limit: 25, search: contactSearch.trim() || undefined }, scope)
+        .then((page) => { if (active) setContactOptions(page.items.map(normalizeContact)); })
+        .catch(() => undefined);
+    }, 250);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [showCreate, editTarget, contactSearch, scope]);
 
   const boardRef = useRef<HTMLDivElement>(null);
   const scrollBoard = useCallback((direction: "left" | "right") => {
@@ -279,28 +256,29 @@ export default function PipelinePage() {
   const saveDeal = useCallback(async (next: Deal): Promise<Deal> => {
     const stamped = { ...next, updatedAt: new Date().toISOString() };
     const saved = isMockMode ? stamped : normalizeDeal(await crmApi.update<Deal>("deal", stamped.id, stamped, scope ?? undefined));
-    setDeals((rows) => rows.map((d) => (d.id === saved.id ? saved : d)));
+    board.upsert(saved);
+    setDetailDeal((current) => (current && current.id === saved.id ? saved : current));
     return saved;
-  }, [scope]);
+  }, [scope, board]);
 
-  const moveDeal = useCallback(async (deal: Deal, stage: DealStage) => {
-    if (deal.stage === stage || isSaving) return;
-    const probability = stage === "won" ? 100 : stage === "lost" ? 0 : deal.stage === "won" || deal.stage === "lost" ? 20 : deal.probability;
-    const optimistic = { ...deal, stage, probability, lostReason: stage === "lost" ? deal.lostReason : undefined };
-    setDeals((rows) => rows.map((d) => (d.id === deal.id ? optimistic : d)));
+  const moveDeal = useCallback(async (deal: Deal, stage: DealStage, lostReasonText?: string): Promise<boolean> => {
+    if (deal.stage === stage || isSaving) return false;
     try {
-      await saveDeal(optimistic);
-      void logActivity("stage_changed", `Moved “${deal.name}”`, deal.id, DEAL_STAGE_LABELS[deal.stage], DEAL_STAGE_LABELS[stage]);
-      toast.success(`“${deal.name}” moved to ${DEAL_STAGE_LABELS[stage]}`);
+      const saved = await board.move(deal, stage, { lostReason: lostReasonText });
+      setDetailDeal((current) => (current && current.id === saved.id ? saved : current));
+      void logActivity("stage_changed", stage === "lost" ? `Marked “${deal.name}” as lost${lostReasonText ? `: ${lostReasonText}` : ""}` : `Moved “${deal.name}”`, deal.id, DEAL_STAGE_LABELS[deal.stage], DEAL_STAGE_LABELS[stage]);
+      toast.success(stage === "lost" ? "Deal marked as Lost" : `“${deal.name}” moved to ${DEAL_STAGE_LABELS[stage]}`);
+      return true;
     } catch (error) {
-      setDeals((rows) => rows.map((d) => (d.id === deal.id ? deal : d)));
-      toast.error(errorMessage(error));
+      const conflict = (error as { status?: number })?.status === 409;
+      toast.error(conflict ? "This deal was moved by someone else. The board has been refreshed." : errorMessage(error));
+      return false;
     }
-  }, [isSaving, logActivity, saveDeal]);
+  }, [isSaving, logActivity, board]);
 
   /* ---- Drag & drop ---- */
   const handleDrop = (stage: DealStage, droppedId: string) => {
-    const deal = deals.find((d) => d.id === (droppedId || draggedId));
+    const deal = findDeal(droppedId || draggedId || "");
     setDraggedId(null);
     setDragOverStage(null);
     if (!deal) return;
@@ -338,7 +316,7 @@ export default function PipelinePage() {
     setIsSaving(true);
     try {
       const saved = isMockMode ? built : normalizeDeal(await crmApi.create("deal", built, scope ?? undefined));
-      setDeals((rows) => [saved, ...rows]);
+      board.upsert(saved);
       void logActivity("deal_created", `Created deal “${saved.name}”`, saved.id);
       toast.success("Deal created");
       setShowCreate(false);
@@ -367,7 +345,8 @@ export default function PipelinePage() {
 
   /** Keeps the deal's name on its tasks in step after a rename. */
   const syncDealName = async (deal: Deal) => {
-    const stale = tasks.filter((t) => t.relatedDealId === deal.id && t.relatedDealName !== deal.name);
+    const related = isMockMode ? tasks : (await crmApi.tasksPage<CrmTask>({ relatedDealId: deal.id, limit: 200 }, scope ?? undefined).catch(() => ({ items: [] as CrmTask[] }))).items;
+    const stale = related.filter((t) => t.relatedDealId === deal.id && t.relatedDealName !== deal.name);
     if (stale.length === 0) return;
     const next = stale.map((t) => ({ ...t, relatedDealName: deal.name }));
     setTasks((rows) => rows.map((t) => next.find((n) => n.id === t.id) ?? t));
@@ -380,7 +359,7 @@ export default function PipelinePage() {
     setIsSaving(true);
     try {
       if (!isMockMode) await crmApi.remove("deal", deal.id, scope ?? undefined);
-      setDeals((rows) => rows.filter((d) => d.id !== deal.id));
+      board.remove(deal.id);
       setDetailId((current) => (current === deal.id ? null : current));
       setDeleteTarget(null);
       toast.success("Deal deleted");
@@ -394,10 +373,7 @@ export default function PipelinePage() {
     setIsSaving(true);
     try {
       const reason = lostReason.trim();
-      const saved = await saveDeal({ ...deal, stage: "lost", probability: 0, lostReason: reason || undefined });
-      void logActivity("stage_changed", `Marked “${saved.name}” as lost${reason ? `: ${reason}` : ""}`, saved.id, DEAL_STAGE_LABELS[deal.stage], "Lost");
-      toast.success("Deal marked as Lost");
-      setLostTarget(null);
+      if (await moveDeal(deal, "lost", reason || undefined)) setLostTarget(null);
     } catch (error) { toast.error(errorMessage(error)); }
     finally { setIsSaving(false); }
   };
@@ -509,7 +485,7 @@ export default function PipelinePage() {
         <Button variant="ghost" size="icon-sm" className="size-7" aria-label={`Actions for ${deal.name}`}><MoreHorizontal className="size-4" /></Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-        <DropdownMenuItem onClick={() => setDetailId(deal.id)}><Eye /> View</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => openDetail(deal)}><Eye /> View</DropdownMenuItem>
         <DropdownMenuItem onClick={() => openEdit(deal)}><Pencil /> Edit</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Move to</DropdownMenuLabel>
@@ -526,7 +502,7 @@ export default function PipelinePage() {
     </DropdownMenu>
   );
 
-  const hasDeals = pipelineDeals.length > 0;
+  const hasDeals = (summary?.total ?? 0) > 0;
   const margin = detail && detail.value > 0 ? Math.round(((detail.value - detail.cost) / detail.value) * 100) : null;
 
   return (
@@ -537,7 +513,7 @@ export default function PipelinePage() {
         description={`Track And Manage Deals Through Every Stage${pipelines.length > 1 ? ` · ${pipelines.length} Pipelines` : ""}.`}
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <CrmRecycleDialog kind="deal" scope={scope} onRestored={() => void load()} />
+            <CrmRecycleDialog kind="deal" scope={scope} onRestored={() => { void load(); board.refresh(); }} />
             <Select value={pipeline.id} onValueChange={setPipelineId}>
               <SelectTrigger className="w-auto min-w-[140px]" aria-label="Pipeline"><SelectValue /></SelectTrigger>
               <SelectContent>{pipelines.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
@@ -548,8 +524,8 @@ export default function PipelinePage() {
         }
       />
 
-      <PipelineMetricCards deals={pipelineDeals} />
-      <CrmForecastPanel deals={pipelineDeals} />
+      <PipelineMetricCards summary={summary} />
+      <CrmForecastPanel summary={summary} />
 
       <FilterBar
         search={<SearchInput value={search} onChange={setSearch} placeholder="Search deal, company, contact..." />}
@@ -584,13 +560,13 @@ export default function PipelinePage() {
         onClearFilters={() => { setSearch(""); setOwnerFilter(null); setPriorityFilter(null); setCloseFilter(null); }}
       />
 
-      {loadError ? (
+      {pageError ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-700">
           <p className="font-medium">The pipeline could not be loaded.</p>
-          <p className="mt-0.5">{errorMessage(loadError)}</p>
-          <Button className="mt-3" size="sm" variant="outline" onClick={() => void load()}><RotateCcw className="size-3.5" /> Retry</Button>
+          <p className="mt-0.5">{errorMessage(pageError)}</p>
+          <Button className="mt-3" size="sm" variant="outline" onClick={() => { void load(); board.retrySummary(); }}><RotateCcw className="size-3.5" /> Retry</Button>
         </div>
-      ) : isLoading ? (
+      ) : isLoading || board.loading ? (
         <div className="flex gap-2 overflow-hidden">
           {Array.from({ length: 4 }, (_, i) => <div key={i} className="h-72 min-w-[280px] flex-1 animate-pulse rounded-2xl border border-slate-200 bg-slate-50" />)}
         </div>
@@ -646,8 +622,10 @@ export default function PipelinePage() {
           >
             <div className="flex gap-3 items-stretch" style={{ width: "max-content", minWidth: "100%" }}>
               {displayStages.map((stage) => {
-                const stageDeals = dealsByStage[stage] ?? [];
-                const totalValue = stageDeals.reduce((sum, d) => sum + d.value, 0);
+                const column = board.column(stage);
+                const stageDeals = column.rows;
+                const figures = stageFigures(stage);
+                const totalValue = figures.value;
                 const isTarget = dragOverStage === stage && draggedId !== null;
                 return (
                   <div
@@ -661,7 +639,7 @@ export default function PipelinePage() {
                     <div className="flex shrink-0 items-center justify-between rounded-t-xl border-b border-slate-200/80 bg-white/70 px-3.5 py-2.5">
                       <div>
                         <h3 className="text-[13px] font-bold text-slate-800 leading-tight">{DEAL_STAGE_LABELS[stage]}</h3>
-                        <p className="text-[11.5px] font-medium text-slate-500 mt-0.5">{stageDeals.length} deal{stageDeals.length === 1 ? "" : "s"} · {formatInr(totalValue)}</p>
+                        <p className="text-[11.5px] font-medium text-slate-500 mt-0.5">{figures.count} deal{figures.count === 1 ? "" : "s"} · {formatInr(totalValue)}</p>
                       </div>
                       <Button
                         variant="ghost" size="icon-sm" className="size-7 rounded-lg hover:bg-slate-100 text-slate-500" aria-label={`Add deal to ${DEAL_STAGE_LABELS[stage]}`}
@@ -673,7 +651,14 @@ export default function PipelinePage() {
 
                     {/* Column List with Vertical Scroller (equal height across all columns) */}
                     <div className="scrollbar-thin flex-1 min-h-0 space-y-2 overflow-y-auto p-2">
-                      {stageDeals.length === 0 ? (
+                      {column.error && stageDeals.length === 0 ? (
+                        <div className="flex h-full min-h-[140px] flex-col items-center justify-center gap-2 text-center text-[12px] font-medium text-red-600">
+                          <p>These deals could not be loaded.</p>
+                          <Button size="sm" variant="outline" onClick={() => board.retryColumn(stage)}><RotateCcw className="size-3.5" /> Retry</Button>
+                        </div>
+                      ) : column.loading && stageDeals.length === 0 ? (
+                        <div className="flex h-full min-h-[140px] items-center justify-center text-[12px] font-medium text-slate-400">Loading deals…</div>
+                      ) : stageDeals.length === 0 ? (
                         <div className="flex h-full min-h-[140px] items-center justify-center text-[12px] font-medium text-slate-400">
                           {isTarget ? "Drop Deal Here" : "No Deals"}
                         </div>
@@ -683,7 +668,7 @@ export default function PipelinePage() {
                           draggable
                           onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", deal.id); setDraggedId(deal.id); }}
                           onDragEnd={() => { setDraggedId(null); setDragOverStage(null); }}
-                          onClick={() => setDetailId(deal.id)}
+                          onClick={() => openDetail(deal)}
                           className={`group cursor-grab rounded-xl border border-slate-200/90 bg-white p-2.5 sm:p-3 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-slate-300 active:cursor-grabbing ${draggedId === deal.id ? "opacity-40" : ""}`}
                         >
                           {/* Title & Grip / Actions */}
@@ -723,6 +708,12 @@ export default function PipelinePage() {
                           </div>
                         </div>
                       ))}
+                      {stageDeals.length > 0 && column.next ? (
+                        <Button variant="outline" size="sm" className="w-full" disabled={column.loadingMore} onClick={() => void board.loadMore(stage)}>
+                          {column.loadingMore ? "Loading…" : `Load more (${Math.max(figures.count - stageDeals.length, 0)} left)`}
+                        </Button>
+                      ) : null}
+                      {column.error && stageDeals.length > 0 ? <p className="text-center text-[11px] text-red-600">Could not load more. <button type="button" className="underline" onClick={() => void board.loadMore(stage)}>Retry</button></p> : null}
                     </div>
                   </div>
                 );
@@ -740,13 +731,13 @@ export default function PipelinePage() {
               <div className="border-b border-slate-100 bg-slate-50/50 px-4 py-3"><h2 className="text-[13px] font-semibold text-slate-800">Stage Breakdown</h2></div>
               <div className="space-y-1.5 p-4">
                 {displayStages.filter((s) => s !== "lost").map((stage) => {
-                  const stageDeals = dealsByStage[stage] ?? [];
-                  const totalVal = stageDeals.reduce((sum, d) => sum + d.value, 0);
+                  const figures = stageFigures(stage);
+                  const totalVal = figures.value;
                   return (
                     <div key={stage} className="flex items-center gap-4 rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5">
                       <span className={`size-3 rounded-full shadow-sm ${STAGE_DOT[stage]}`} />
                       <span className="flex-1 text-[13px] font-bold text-slate-800">{DEAL_STAGE_LABELS[stage]}</span>
-                      <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[13px] font-medium text-slate-500">{stageDeals.length} deal{stageDeals.length === 1 ? "" : "s"}</span>
+                      <span className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[13px] font-medium text-slate-500">{figures.count} deal{figures.count === 1 ? "" : "s"}</span>
                       <span className="text-[14px] font-bold text-slate-800">{formatInr(totalVal)}</span>
                     </div>
                   );
@@ -807,7 +798,7 @@ export default function PipelinePage() {
                     <div className="grid grid-cols-2 gap-2 text-[12px]">
                       <div><span className="text-[#75829D]">Company:</span> <span className="text-[#354568]">{detail.companyName || "—"}</span></div>
                       <div><span className="text-[#75829D]">Contact:</span>{" "}
-                        {detail.primaryContactId && contacts.some((c) => c.id === detail.primaryContactId)
+                        {detail.primaryContactId
                           ? <Link href={crmLink("contacts", detail.primaryContactId)} className="font-medium text-indigo-700 hover:underline">{detail.primaryContactName || "View Contact"}</Link>
                           : <span className="text-[#354568]">{detail.primaryContactName || "—"}</span>}
                       </div>
@@ -882,12 +873,12 @@ export default function PipelinePage() {
       {/* ---- Create / Edit Deal ---- */}
       <DealFormModal
         key={`create-${formKey}`} open={showCreate} onOpenChange={setShowCreate} title="Create Deal" submitLabel="Save Deal"
-        isSaving={isSaving} contacts={contacts} pipelines={pipelines} assignees={assignees} onSubmit={handleCreate}
+        isSaving={isSaving} contacts={contactOptions} onContactSearch={isMockMode ? undefined : setContactSearch} pipelines={pipelines} assignees={assignees} onSubmit={handleCreate}
         initial={{ pipelineId: pipeline.id, stage: createStage, probability: "20", priority: "medium", source: "manual", ownerId: assignees[0]?.id ?? "" }}
       />
       <DealFormModal
         key={`edit-${editTarget?.id ?? "none"}-${formKey}`} open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }}
-        title="Edit Deal" submitLabel="Update Deal" isSaving={isSaving} contacts={contacts} pipelines={pipelines}
+        title="Edit Deal" submitLabel="Update Deal" isSaving={isSaving} contacts={contactOptions} onContactSearch={isMockMode ? undefined : setContactSearch} pipelines={pipelines}
         assignees={assignees} onSubmit={handleEdit} initial={editTarget ? dealFormValues(editTarget) : undefined}
       />
 

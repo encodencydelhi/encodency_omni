@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { useCompanyScope } from "@/features/support/hooks";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { assistantApi } from "./api";
 import { AssistantModal } from "./assistant-modal";
 import { useAssistantChat } from "./use-assistant-chat";
@@ -30,11 +31,12 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname() ?? "/admin";
   const { user } = useAuth();
   const { companyId, ready } = useCompanyScope();
+  const { clientId } = useTenancyContext();
   const [isOpen, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
 
   const bootstrap = useQuery({
-    queryKey: ["assistant", companyId, "bootstrap", pathname],
+    queryKey: ["assistant", companyId, clientId, "bootstrap", pathname],
     enabled: isOpen && ready,
     queryFn: ({ signal }) => assistantApi.bootstrap(companyId, pathname, typeof navigator !== "undefined" ? navigator.language : undefined, signal),
     staleTime: 60_000,
@@ -70,6 +72,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         draft={draft}
         onDraftChange={setDraft}
         onNavigate={close}
+        companyId={companyId || undefined}
       />
     </AssistantContext.Provider>
   );

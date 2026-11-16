@@ -1,3 +1,4 @@
+import { resolveXMockMode } from "@/config/data-source-policy";
 import type {
   ApprovalState,
   FailureCode,
@@ -44,7 +45,7 @@ export const xRoutes = {
  * the workspace then renders a service-unavailable state rather than fake
  * numbers.
  */
-export const X_MOCK_MODE = process.env.NEXT_PUBLIC_X_MOCK_MODE !== "false";
+export const X_MOCK_MODE = resolveXMockMode(process.env.NEXT_PUBLIC_X_MOCK_MODE, process.env.NODE_ENV === "production", process.env.NEXT_PUBLIC_ALLOW_MOCK_PREVIEW === "true");
 
 /* ------------------------------------------------------------------ */
 /* Composer limits                                                     */

@@ -23,6 +23,9 @@ export function scheduleProblem(c: Record<string, any>): string | null {
 export function nodeProblem(node: AutomationNode): string | null {
   const c = node.config ?? {};
   switch (node.actionId) {
+    case "platform_event": return String(c.eventType ?? '').trim() ? null : "Choose a business event";
+    case 'lookup_resource': return !c.resourceType ? 'Choose a resource type' : !String(c.resourceId ?? '').trim() ? 'Enter a resource ID or variable' : !c.saveAs ? 'Choose a result name' : null;
+    case 'generate_report': return !['pdf', 'csv'].includes(String(c.format ?? 'pdf')) || ![7, 14, 30, 60, 90].includes(Number(c.rangeDays ?? 30)) ? 'Choose a supported format and reporting period' : null;
     case "website_down": return c.websiteId ? null : "Choose a monitored website";
     case "website_ssl_expiring": return c.websiteId ? (c.daysBefore === "" || c.daysBefore === undefined || (Number(c.daysBefore) >= 1 && Number(c.daysBefore) <= 90) ? null : "Days before expiry must be 1 to 90") : "Choose a monitored website";
     case "lead_stage_changed":

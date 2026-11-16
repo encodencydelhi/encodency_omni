@@ -18,12 +18,13 @@ interface ManageGroupsDialogProps {
   groups: ContactGroup[];
   /** Live member counts keyed by group name. */
   counts: Record<string, number>;
+  countScope?: "all" | "page";
   isSaving?: boolean;
   onCreate: (name: string, description: string) => void | Promise<void>;
   onDelete: (group: ContactGroup) => void | Promise<void>;
 }
 
-export function ManageGroupsDialog({ open, onClose, groups, counts, isSaving = false, onCreate, onDelete }: ManageGroupsDialogProps) {
+export function ManageGroupsDialog({ open, onClose, groups, counts, countScope = "all", isSaving = false, onCreate, onDelete }: ManageGroupsDialogProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -61,7 +62,7 @@ export function ManageGroupsDialog({ open, onClose, groups, counts, isSaving = f
             <li key={group.id} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-semibold text-slate-800">{group.name}</p>
-                <p className="truncate text-[12px] text-slate-500">{group.description || "No description"} · {counts[group.name] ?? 0} contact{(counts[group.name] ?? 0) === 1 ? "" : "s"}</p>
+                <p className="truncate text-[12px] text-slate-500">{group.description || "No description"} · {counts[group.name] ?? 0} contact{(counts[group.name] ?? 0) === 1 ? "" : "s"}{countScope === "page" ? " on this page" : ""}</p>
               </div>
               {confirmId === group.id ? (
                 <div className="flex items-center gap-1.5">

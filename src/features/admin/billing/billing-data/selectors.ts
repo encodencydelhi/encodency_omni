@@ -165,7 +165,7 @@ export function usageRows(snapshot: BillingSnapshot): UsageRow[] {
       limit,
       percent: limit ? Math.round((used / limit) * 100) : 0,
       state: usageState(used, limit),
-      remaining: limit === null ? null : Math.max(limit - used, 0),
+      remaining: limit === null ? null : Math.max(limit - used - (isCredits ? snapshot.credits.reserved ?? 0 : 0), 0),
       resets: metric?.resets ?? false,
       extra,
     };
@@ -180,7 +180,7 @@ export const USAGE_STATE_META: Record<UsageState, { label: string; tone: "green"
 };
 
 export function creditsRemaining(snapshot: BillingSnapshot) {
-  return Math.max(snapshot.credits.included + snapshot.credits.purchased - snapshot.credits.used, 0);
+  return Math.max(snapshot.credits.included + snapshot.credits.purchased - snapshot.credits.used - (snapshot.credits.reserved ?? 0), 0);
 }
 
 /* ------------------------------------------------------------------ */

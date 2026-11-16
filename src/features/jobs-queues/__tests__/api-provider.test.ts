@@ -15,6 +15,14 @@ const { toJobRecord, toLifecycle, toQueueDefinition, toWorkerRecord, toSchedule,
 type WireJobSummary = import("../live/jobs-ops-api").WireJobSummary;
 type WireQueueOverview = import("../live/jobs-ops-api").WireQueueOverview;
 
+it('marks domain queues as managed by their module and explains their recovery location', () => {
+  const queue = toQueueDefinition({ queue: 'automation-runs', reachable: true, paused: false, controlMode: 'module' });
+  assert.equal(queue.name, 'Automation');
+  assert.equal(queue.controlMode, 'module');
+  assert.match(queue.purpose, /Automation/);
+  assert.match(queue.deadLetterPolicy, /owning module/);
+});
+
 const job = (over: Partial<WireJobSummary> = {}): WireJobSummary => ({
   key: "crawler~12", id: "12", queue: "crawler", name: "crawl-site", state: "waiting", priority: 0, attemptsMade: 0, maxAttempts: 3,
   createdAt: "2026-10-08T10:00:00.000Z", processedAt: null, finishedAt: null, runAt: null, failedReason: null, failure: null,

@@ -1,11 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { AppProviders } from "@/components/providers/app-providers";
 import { APP } from "@/config/app";
 import "./globals.css";
+import "../assets/fonts/inter-subsets.css";
 
-const inter = Inter({
-  subsets: ["latin"],
+const inter = localFont({
+  src: "../assets/fonts/inter-latin.woff2",
+  weight: "100 900",
+  style: "normal",
+  fallback: ["Inter", "Inter Fallback"],
+  adjustFontFallback: false,
   variable: "--font-inter",
   display: "swap",
 });

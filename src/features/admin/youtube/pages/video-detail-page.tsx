@@ -1,4 +1,5 @@
 "use client";
+import { confirmAction } from "@/lib/ui-dialog-store";
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -279,7 +280,7 @@ function CaptionsTab({ videoId }: { videoId: string }) {
   };
 
   const remove = async (captionId: string) => {
-    if (!scope || busy || !window.confirm("Delete this caption track from YouTube?")) return;
+    if (!scope || busy || !await confirmAction("Delete this caption track from YouTube?")) return;
     setBusy(captionId);
     setError(null);
     try {

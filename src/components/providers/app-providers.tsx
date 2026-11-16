@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/features/auth/components/auth-provider";
 import { createQueryClient } from "@/lib/query/query-client";
+import { AppDialogHost } from "@/components/shared/app-dialog-host";
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(createQueryClient);
 
@@ -16,6 +17,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         <IdentityDocument />
         <TooltipProvider delayDuration={200}>
           {children}
+          <AppDialogHost />
           <Toaster
             position="bottom-right"
             toastOptions={{

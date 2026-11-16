@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { nativeWhatsAppApi } from "../../demo/native-api";
 import {
   Area,
   AreaChart,
@@ -21,15 +23,11 @@ import {
 import {
   AlertCircle,
   ArrowDown,
-  ArrowRight,
   BarChart3,
   Calendar,
   CheckCircle2,
-  Clock,
   Eye,
   FileText,
-  Filter,
-  Layers,
   Megaphone,
   PieChart as PieIcon,
   RefreshCw,
@@ -53,6 +51,25 @@ import type {
 import { useWhatsAppOverviewAnalytics } from "../../live/whatsapp-hooks";
 import type { ProviderOverview } from "@/features/admin/integrations/live/integrations-api";
 
+
+function PerformanceTooltip({ name, metric, value, category, language, deliveryRate, readRate, failureRate }: {
+  name: string; metric: string; value: ReactNode; category?: string; language?: string;
+  deliveryRate: number; readRate: number; failureRate?: number;
+}) {
+  const rows = [
+    ...(category ? [["Category", category]] : []),
+    ...(language ? [["Language", language]] : []),
+    [metric, value], ["Delivered", `${deliveryRate.toFixed(1)}%`],
+    ["Read", `${readRate.toFixed(1)}%`], ["Failed", `${(failureRate ?? 0).toFixed(1)}%`],
+  ];
+  return <div className="w-full rounded-lg bg-slate-900 p-3 text-xs text-slate-50 shadow-lg [overflow-wrap:anywhere]">
+    <p className="mb-2 font-semibold">{name}</p>
+    <dl className="space-y-1.5">{rows.map(([label, detail], index) => <div key={index} className="grid grid-cols-2 gap-3">
+      <dt className="min-w-0 capitalize text-slate-300">{label}</dt><dd className="min-w-0 text-right">{detail}</dd>
+    </div>)}</dl>
+  </div>;
+}
+
 interface OverviewInsightsProps {
   overviewAnalytics: WhatsAppOverviewAnalytics | null;
   status: ProviderOverview | null;
@@ -62,10 +79,11 @@ interface OverviewInsightsProps {
   onTabChange: (tab: string) => void;
   companyId?: string;
   clientId?: string;
+  demoAnalytics?: (query: WhatsAppAnalyticsQuery) => WhatsAppOverviewAnalytics;
+  nativeScope?: string;
 }
 
 const FAILURE_COLORS = ["#EF4444", "#F59E0B", "#8B5CF6", "#3B82F6", "#EC4899", "#64748B", "#10B981"];
-const AUDIENCE_PIE_COLORS = ["#10B981", "#EF4444"];
 const CAMPAIGN_STATUS_COLORS: Record<string, string> = {
   ACTIVE: "#10B981",
   COMPLETED: "#3B82F6",
@@ -78,19 +96,21 @@ type RangeOption = "7d" | "15d" | "30d" | "today" | "90d" | "this_month" | "last
 
 export function WhatsAppOverviewInsights({
   overviewAnalytics: initialOverviewAnalytics,
-  status,
-  templates,
   messages,
   loading: parentLoading,
   onTabChange,
   companyId,
   clientId,
+  demoAnalytics,
+  nativeScope,
 }: OverviewInsightsProps) {
   // Global Date Filter State
   const [selectedRange, setSelectedRange] = useState<RangeOption>("30d");
+  const [lastPresetRange,setLastPresetRange]=useState<Exclude<RangeOption,"custom">>("30d");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [appliedCustomDates, setAppliedCustomDates] = useState<{ start?: string; end?: string }>({});
+  const [customDateError, setCustomDateError] = useState("");
 
   // Metric Switcher States
   const [campaignMetric, setCampaignMetric] = useState<"sent" | "delivered" | "read" | "failed">("sent");
@@ -105,18 +125,19 @@ export function WhatsAppOverviewInsights({
         endDate: appliedCustomDates.end,
       };
     }
-    return { range: selectedRange };
-  }, [selectedRange, appliedCustomDates]);
+    return { range: selectedRange === "custom" ? lastPresetRange : selectedRange };
+  }, [selectedRange, appliedCustomDates, lastPresetRange]);
 
   const { data: dynamicOverview, isLoading: queryLoading, isFetching } = useWhatsAppOverviewAnalytics(
     companyId ?? "",
     clientId ?? "",
     queryParam,
-    Boolean(companyId && clientId),
+    !nativeScope && !demoAnalytics && Boolean(companyId && clientId),
   );
+  const native=useQuery({queryKey:["whatsapp-native-analytics",nativeScope,queryParam],enabled:!!nativeScope,queryFn:({signal})=>nativeWhatsAppApi.analytics(nativeScope!,queryParam,signal),retry:false,refetchInterval:5000});
 
-  const overview = dynamicOverview ?? initialOverviewAnalytics;
-  const isLoading = parentLoading || queryLoading;
+  const overview = nativeScope ? native.data : demoAnalytics ? demoAnalytics(queryParam) : dynamicOverview ?? initialOverviewAnalytics;
+  const isLoading = parentLoading || queryLoading || !!nativeScope && native.isLoading;
 
   // Safe KPI Aggregations (Strictly from real data)
   const total = overview?.total ?? messages.length;
@@ -155,6 +176,12 @@ export function WhatsAppOverviewInsights({
   const audienceGrowth = overview?.audienceGrowth ?? [];
 
   const handleApplyCustomDate = () => {
+    if (!customStartDate || !customEndDate || customEndDate < customStartDate) {
+      setCustomDateError("Choose A Valid Start And End Date.");
+      return;
+    }
+    if(!Number.isFinite(Date.parse(customStartDate))||!Number.isFinite(Date.parse(customEndDate))||Date.parse(customEndDate)-Date.parse(customStartDate)>365*86400000){setCustomDateError("Choose A Valid Date Range Of At Most 366 Days.");return;}
+    setCustomDateError("");
     if (customStartDate && customEndDate) {
       setAppliedCustomDates({ start: customStartDate, end: customEndDate });
     }
@@ -229,6 +256,7 @@ export function WhatsAppOverviewInsights({
 
   return (
     <div className="space-y-2 pt-1">
+      {customDateError && <p role="alert" className="text-xs text-rose-700">{customDateError}</p>}
       {/* =================================================================== */}
       {/* 12. GLOBAL DATE FILTER BAR                                          */}
       {/* =================================================================== */}
@@ -255,7 +283,7 @@ export function WhatsAppOverviewInsights({
             <button
               key={item.key}
               type="button"
-              onClick={() => setSelectedRange(item.key)}
+              onClick={() => {setSelectedRange(item.key);setCustomDateError("");if(item.key!=="custom")setLastPresetRange(item.key);}}
               className={cn(
                 "rounded-md px-3.5 py-1.5 text-xs font-medium transition-all",
                 selectedRange === item.key
@@ -276,6 +304,7 @@ export function WhatsAppOverviewInsights({
             <span className="font-semibold text-slate-700">Start Date:</span>
             <input
               type="date"
+              aria-label="Analytics Start Date"
               value={customStartDate}
               onChange={(e) => setCustomStartDate(e.target.value)}
               className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-800 focus:border-emerald-500 focus:outline-hidden"
@@ -285,6 +314,7 @@ export function WhatsAppOverviewInsights({
             <span className="font-semibold text-slate-700">End Date:</span>
             <input
               type="date"
+              aria-label="Analytics End Date"
               value={customEndDate}
               onChange={(e) => setCustomEndDate(e.target.value)}
               className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-800 focus:border-emerald-500 focus:outline-hidden"
@@ -304,22 +334,24 @@ export function WhatsAppOverviewInsights({
       {/* =================================================================== */}
       {/* 11. TOP 8 KPI CARDS                                                 */}
       {/* =================================================================== */}
-      <section className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+      {nativeScope&&native.error&&<div role="alert" className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm"><p>{native.error.message}</p><Button size="sm" variant="outline" onClick={()=>void native.refetch()}>Retry Analytics</Button></div>}
+      {!(nativeScope&&native.error)&&<>
+      <section className="grid grid-cols-2 gap-1 sm:grid-cols-4 xl:grid-cols-7">
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
             <div
               key={kpi.id}
-              className={cn("rounded-lg border p-3.5 bg-white shadow-2xs transition-all hover:shadow-xs", kpi.bg)}
+              className={cn("min-w-0 rounded-lg border px-3 py-2 bg-white shadow-2xs transition-all hover:shadow-xs", kpi.bg)}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-tight">{kpi.label}</span>
-                <Icon className={cn("size-3.5", kpi.color)} />
+              <div className="flex items-start justify-between gap-1 leading-tight">
+                <span className="min-w-0 break-words text-[11px] font-semibold text-slate-500 uppercase tracking-tight">{kpi.label}</span>
+                <Icon className={cn("size-3.5 shrink-0", kpi.color)} />
               </div>
-              <p className="mt-2 text-xl font-extrabold tracking-tight text-slate-900">
+              <p className="mt-1 text-xl font-extrabold leading-tight tracking-tight text-slate-900">
                 {isLoading ? "—" : kpi.value}
               </p>
-              <p className="mt-1 text-[10px] text-slate-500 line-clamp-1">{kpi.note}</p>
+              <p className="mt-0.5 text-[10px] leading-tight text-slate-500 whitespace-normal">{kpi.note}</p>
             </div>
           );
         })}
@@ -342,7 +374,7 @@ export function WhatsAppOverviewInsights({
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1 rounded bg-slate-100 p-0.5 text-xs">
+              <div className="flex max-w-full flex-wrap items-center gap-1 rounded bg-slate-100 p-0.5 text-xs">
                 {(
                   [
                     { key: "7d", label: "7 Days" },
@@ -550,7 +582,7 @@ export function WhatsAppOverviewInsights({
               </div>
 
               {/* Metric Switcher */}
-              <div className="flex items-center gap-1 rounded bg-slate-100 p-0.5 text-xs">
+              <div className="flex max-w-full flex-wrap items-center gap-1 rounded bg-slate-100 p-0.5 text-xs">
                 {(["sent", "delivered", "read", "failed"] as const).map((m) => (
                   <button
                     key={m}
@@ -595,17 +627,12 @@ export function WhatsAppOverviewInsights({
                     />
                     <YAxis tick={{ fontSize: 11, fill: "#64748B" }} tickLine={false} axisLine={false} allowDecimals={false} />
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#0F172A",
-                        borderRadius: "8px",
-                        border: "none",
-                        color: "#F8FAFC",
-                        fontSize: "12px",
+                      allowEscapeViewBox={{ x: false, y: false }}
+                      wrapperStyle={{ width: "min(240px, calc(100vw - 64px))", whiteSpace: "normal", zIndex: 10 }}
+                      content={({ active, payload }) => {
+                        const point = payload?.[0];
+                        return active && point ? <PerformanceTooltip {...point.payload} value={point.value} metric={campaignMetric} /> : null;
                       }}
-                      formatter={(val: any, name: any, item: any) => [
-                        `${val} (${campaignMetric})`,
-                        `Del: ${item.payload.deliveryRate.toFixed(1)}% | Read: ${item.payload.readRate.toFixed(1)}% | Fail: ${item.payload.failureRate.toFixed(1)}%`,
-                      ]}
                     />
                     <Bar
                       dataKey={campaignMetric}
@@ -629,9 +656,9 @@ export function WhatsAppOverviewInsights({
             {campaignPerformance.length > 0 && (
               <div className="mt-3 max-h-36 overflow-y-auto divide-y divide-slate-100 text-xs">
                 {campaignPerformance.map((c) => (
-                  <div key={c.id} className="flex items-center justify-between py-2">
-                    <span className="font-semibold text-slate-800 truncate max-w-[180px]">{c.name}</span>
-                    <div className="flex items-center gap-2 text-[11px]">
+                  <div key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                    <span className="min-w-0 break-words font-semibold text-slate-800">{c.name}</span>
+                    <div className="flex flex-wrap items-center gap-2 text-[11px]">
                       <span className="text-emerald-700 font-medium">Del: {c.deliveryRate.toFixed(1)}%</span>
                       <span className="text-indigo-700 font-medium">Read: {c.readRate.toFixed(1)}%</span>
                       <span className="text-rose-600 font-medium">Fail: {c.failureRate.toFixed(1)}%</span>
@@ -666,7 +693,7 @@ export function WhatsAppOverviewInsights({
               </div>
 
               {/* Metric Switcher */}
-              <div className="flex items-center gap-1 rounded bg-slate-100 p-0.5 text-xs">
+              <div className="flex max-w-full flex-wrap items-center gap-1 rounded bg-slate-100 p-0.5 text-xs">
                 {(["sent", "delivered", "read", "failed"] as const).map((m) => (
                   <button
                     key={m}
@@ -714,17 +741,12 @@ export function WhatsAppOverviewInsights({
                       axisLine={false}
                     />
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#0F172A",
-                        borderRadius: "8px",
-                        border: "none",
-                        color: "#F8FAFC",
-                        fontSize: "12px",
+                      allowEscapeViewBox={{ x: false, y: false }}
+                      wrapperStyle={{ width: "min(240px, calc(100vw - 64px))", whiteSpace: "normal", zIndex: 10 }}
+                      content={({ active, payload }) => {
+                        const point = payload?.[0];
+                        return active && point ? <PerformanceTooltip {...point.payload} value={point.value} metric={templateMetric} /> : null;
                       }}
-                      formatter={(val: any, name: any, item: any) => [
-                        `${val} ${templateMetric}`,
-                        `Category: ${item.payload.category} | Lang: ${item.payload.language} | Del: ${item.payload.deliveryRate.toFixed(1)}% | Read: ${item.payload.readRate.toFixed(1)}%`,
-                      ]}
                     />
                     <Bar
                       dataKey={templateMetric}
@@ -748,14 +770,14 @@ export function WhatsAppOverviewInsights({
             {templatePerformance.length > 0 && (
               <div className="mt-3 max-h-40 overflow-y-auto divide-y divide-slate-100 text-xs">
                 {templatePerformance.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between py-2">
+                  <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                     <div>
                       <p className="font-semibold text-slate-800">{t.name}</p>
                       <p className="text-[10px] text-slate-400">
                         {t.category} · {t.language} · {t.usageCount ?? t.total} uses
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 text-[11px]">
+                    <div className="flex flex-wrap items-center gap-2 text-[11px]">
                       <span className="text-emerald-700 font-medium">Del: {t.deliveryRate.toFixed(1)}%</span>
                       <span className="text-indigo-700 font-medium">Read: {t.readRate.toFixed(1)}%</span>
                       <span className="text-rose-600 font-medium">Fail: {(t.failureRate ?? 0).toFixed(1)}%</span>
@@ -882,7 +904,7 @@ export function WhatsAppOverviewInsights({
             </div>
 
             <p className="mt-2 text-xs text-slate-500">
-              Categorization based strictly on actual provider error codes stored in the database.
+              {demoAnalytics ? "Illustrative failure categories from demo data." : "Categorization based strictly on actual provider error codes stored in the database."}
             </p>
 
             {failureReasons.length === 0 ? (
@@ -1027,7 +1049,7 @@ export function WhatsAppOverviewInsights({
 
                 <div className="space-y-2 text-xs">
                   <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex min-h-7 items-start justify-between gap-1">
                       <span className="flex items-center gap-1.5 font-bold text-emerald-950">
                         <UserCheck className="size-3.5 text-emerald-600" /> Opted In
                       </span>
@@ -1039,7 +1061,7 @@ export function WhatsAppOverviewInsights({
                   </div>
 
                   <div className="rounded-lg border border-rose-100 bg-rose-50/50 p-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex min-h-7 items-start justify-between gap-1">
                       <span className="flex items-center gap-1.5 font-bold text-rose-950">
                         <UserMinus className="size-3.5 text-rose-600" /> Opted Out
                       </span>
@@ -1076,6 +1098,7 @@ export function WhatsAppOverviewInsights({
           </div>
         </section>
       </div>
+      </>}
     </div>
   );
 }

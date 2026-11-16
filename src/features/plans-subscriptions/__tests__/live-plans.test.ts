@@ -71,6 +71,7 @@ beforeEach(() => {
     plans = [...plans.filter((item) => item.name !== payload.name), saved];
     return saved;
   };
+  api.renamePlan = record("renamePlan");
   api.activatePlan = record("activatePlan");
   api.deactivatePlan = record("deactivatePlan");
   api.changePlan = record("changePlan");
@@ -338,14 +339,16 @@ describe("the live repository writes", () => {
     assert.equal((await new live.LivePlansRepository().listPlans({})).summaries[0]!.draft, null, "a new session has no drafts");
   });
 
-  it("refuses to publish a change to a plan that has subscribers, and a rename", async () => {
+  it("refuses to publish a term change to a plan that has subscribers, but once nobody subscribes it renames through the rename endpoint", async () => {
     const repo = new live.LivePlansRepository();
     await repo.saveDraft("p-growth", input({ name: "Growth" }) as never, actor);
     assert.match((await reason(repo.publishPlan("p-growth", { rollout: "new_only", migrateCompanyIds: [], note: "" }, actor))).message, /1 subscriber/);
     subs = [];
     await repo.saveDraft("p-growth", input({ name: "Growth 2" }) as never, actor);
-    assert.match((await reason(repo.publishPlan("p-growth", { rollout: "new_only", migrateCompanyIds: [], note: "" }, actor))).message, /Renaming/);
-    assert.equal(calls.filter((call) => call.fn === "upsertPlan").length, 0);
+    await repo.publishPlan("p-growth", { rollout: "new_only", migrateCompanyIds: [], note: "" }, actor);
+    assert.deepEqual(calls.filter((call) => call.fn === "renamePlan").map((call) => call.args), [["p-growth", "Growth 2"]]);
+    // The fixture draft also changes the terms, which is allowed once nobody subscribes.
+    assert.equal(calls.filter((call) => call.fn === "upsertPlan").length, 1);
   });
 
   it("hides and shows a plan for real, and does not pretend to retire one or set options it cannot keep", async () => {

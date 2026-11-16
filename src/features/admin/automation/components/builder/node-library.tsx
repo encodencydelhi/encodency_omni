@@ -21,6 +21,9 @@ export interface LibraryItem {
 }
 
 export const LIBRARY: LibraryItem[] = [
+  { id: 'lookup_resource', type: 'action', label: 'Look Up Resource', description: 'Read current CRM, ticket, report, scan, post, asset, study or invoice state before deciding what to do.', icon: Database, category: 'Actions', iconBg: 'bg-[#0369A1]', hexColor: '#0369A1' },
+  { id: 'generate_report', type: 'action', label: 'Generate Report', description: 'Generate a real client PDF or CSV report. Replays reuse the same report file.', icon: FileText, category: 'Actions', iconBg: 'bg-[#0F766E]', hexColor: '#0F766E' },
+  { id: "platform_event", type: "trigger", label: "Business Event", description: "React to content, publishing, reports, support, client, team, integration, infrastructure and WhatsApp activity.", icon: Activity, category: "Triggers", iconBg: "bg-[#0369A1]", hexColor: "#0369A1" },
   { id: "new_lead", type: "trigger", label: "New Lead", description: "Runs when a lead is added to the CRM (manually, import or form).", icon: UserCheck, category: "Triggers", iconBg: "bg-[#2563EB]", hexColor: "#2563EB", supported: true },
   { id: "meta_lead", type: "trigger", label: "New Meta Lead", description: "Runs when a lead with source Facebook or Instagram is added.", icon: FaFacebookF, category: "Triggers", iconBg: "bg-[#1877F2]", hexColor: "#1877F2" },
   { id: "new_customer", type: "trigger", label: "New Customer", description: "Runs when a contact is added to the CRM.", icon: Users, category: "Triggers", iconBg: "bg-[#0EA5E9]", hexColor: "#0EA5E9" },

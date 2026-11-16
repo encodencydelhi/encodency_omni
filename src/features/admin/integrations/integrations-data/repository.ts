@@ -77,7 +77,7 @@ const CLIENT_COLORS = ["#2563EB", "#7C3AED", "#0E9F6E", "#D97706", "#DB2777", "#
 function activeCompanyId(): string {
   const companyId = getStoredCompanyId();
   if (!UUID_PATTERN.test(companyId)) {
-    throw new IntegrationServiceError("validation", "Select a company to continue.", "A valid company selection is required to load integrations.");
+    throw new IntegrationServiceError("validation", "Select a Company to continue.", "A valid company selection is required to load integrations.");
   }
   return companyId;
 }

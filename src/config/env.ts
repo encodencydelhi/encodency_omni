@@ -6,10 +6,10 @@
  * the service layer — no page, hook or component changes.
  */
 
-type DataSource = "mock" | "api";
+import { resolveDataSource } from "./data-source-policy";
 
-function readDataSource(): DataSource {
-  return process.env.NEXT_PUBLIC_DATA_SOURCE === "api" ? "api" : "mock";
+function readDataSource() {
+  return resolveDataSource(process.env.NEXT_PUBLIC_DATA_SOURCE, process.env.NODE_ENV === "production", process.env.NEXT_PUBLIC_ALLOW_MOCK_PREVIEW === "true");
 }
 
 function readNumber(raw: string | undefined, fallback: number): number {

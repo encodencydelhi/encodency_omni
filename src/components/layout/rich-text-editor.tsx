@@ -1,4 +1,5 @@
 "use client";
+import { requestText } from "@/lib/ui-dialog-store";
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
@@ -190,8 +191,13 @@ export default function RichTextEditor({
     checkActiveStates();
   };
 
-  const addLink = () => {
-    const url = window.prompt("Enter URL");
+  const addLink = async () => {
+    const selection = window.getSelection();
+    const range = selection?.rangeCount && editorRef.current?.contains(selection.anchorNode) ? selection.getRangeAt(0).cloneRange() : null;
+    const url = await requestText("Enter the destination URL for this link.", { inputLabel: "Link URL", confirmLabel: "Insert Link" });
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+    if (range) { const selected = window.getSelection(); selected?.removeAllRanges(); selected?.addRange(range); }
     if (url) {
       document.execCommand("createLink", false, url);
     }

@@ -39,6 +39,8 @@ import { leads as seedLeads, activities as seedActivities, teamMembers } from ".
 import { exportLeadsCsv, listValues } from "./lib/csv";
 import type { Lead, LeadStage, LeadSource, CrmActivity, CrmTask, TaskPriority, Contact, Deal, Pipeline } from "./types";
 import { crmApi, type CrmScope } from "./data/crm-api";
+import { useCrmCursor } from "./lib/use-crm-cursor";
+import { CrmCursorPagination } from "./components/crm-cursor-pagination";
 import Link from "next/link";
 import { ConvertLeadDialog, type ConvertLeadValues } from "./components/convert-lead-dialog";
 import { CrmAiInsights } from "./components/crm-ai-insights";
@@ -124,7 +126,6 @@ export default function LeadsPage() {
   const { user } = useAuth();
   const { companyId, clientId, isReady } = useTenancyContext();
   const scope = useMemo<CrmScope | null>(() => companyId && clientId ? { companyId, clientId } : null, [companyId, clientId]);
-  const [leads, setLeads] = useState<Lead[]>(isMockMode ? seedLeads : []);
   const [acts, setActs] = useState<CrmActivity[]>(isMockMode ? seedActivities : []);
   const [assignees, setAssignees] = useState<Array<{ id: string; name: string }>>(() => isMockMode ? teamMembers.map((member) => ({ id: member.id, name: member.name })) : []);
   const [search, setSearch] = useState("");
@@ -142,9 +143,7 @@ export default function LeadsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Lead | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [isLoading, setIsLoading] = useState(!isMockMode);
   const [isSaving, setIsSaving] = useState(false);
-  const [loadError, setLoadError] = useState<unknown>(null);
   const [assignTarget, setAssignTarget] = useState<Lead | null>(null);
   const [selectedOwnerId, setSelectedOwnerId] = useState("");
   const [taskTarget, setTaskTarget] = useState<Lead | null>(null);
@@ -156,29 +155,27 @@ export default function LeadsPage() {
   const [convertTarget, setConvertTarget] = useState<Lead | null>(null);
   const [convertKey, setConvertKey] = useState(0);
 
-  const loadLeads = useCallback(async () => {
-    if (isMockMode) { setIsLoading(false); return; }
-    if (!isReady || !scope) {
-      if (isReady) { setLoadError(new Error("Select a Client to view CRM leads.")); setIsLoading(false); }
-      return;
-    }
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const [leadRows, activityRows, memberRows] = await Promise.all([
-        crmApi.list<Lead>("lead", scope), crmApi.list<CrmActivity>("activity", scope),
-        teamApi.listMembers(scope.companyId).catch(() => []),
-      ]);
-      setLeads(leadRows.map(normalizeLead));
-      setActs(activityRows.map(normalizeActivity));
-      const activeMembers = memberRows.filter((member) => !member.suspendedAt).map((member) => ({ id: member.user.id, name: member.user.name?.trim() || member.user.email }));
-      if (activeMembers.length) setAssignees(activeMembers);
-      setSelected([]);
-    } catch (error) { setLoadError(error); }
-    finally { setIsLoading(false); }
-  }, [isReady, scope]);
+  const cursor = useCrmCursor<Lead>({ kind: "lead", scope, ready: isReady, normalize: normalizeLead,
+    query: { search: search.trim() || undefined, status: stageFilter ?? undefined, source: sourceFilter ?? undefined, limit: pageSize },
+    preview: isMockMode ? seedLeads : undefined });
+  const { rows: leads, setRows: setLeads, isLoading, error: loadError, reload: reloadCursor, isCurrent: isCurrentCursor } = cursor;
+  useEffect(() => { const timer = setTimeout(() => { setSelected([]); setDetailLead(null); }, 0); return () => clearTimeout(timer); }, [cursor.key]);
 
-  useEffect(() => { const timer = window.setTimeout(() => void loadLeads(), 0); return () => window.clearTimeout(timer); }, [loadLeads]);
+  const loadLeads = useCallback(async () => {
+    setSelected([]);
+    await reloadCursor();
+  }, [reloadCursor]);
+
+  useEffect(() => {
+    if (isMockMode || !scope) return;
+    let cancelled = false;
+    void Promise.allSettled([crmApi.list<CrmActivity>("activity", scope), teamApi.listMembers(scope.companyId)]).then(([activityRows, memberRows]) => {
+      if (cancelled) return;
+      if (activityRows.status === "fulfilled") setActs(activityRows.value.map(normalizeActivity));
+      if (memberRows.status === "fulfilled") setAssignees(memberRows.value.filter(member => !member.suspendedAt).map(member => ({ id: member.user.id, name: member.user.name?.trim() || member.user.email })));
+    });
+    return () => { cancelled = true; };
+  }, [scope]);
 
   useEffect(() => {
     if (isMockMode || !scope) return;
@@ -201,6 +198,7 @@ export default function LeadsPage() {
   }, [scope, user]);
 
   const filtered = useMemo(() => {
+    if (!isMockMode) return leads;
     let r = leads;
     if (search) { const q = search.toLowerCase(); r = r.filter((l) => `${l.firstName} ${l.lastName}`.toLowerCase().includes(q) || l.email.toLowerCase().includes(q) || l.company.toLowerCase().includes(q)); }
     if (stageFilter) r = r.filter((l) => l.stage === stageFilter);
@@ -212,11 +210,12 @@ export default function LeadsPage() {
   useOpenParam(!isLoading && isReady, useCallback((id: string) => {
     const lead = leads.find((l) => l.id === id);
     if (lead) setDetailLead(lead);
-  }, [leads]));
+    else if (!isMockMode && scope) void crmApi.get<Lead>("lead", id, scope).then(row => { if (isCurrentCursor()) setDetailLead(normalizeLead(row)); }).catch(error => toast.error(errorMessage(error)));
+  }, [leads, scope, isCurrentCursor]));
 
   const totalPages = Math.ceil(filtered.length / pageSize);
   const currentPage = Math.min(page, Math.max(1, totalPages));
-  const paginated = useMemo(() => { const s = (currentPage - 1) * pageSize; return filtered.slice(s, s + pageSize); }, [filtered, currentPage, pageSize]);
+  const paginated = useMemo(() => { if (!isMockMode) return filtered; const s = (currentPage - 1) * pageSize; return filtered.slice(s, s + pageSize); }, [filtered, currentPage, pageSize]);
   const pagination: PaginationMeta = useMemo(() => ({ page: currentPage, pageSize, total: filtered.length, totalPages, hasNextPage: currentPage < totalPages, hasPreviousPage: currentPage > 1 }), [currentPage, pageSize, filtered.length, totalPages]);
 
   const funnel = useMemo(() => {
@@ -632,11 +631,12 @@ export default function LeadsPage() {
         action={<div className="flex items-center gap-2">
           <CrmRecycleDialog kind="lead" scope={scope} onRestored={() => void loadLeads()} />
           <Button variant="outline" size="sm" onClick={() => setShowImport(true)}><Upload className="size-3.5" /> Import</Button>
-          <Button variant="outline" size="sm" onClick={handleExport}><Download className="size-3.5" /> Export</Button>
+          <Button variant="outline" size="sm" onClick={handleExport}><Download className="size-3.5" /> {isMockMode ? "Export" : "Export Page / Selection"}</Button>
           <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Lead</Button>
         </div>}
       />
 
+      {!isMockMode && <p className="px-1 text-xs text-slate-500">Statistics and charts describe this results page. Search and stage/source filters apply to all records. Results use a stable creation order.</p>}
       <LeadMetricCards leads={leads} />
 
       <FilterBar
@@ -660,9 +660,11 @@ export default function LeadsPage() {
         onClearFilters={() => { setStageFilter(null); setSourceFilter(null); setSearch(""); setPage(1); }}
       />
 
-      <DataTable columns={columns} rows={paginated} getRowId={(r) => r.id} isLoading={isLoading} error={loadError} onRetry={() => void loadLeads()} sort={sort} onToggleSort={handleSort} pagination={pagination} onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} selection={selection} onRowClick={(r) => setDetailLead(r)} enableColumnVisibility
+      <DataTable columns={columns} rows={paginated} getRowId={(r) => r.id} isLoading={isLoading} error={loadError} onRetry={() => void loadLeads()} sort={isMockMode ? sort : null} onToggleSort={isMockMode ? handleSort : undefined} pagination={isMockMode ? pagination : undefined} onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} selection={selection} onRowClick={(r) => setDetailLead(r)} enableColumnVisibility
         emptyState={<EmptyState icon={Users} title="No leads found" description="Create your first lead or adjust filters." action={<Button size="sm" onClick={() => setShowCreate(true)}><Plus className="size-3.5" /> Create Lead</Button>} />}
       />
+
+      {!isMockMode && <CrmCursorPagination count={leads.length} page={cursor.pageNumber} size={pageSize} loading={isLoading} error={loadError} hasMore={cursor.hasMore} hasPrevious={cursor.hasPrevious} onNext={() => { setSelected([]); void cursor.next(); }} onPrevious={() => { setSelected([]); void cursor.previous(); }} onSize={setPageSize} />}
 
       <div className="grid gap-1 lg:grid-cols-3 mt-1">
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-300">

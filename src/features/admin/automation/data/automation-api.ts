@@ -22,6 +22,10 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3
  * aggregate): no x-client-id header is sent and the backend returns company-wide data.
  */
 export type ClientScope = string | null;
+export interface PlatformEventEntry { event: string; module: string; label: string; source: 'audit' | 'domain' }
+export interface WorkflowResourceEntry { id: string; label: string; capability: string }
+export interface SourceEventEntry { id: string; event: string; eventType: string; clientId: string | null; status: 'PENDING' | 'SENDING' | 'PROCESSED' | 'DEAD' | 'EXPIRED' | 'SUPPRESSED'; attempts: number; createdAt: string; availableAt: string; processedAt: string | null; lastError: string | null; replayable: boolean; summary: { resourceType: string | null; resourceId: string | null; outcome: string | null; occurredAt: string | null; scrubbed: boolean }; matchedWorkflowCount: number; matches: Array<{ workflowId: string; name: string; runId: string | null; status: string }> }
+export interface SourceEventPage { items: SourceEventEntry[]; counts: Record<string, number>; nextCursor: string | null }
 
 function headers(clientId: ClientScope): Record<string, string> {
   return companyScopeHeaders(getStoredCompanyId(), clientId && UUID_PATTERN.test(clientId) ? { "x-client-id": clientId } : {});
@@ -128,6 +132,11 @@ export interface AutomationSecretInfo { name: string; hint: string; updatedAt: s
 export interface WorkflowExportDocument { kind: string; schemaVersion: number; name: string; warnings: string[]; [key: string]: unknown }
 
 export const automationApi = {
+  eventCatalog: () => req<PlatformEventEntry[]>('GET', '/automation/events/catalog', null),
+  resourceCatalog: () => req<WorkflowResourceEntry[]>('GET', '/automation/resources/catalog', null),
+  sourceEvents: (clientId: ClientScope, status?: string, cursor?: string, search?: string) => req<SourceEventPage>('GET', '/automation/events', clientId, undefined, { limit: '25', ...(status ? { status } : {}), ...(cursor ? { cursor } : {}), ...(search ? { search } : {}) }),
+  replayMatchingSourceEvents: (clientId: ClientScope, search?: string) => req<{ recovered: number; remaining: number }>('POST', '/automation/events/replay', clientId, { limit: 200, ...(search ? { search } : {}) }),
+  replaySourceEvent: (clientId: ClientScope, id: string) => req<{ status: string; id: string }>('POST', `/automation/events/${encodeURIComponent(id)}/replay`, clientId),
   /** Switches on every recommended automation this client does not have yet. */
   provisionRecommended: (clientId: string) => req<{ created: string[]; skipped: string[]; failed: Array<{ id: string; reason: string }> }>("POST", "/automation/provision", clientId),
 

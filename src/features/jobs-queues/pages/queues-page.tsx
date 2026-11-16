@@ -76,7 +76,7 @@ export function QueuesPage() {
   };
 
   const handlePauseResume = (queue: QueueDefinition) => {
-    if (queue.operationalState !== "running" && queue.operationalState !== "paused") return;
+    if (queue.controlMode === "module" || (queue.operationalState !== "running" && queue.operationalState !== "paused")) return;
     const pause = queue.operationalState === "running";
     if (!JOBS_MOCK_MODE) {
       setReasonFor({ queue, pause });

@@ -1,4 +1,5 @@
 "use client";
+import { confirmAction } from "@/lib/ui-dialog-store";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -17,7 +18,7 @@ export function useMetaLeadCrm() {
     const clientId = getStoredClientId();
     if (busy || !leads.length) return;
     if (!clientId || !accountId) { toast.error("Select A Client And A Linked Ad Account First."); return; }
-    if (!window.confirm(`Open ${leads.length === 1 ? leads[0]!.name : `${leads.length} Leads`} In CRM? Missing CRM Records Will Be Imported For The Selected Client. Existing Records Will Be Reused.`)) return;
+    if (!await confirmAction(`Open ${leads.length === 1 ? leads[0]!.name : `${leads.length} Leads`} In CRM? Missing CRM Records Will Be Imported For The Selected Client. Existing Records Will Be Reused.`)) return;
     setBusy(true);
     try {
       for (const lead of leads) await apiClient.request({ method: "POST", path: `/integrations/meta-ads/leads/${encodeURIComponent(lead.id)}/crm`, headers: companyScopeHeaders(getStoredCompanyId(), { "x-client-id": clientId }), body: { adAccountId: accountId } });
