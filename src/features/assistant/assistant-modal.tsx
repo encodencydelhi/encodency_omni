@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ArrowUp, BotMessageSquare, Headphones, LifeBuoy, RotateCcw, ShieldCheck, Ticket, X } from "lucide-react";
+import { ArrowUp, BotMessageSquare, Headphones, LifeBuoy, RotateCcw, ShieldCheck, ThumbsDown, ThumbsUp, Ticket, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { NavigateCard, TicketDraftCard, TicketListCard } from "./cards";
+import { ConfirmActionCard } from "./confirm-card";
 import { RichText } from "./rich-text";
 import { isRtl, MAX_INPUT_CHARS } from "./text";
 import type { AssistantBootstrap, ChatMessage } from "./types";
@@ -26,21 +27,35 @@ interface Props {
   draft: string;
   onDraftChange: (value: string) => void;
   onNavigate: () => void;
+  /** The Company the assistant works in; confirm calls are made for it. */
+  companyId?: string;
 }
 
-function Bubble({ message, chat, bootstrap, onNavigate }: { message: ChatMessage; chat: Chat; bootstrap: AssistantBootstrap | undefined; onNavigate: () => void }) {
+const LOOKUP_LABEL: Record<string, string> = {
+  get_crm_summary: "CRM numbers",
+  get_publishing_summary: "Posts",
+  get_campaign_summary: "Campaigns",
+  get_automation_health: "Automation",
+  get_integration_health: "Connections",
+  get_website_summary: "Website scan",
+  get_plan_usage: "Plan usage",
+};
+
+function Bubble({ message, chat, bootstrap, companyId, onNavigate }: { message: ChatMessage; chat: Chat; bootstrap: AssistantBootstrap | undefined; companyId: string | undefined; onNavigate: () => void }) {
   const mine = message.role === "user";
   return (
     <div className={cn("flex w-full flex-col", mine ? "items-end" : "items-start")}>
       <div className={cn("max-w-[88%] rounded-sm px-3 py-2", mine ? "bg-red-600 text-white" : message.notice ? "border border-amber-200 bg-amber-50 text-amber-900" : "bg-slate-100 text-slate-800")}>
         {mine ? <p dir="auto" className="whitespace-pre-wrap break-words text-[13px] leading-relaxed">{message.content}</p> : <RichText text={message.content} />}
       </div>
+      {!mine && message.lookups?.length ? <p className="mt-1 text-[11px] font-medium text-slate-500">Checked your workspace (read-only): {message.lookups.map((name) => LOOKUP_LABEL[name] ?? name).join(", ")}</p> : null}
       {!mine && message.redacted && <p className="mt-1 text-[11px] font-medium text-slate-500">Passwords, keys or card numbers in your last message were hidden for your safety.</p>}
       {!mine && (
         <div className="w-full max-w-[94%]">
           {message.actions?.map((action, index) => {
             const state = message.state?.[index];
             if (action.type === "navigate") return <NavigateCard key={index} action={action} state={state} onOpen={() => chat.open(message.id, index, action.path)} />;
+            if (action.type === "confirm_action") return <ConfirmActionCard key={index} action={action} companyId={companyId} state={state} onDone={(done) => chat.patchState(message.id, index, { done })} onDismiss={() => chat.patchState(message.id, index, { dismissed: true })} onNavigate={onNavigate} />;
             if (action.type === "tickets") return <TicketListCard key={index} items={action.items} onNavigate={onNavigate} />;
             return (
               <TicketDraftCard
@@ -53,6 +68,17 @@ function Bubble({ message, chat, bootstrap, onNavigate }: { message: ChatMessage
               />
             );
           })}
+          {message.serverId && !message.notice && !message.degraded && (
+            <div className="mt-1.5 flex items-center gap-1" role="group" aria-label="Was this answer helpful?">
+              <span className="me-1 text-[11px] font-medium text-slate-400">Helpful?</span>
+              <button type="button" onClick={() => chat.rate(message.id, "positive")} aria-label="Helpful" aria-pressed={message.feedback === "positive"} className={cn("grid size-6 place-items-center rounded-sm border transition", message.feedback === "positive" ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-transparent text-slate-400 hover:border-slate-200 hover:text-slate-700")}>
+                <ThumbsUp className="size-3.5" />
+              </button>
+              <button type="button" onClick={() => chat.rate(message.id, "negative")} aria-label="Not helpful" aria-pressed={message.feedback === "negative"} className={cn("grid size-6 place-items-center rounded-sm border transition", message.feedback === "negative" ? "border-red-300 bg-red-50 text-red-700" : "border-transparent text-slate-400 hover:border-slate-200 hover:text-slate-700")}>
+                <ThumbsDown className="size-3.5" />
+              </button>
+            </div>
+          )}
           {message.degraded && bootstrap?.canRaiseTickets !== false && !message.actions?.length && (
             <button type="button" onClick={chat.startTicket} className="mt-2 inline-flex items-center gap-2 rounded-sm border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100">
               <Headphones className="size-3.5" />
@@ -65,7 +91,7 @@ function Bubble({ message, chat, bootstrap, onNavigate }: { message: ChatMessage
   );
 }
 
-export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapLoading, firstName, draft, onDraftChange, onNavigate }: Props) {
+export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapLoading, firstName, draft, onDraftChange, onNavigate, companyId }: Props) {
   const bottom = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const [composing, setComposing] = useState(false);
@@ -160,13 +186,15 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
                 )}
                 <p className="flex items-start gap-2 text-[11px] font-medium leading-relaxed text-slate-500">
                   <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-emerald-600" />
-                  I cannot see your clients, posts or numbers, and I never need your passwords or keys. Please do not share them. Chats are saved so our support team can review them and improve the help.
+                  {bootstrap?.dataLookups
+                    ? "I can look up counts and statuses from your workspace, such as leads, posts and connections, to answer you. I never see names, messages or passwords, and I never need them. Chats are saved so our support team can review them and improve the help."
+                    : "I cannot see your clients, posts or numbers, and I never need your passwords or keys. Please do not share them. Chats are saved so our support team can review them and improve the help."}
                 </p>
               </div>
             )}
 
             {chat.messages.map((message) => (
-              <Bubble key={message.id} message={message} chat={chat} bootstrap={bootstrap} onNavigate={onNavigate} />
+              <Bubble key={message.id} message={message} chat={chat} bootstrap={bootstrap} companyId={companyId} onNavigate={onNavigate} />
             ))}
 
             {chat.pending && (
@@ -193,6 +221,12 @@ export function AssistantModal({ open, onOpenChange, chat, bootstrap, bootstrapL
                 <LifeBuoy className="size-3.5" />
                 Talk To The Support Team
               </button>
+              {bootstrap?.page && !disabled && (
+                <button type="button" onClick={() => submit(`What is the ${bootstrap.page!.title} page for, and what can I do here?`)} disabled={chat.pending} className="inline-flex items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-red-300 hover:text-red-700 disabled:opacity-50">
+                  <BotMessageSquare className="size-3.5" />
+                  Ask About This Page
+                </button>
+              )}
               <Link href="/admin/support/tickets" onClick={onNavigate} className="inline-flex items-center gap-1.5 rounded-sm border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:border-red-300 hover:text-red-700">
                 <Ticket className="size-3.5" />
                 My Tickets

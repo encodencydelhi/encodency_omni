@@ -129,6 +129,20 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
     [companyId, patchState],
   );
 
+  /** Thumbs up/down on an answer. Shown at once; undone if the server could not save it. */
+  const rate = useCallback(
+    (messageId: string, rating: "positive" | "negative") => {
+      const target = ref.current.find((message) => message.id === messageId);
+      if (!companyId || !target?.serverId) return;
+      const before = target.feedback;
+      commit((current) => current.map((message) => (message.id === messageId ? { ...message, feedback: rating } : message)));
+      void assistantApi.feedback(companyId, { messageId: target.serverId, rating }).catch(() => {
+        commit((current) => current.map((message) => (message.id === messageId ? { ...message, feedback: before } : message)));
+      });
+    },
+    [commit, companyId],
+  );
+
   const open = useCallback(
     (messageId: string, index: number, path: string) => {
       patchState(messageId, index, { navigated: true });
@@ -151,7 +165,7 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
           cid.current = reply.conversationId;
           setConversationId(reply.conversationId);
         }
-        const message: ChatMessage = { id: newId(), role: "assistant", content: reply.reply, createdAt: Date.now(), actions: reply.actions, degraded: reply.degraded, redacted: reply.redacted };
+        const message: ChatMessage = { id: newId(), role: "assistant", content: reply.reply, createdAt: Date.now(), actions: reply.actions, degraded: reply.degraded, redacted: reply.redacted, ...(reply.lookups?.length ? { lookups: reply.lookups } : {}), ...(reply.messageId ? { serverId: reply.messageId } : {}) };
         commit((current) => [...current, message]);
         // Only a plain page-open the person explicitly asked for runs by itself; everything else waits for a click.
         const auto = reply.actions.findIndex((action: AssistantAction) => action.type === "navigate" && action.auto);
@@ -207,5 +221,5 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
     commit(() => []);
   }, [commit]);
 
-  return { messages, pending, send, open, patchState, ticketSent, startTicket, reset };
+  return { messages, pending, send, open, patchState, ticketSent, startTicket, reset, rate };
 }
