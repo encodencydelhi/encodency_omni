@@ -1,7 +1,7 @@
 import type { AnimatedIconName } from "@/components/shared/animated-icon";
 import {
   BarChart3, Blocks, Bot, BriefcaseBusiness, CalendarDays, ContactRound, FileChartColumn,
-  Building2, FolderKanban, Gauge, Globe2, Hash, Image, Landmark, ListChecks, Network,
+  Building2, FolderKanban, Gauge, Globe2, Hash, Image, KeyRound, Landmark, ListChecks, Network,
   Megaphone, MessageCircle, PanelsTopLeft, Settings, ShieldCheck, Target,
   Server, Share2, Swords, UsersRound, Video, WalletCards, Webhook, type LucideIcon,
 } from "lucide-react";
@@ -62,6 +62,7 @@ export const adminNavigation: AdminNavSection[] = [
       { label: "Roles & Permissions", description: "Define roles and control workspace access.", href: "/admin/roles", icon: ShieldCheck, animatedIcon: "roles", iconColor: "text-teal-400" },
       { label: "Integrations", description: "Connect external services to your workspace.", href: "/admin/integrations", icon: Blocks, animatedIcon: "integrations", iconColor: "text-fuchsia-400" },
       { label: "Webhooks", description: "Configure endpoints and review event deliveries.", href: "/admin/settings/integrations/webhooks", icon: Webhook, animatedIcon: "webhooks", iconColor: "text-pink-400" },
+      { label: "API & Developers", description: "Create API keys so your own systems can send WhatsApp messages, templates and campaigns.", href: "/admin/developers", icon: KeyRound, animatedIcon: "webhooks", iconColor: "text-amber-400" },
       { label: "Billing", description: "Review your plan, invoices, and payment details.", href: "/admin/billing", icon: WalletCards, animatedIcon: "billing", iconColor: "text-emerald-400" },
       { label: "Settings", description: "Configure workspace preferences, branding, and security.", href: "/admin/settings", icon: Settings, animatedIcon: "settings", iconColor: "text-blue-400" },
     ]

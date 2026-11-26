@@ -12,6 +12,7 @@ import type { InternalRole } from "@/types/domain/team";
 export const ROUTES = {
   login: "/login",
   forgotPassword: "/forgot-password",
+  signup: "/signup",
   resetPassword: "/reset-password",
 
   superAdmin: {
@@ -35,6 +36,7 @@ export const ROUTES = {
     usage: "/super-admin/usage",
 
     integrations: "/super-admin/integrations",
+    whatsapp: "/super-admin/whatsapp",
     integrationsProviders: "/super-admin/integrations/providers",
     integrationsProvider: (id: string) => `/super-admin/integrations/providers/${id}`,
     integrationsConnections: "/super-admin/integrations/connections",

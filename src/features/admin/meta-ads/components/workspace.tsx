@@ -40,7 +40,7 @@ import { MetaProductNav } from "@/features/admin/meta/ui";
 import { btn, btnPrimary } from "./ui";
 
 /** Live mode reports through Meta's 7/30/90-day presets only; the demo data also has the two extra ranges. */
-const DATE_RANGES = LIVE ? ["Last 7 days", "Last 30 days", "Last 90 days"] : ["Last 7 days", "Last 30 days", "Last 90 days", "This month", "Lifetime"];
+const DATE_RANGES = LIVE ? ["Last 7 days", "Last 30 days", "Last 90 days", "Last 365 days", "Lifetime"] : ["Last 7 days", "Last 30 days", "Last 90 days", "This month", "Lifetime"];
 
 /**
  * Writes the chosen range to `?range=`, which the reporting pages read through
@@ -497,7 +497,12 @@ export function AdsWorkspace({
         </div>
 
         {/* <MetaPageGuide context={ads.status === "ready" ? JSON.stringify({ account: ads.accounts.find((a) => a.id === ads.accountId)?.name, period: ads.period, currency: ads.accounts.find((a) => a.id === ads.accountId)?.currency, totalsMinorUnits: ads.totals, availability: ads.datasets, syncedAt: ads.syncedAt }).slice(0, 2500) : undefined} /> */}
-        {ads.completeness && Object.values(ads.completeness).includes("limited") && <p className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">Partial Library: A Provider Fetch Limit Was Reached. Loaded Rows Are Shown; These Are Not Guaranteed Complete Totals.</p>}
+        {(() => {
+          // Only the list that was cut short says so, on its own tab (Leads, Overview, etc. are not affected).
+          const section = pathname.startsWith(`${ADS_ROOT}/adsets`) ? "adSets" : pathname.startsWith(`${ADS_ROOT}/ads`) ? "ads" : pathname.startsWith(`${ADS_ROOT}/creative`) ? "creatives" : null;
+          const label = { adSets: "ad sets (first 500)", ads: "ads (first 500)", creatives: "creatives (first 200)" } as const;
+          return section && ads.completeness?.[section] === "limited" ? <p className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">This account has more {label[section]} than Media360 loads at once. The ones Meta returned first are shown; totals in this list may be incomplete.</p> : null;
+        })()}
         {LIVE && ads.status === "ready" && ads.stale && (
           <div className="mb-3 flex flex-wrap items-center gap-2 rounded-sm border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-xs font-medium text-amber-900" role="status">
             <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />

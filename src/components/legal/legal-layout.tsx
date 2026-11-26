@@ -18,6 +18,9 @@ export function LegalLayout({ title, updated, children }: { title: string; updat
             <Link href="/data-deletion" className="hover:text-slate-900">
               Data Deletion
             </Link>
+            <Link href="/terms" className="hover:text-slate-900">
+              Terms
+            </Link>
           </nav>
         </div>
       </header>
@@ -28,7 +31,9 @@ export function LegalLayout({ title, updated, children }: { title: string; updat
       </article>
       <footer className="border-t border-slate-200">
         <p className="mx-auto max-w-3xl px-5 py-6 text-xs text-slate-500">
-          © {new Date().getFullYear()} {APP.vendor} Pvt. Ltd. · {APP.name}
+          © {new Date().getFullYear()} {APP.legalName} · {APP.name}
+          <br />
+          Registered office: {APP.registeredAddress}
         </p>
       </footer>
     </main>

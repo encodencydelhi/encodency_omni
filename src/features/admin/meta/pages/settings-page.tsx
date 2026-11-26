@@ -10,6 +10,7 @@ import { btn, btnPrimary, EmptyState, TableShell, Td, Th, Tr } from "@/features/
 import { useMeta } from "../connection-context";
 import { DisconnectDialog, MapResourceDialog } from "../components/connection-dialogs";
 import { ProfileCard } from "../components/profile-card";
+import { LeadAutoImportSection } from "../components/lead-auto-import";
 import { useSocialOverview } from "../live/meta-hooks";
 import { missingEssential, PRODUCT_LABEL, type MetaProduct } from "../permissions";
 import { ConnectionGate, InlineNotice, KeyValue, META_ROOT, MetaShell, Pill, Section } from "../ui";
@@ -199,6 +200,8 @@ function SettingsBody() {
           )}
         </Section>
       )}
+
+      {connected && <LeadAutoImportSection />}
 
       {connected && (
         <Section title="Disconnect" description="Stop Media360 from using this Meta login.">

@@ -249,7 +249,7 @@ function invitationOf(r: LiveInvitationRow): UserInvitation {
     clientAccessScope: r.clientCount > 0 ? "selected" : "all",
     clientAccessIds: [],
     clientAccessCount: r.clientCount,
-    invitedBy: { id: r.invitedBy.userId, name: r.invitedBy.name?.trim() || r.invitedBy.email, email: r.invitedBy.email },
+    invitedBy: r.invitedBy ? { id: r.invitedBy.userId, name: r.invitedBy.name?.trim() || r.invitedBy.email, email: r.invitedBy.email } : { id: "", name: "Self sign-up", email: "" },
     sentAt: r.createdAt,
     expiresAt: r.expiresAt,
     status: r.status,

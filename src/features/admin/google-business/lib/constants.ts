@@ -16,7 +16,8 @@ export const GB_ROOT = "/admin/google-business";
 export const gbRoutes = {
   overview: GB_ROOT,
   locations: `${GB_ROOT}/locations`,
-  location: (id: string) => `${GB_ROOT}/locations/${id}`,
+  // A live location id is Google's resource name ("locations/123"); encode it so the slash stays inside one URL segment.
+  location: (id: string) => `${GB_ROOT}/locations/${encodeURIComponent(id)}`,
   reviews: `${GB_ROOT}/reviews`,
   posts: `${GB_ROOT}/posts`,
   postCreate: `${GB_ROOT}/posts/create`,

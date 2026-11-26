@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api/client";
 import { companyScopeHeaders } from "@/lib/api/company-scope";
+import { linkedInPageHeader } from "@/features/admin/channels/live/linkedin-page-selection";
 import type { ProviderId } from "../integrations-data/types";
 
 export type BackendOAuthProvider = "META" | "GOOGLE_BUSINESS" | "LINKEDIN" | "YOUTUBE";
@@ -88,6 +89,8 @@ export interface OverviewResource {
   mappingId: string;
   resourceType: BackendResourceType;
   externalResourceId: string;
+  /** Name saved when the page was mapped (null for older mappings). */
+  resourceName?: string | null;
   integrationId: string;
 }
 
@@ -134,6 +137,111 @@ export interface LinkedInDataset<T> {
   data: T;
   reason: string | null;
 }
+
+export type LinkedInAdPeriod = "7d" | "30d" | "90d" | "365d";
+export interface LinkedInPostsPage {
+  organizationUrn: string; start: number; count: number; syncedAt: string; hasMore: boolean;
+  state: "live" | "empty" | "permission_required" | "reconnect_required" | "rate_limited" | "unavailable"; reason: string | null;
+  items: Array<Record<string, unknown>>;
+}
+export type LinkedInFeedState = "live" | "empty" | "permission_required" | "reconnect_required" | "rate_limited" | "unavailable";
+export interface LinkedInAdAccount { id: string; urn: string; name: string; status: string; type: string; currency: string; reference: string | null }
+export interface LinkedInCampaignRow {
+  id: string; accountId: string; accountName: string; currency: string; name: string; status: string; objective: string | null; type: string | null;
+  dailyBudget: number | null; totalBudget: number | null; startAt: string | null; endAt: string | null;
+  impressions: number; clicks: number; spend: number; leads: number; conversions: number; ctr: number | null; cpc: number | null; cpl: number | null;
+}
+export interface LinkedInAdsResponse {
+  period: LinkedInAdPeriod | "custom"; from: string | null; to: string | null; syncedAt: string; organizationUrns: string[]; state: LinkedInFeedState; reason: string | null; partial: boolean;
+  accounts: LinkedInAdAccount[]; otherAccounts: number; campaigns: LinkedInCampaignRow[];
+  totals: { impressions: number; clicks: number; spend: number; leads: number; conversions: number; currency: string | null; spendComparable: boolean; ctr: number | null; cpc: number | null; cpl: number | null; activeCampaigns: number };
+}
+export interface LinkedInLeadRow {
+  id: string; submittedAt: string | null; leadType: string; formId: string | null; formName: string | null; owner: string | null; campaignId: string | null;
+  name: string | null; firstName: string | null; lastName: string | null; email: string | null; phone: string | null; company: string | null; jobTitle: string | null;
+  city: string | null; country: string | null; answers: Array<{ question: string; answer: string }>;
+}
+export interface LinkedInLeadsResponse {
+  syncedAt: string; organizationUrns: string[]; autoSync: boolean; state: LinkedInFeedState; reason: string | null; partial: boolean;
+  forms: Array<{ id: string; name: string; state: string; owner: string; questions: Array<{ id: string; label: string; field: string | null }> }>;
+  leads: LinkedInLeadRow[]; inCrm: number;
+}
+
+export interface LinkedInAnalyticsDay {
+  date: string; pageViews: number; uniquePageViews: number; impressions: number; uniqueImpressions: number; clicks: number; likes: number; comments: number; shares: number;
+  followersGained: number; organicFollowers: number; paidFollowers: number;
+}
+export interface LinkedInAnalyticsResponse {
+  organizationUrn: string; from: string; to: string; days: number; syncedAt: string; state: LinkedInFeedState; reason: string | null; partial: string[];
+  series: LinkedInAnalyticsDay[];
+  totals: Omit<LinkedInAnalyticsDay, "date"> & { engagementRate: number | null; ctr: number | null };
+}
+export interface LinkedInComment {
+  urn: string; id: string; postUrn: string; parentUrn: string | null; actorUrn: string | null; actorKind: "organization" | "person" | "unknown";
+  byThisPage: boolean; text: string; createdAt: string | null; likes: number; replies: number;
+}
+export type LinkedInAiLanguage = "auto" | "English" | "Hindi" | "Hinglish";
+export type LinkedInAiImproveMode = "polish" | "shorter" | "friendlier" | "formal" | "English" | "Hindi" | "Hinglish";
+export interface LinkedInAiSuggestBody {
+  task: "reply" | "comment" | "improve"; postUrn: string; commentUrn?: string; threadUrn?: string; history?: string;
+  draft?: string; mode?: LinkedInAiImproveMode; tone?: string; language?: LinkedInAiLanguage; instruction?: string;
+}
+export interface LinkedInAiSuggestion {
+  options: Array<{ text: string; why: string }>; language: string | null;
+  insight: { who: string; wants: string; approach: string } | null;
+  read: { pageName: string; commenter: { name: string | null; headline: string | null; kind: string } | null; threadLength: number; otherComments: number; postAttachment: string | null };
+  tokensConsumed: number;
+}
+export interface LinkedInAiReview {
+  summary: string; tokensConsumed: number;
+  items: Record<string, { intent: "lead" | "question" | "praise" | "complaint" | "spam" | "other"; sentiment: string; priority: "high" | "normal" | "low"; needsReply: boolean; note: string }>;
+}
+export interface LinkedInActor { urn: string; kind: "organization" | "person"; name: string; headline: string | null; profileUrl: string | null }
+export interface LinkedInConversations {
+  organizationUrn: string; syncedAt: string; canReply: boolean; state: LinkedInFeedState; reason: string | null;
+  posts: Array<{
+    postUrn: string; text: string; publishedAt: string | null;
+    counts: { reactions: Record<string, number>; totalReactions: number; comments: number; commentsOpen?: boolean };
+    reactions: Array<{ actorUrn: string; reaction: string; at: string | null }>;
+    comments: LinkedInComment[];
+  }>;
+  /** Names of everyone who commented or reacted, by URN. */
+  actors: Record<string, LinkedInActor>;
+  /** Member URN -> CRM lead id, for people already saved as leads. */
+  leads?: Record<string, string>;
+  /** Comment URN -> AI tags stored by the background watcher. */
+  triage?: LinkedInAiReview["items"];
+}
+export interface LinkedInActivity {
+  pageName: string; organizationUrn: string; actors: Record<string, LinkedInActor>;
+  items: Array<{ kind: "mention" | "reshare"; itemUrn: string; postUrn: string | null; actorUrn: string | null; text: string; happenedAt: string | null }>;
+}
+export interface LinkedInLeadResult { leadId: string; name: string; created: boolean; insight: { jobTitle: string; company: string; interest: string; score: number; nextStep: string } | null }
+export interface LinkedInPostInsights {
+  state: LinkedInFeedState; reason: string | null; tokensConsumed: number;
+  posts: Array<{ urn: string; publishedAt: string; weekday: string; hourIst: number; format: string; text: string; impressions: number; clicks: number; likes: number; comments: number; shares: number; engagementRate: number }>;
+  times: Record<"weekdays" | "hours" | "formats", Array<{ label: string; posts: number; avgEngagementRate: number; avgImpressions: number }>>;
+  totals?: { impressions: number; clicks: number; likes: number; comments: number; shares: number };
+  insights: { summary: string; whatWorks: string[]; improve: string[]; bestTime: string; ideas: Array<{ title: string; hook: string; format: string }> } | null;
+}
+export interface LinkedInMember { name: string; picture: string | null; canPost: boolean; reason: string | null }
+export interface LinkedInEvent {
+  id: string; name: string; description: string | null; format: "IN_PERSON" | "ONLINE" | "UNKNOWN"; startsAt: string | null; endsAt: string | null;
+  venue: string | null; externalUrl: string | null; url: string; organizer: string | null; imageUrn: string | null;
+}
+export interface LinkedInEventsResponse { syncedAt: string; organizationUrns: string[]; state: LinkedInFeedState; reason: string | null; events: LinkedInEvent[]; partial: boolean }
+export interface LinkedInSegment {
+  id: string; name: string; accountId: string; accountName: string; type: string | null; status: string | null; sourcePlatform: string | null;
+  audienceSize: number | null; matchedCount: number | null; destinationStatus: string | null; updatedAt: string | null;
+}
+export interface LinkedInAudiencesResponse { syncedAt: string; organizationUrns: string[]; crmContactsWithEmail: number; state: LinkedInFeedState; reason: string | null; accounts: LinkedInAdAccount[]; audiences: LinkedInSegment[] }
+export const LINKEDIN_CONVERSION_TYPES = ["LEAD", "PURCHASE", "SUBMIT_APPLICATION", "ADD_TO_CART", "QUALIFIED_LEAD"] as const;
+export type LinkedInConversionType = (typeof LINKEDIN_CONVERSION_TYPES)[number];
+export interface LinkedInConversionRule {
+  id: string; name: string; accountId: string; accountName: string; type: string | null; method: string | null; enabled: boolean;
+  postClickWindowDays: number | null; viewThroughWindowDays: number | null; lastCallbackAt: string | null; canReceiveEvents: boolean;
+}
+export interface LinkedInConversionsResponse { syncedAt: string; organizationUrns: string[]; state: LinkedInFeedState; reason: string | null; accounts: LinkedInAdAccount[]; rules: LinkedInConversionRule[] }
 
 export interface LinkedInDashboardResponse {
   organizationUrn: string;
@@ -309,6 +417,103 @@ export const integrationsApi = {
     });
   },
 
+  /** GET /integrations/linkedin/ads — this Client's LinkedIn ad accounts, campaigns and performance. */
+  async getLinkedInAds(companyId: string, clientId: string, period: LinkedInAdPeriod, signal?: AbortSignal, custom?: { from: string; to: string }): Promise<LinkedInAdsResponse> {
+    const query = custom ? `from=${encodeURIComponent(custom.from)}&to=${encodeURIComponent(custom.to)}` : `period=${period}`;
+    return apiClient.request<LinkedInAdsResponse>({ method: "GET", path: `/integrations/linkedin/ads?${query}`, headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), signal });
+  },
+  /** GET /integrations/linkedin/posts — one page of company-page posts with per-post statistics. */
+  async getLinkedInPosts(companyId: string, clientId: string, start: number, count: number, signal?: AbortSignal): Promise<LinkedInPostsPage> {
+    return apiClient.request<LinkedInPostsPage>({ method: "GET", path: `/integrations/linkedin/posts?start=${start}&count=${count}`, headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), signal });
+  },
+  /** GET /integrations/linkedin/leads — Lead Gen form responses for this Client's page and its ad accounts. */
+  async getLinkedInLeads(companyId: string, clientId: string, signal?: AbortSignal): Promise<LinkedInLeadsResponse> {
+    return apiClient.request<LinkedInLeadsResponse>({ method: "GET", path: "/integrations/linkedin/leads", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), signal });
+  },
+  /** POST /integrations/linkedin/leads/sync — copy new LinkedIn leads into this Client's CRM (repeat-safe). */
+  async syncLinkedInLeads(companyId: string, clientId: string): Promise<{ total: number; imported: number; skipped: number }> {
+    return apiClient.request<{ total: number; imported: number; skipped: number }>({ method: "POST", path: "/integrations/linkedin/leads/sync", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: {} });
+  },
+
+  /** PATCH /integrations/linkedin/campaigns/:id — start/pause a campaign or change its daily budget (needs confirm). */
+  async updateLinkedInCampaign(companyId: string, clientId: string, campaignId: string, body: { accountId: string; status?: "ACTIVE" | "PAUSED"; dailyBudget?: number; confirm: true }) {
+    return apiClient.request<{ id: string; accountId: string; status: string; dailyBudget: number | null; currency: string }>({ method: "PATCH", path: `/integrations/linkedin/campaigns/${encodeURIComponent(campaignId)}`, headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body });
+  },
+  /** GET /integrations/linkedin/analytics — page views, post performance and follower gains per day for from..to. */
+  async getLinkedInAnalytics(companyId: string, clientId: string, from: string, to: string, signal?: AbortSignal) {
+    return apiClient.request<LinkedInAnalyticsResponse>({ method: "GET", path: `/integrations/linkedin/analytics?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`, headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), signal });
+  },
+  /** Comments and replies on the chosen page's recent posts. */
+  async getLinkedInConversations(companyId: string, clientId: string, signal?: AbortSignal) {
+    return apiClient.request<LinkedInConversations>({ method: "GET", path: "/integrations/linkedin/conversations", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), signal });
+  },
+  /** Comment on a post, or reply to a comment (parentUrn), as the page. */
+  async commentOnLinkedIn(companyId: string, clientId: string, body: { postUrn: string; parentUrn?: string; text: string }) {
+    return apiClient.request<{ urn: string | null }>({ method: "POST", path: "/integrations/linkedin/comments", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: { ...body, confirm: true } });
+  },
+  async reactOnLinkedIn(companyId: string, clientId: string, targetUrn: string, reaction: "LIKE" | "PRAISE" | "EMPATHY" | "INTEREST" | "APPRECIATION" | "ENTERTAINMENT" = "LIKE") {
+    return apiClient.request<{ reacted: boolean }>({ method: "POST", path: "/integrations/linkedin/reactions", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: { targetUrn, reaction, confirm: true } });
+  },
+  async deleteLinkedInComment(companyId: string, clientId: string, commentUrn: string) {
+    return apiClient.request<{ deleted: boolean }>({ method: "POST", path: "/integrations/linkedin/comments/delete", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: { commentUrn, confirm: true } });
+  },
+  /** AI reads the post, thread and commenter profile on the server and proposes text. Nothing is posted. */
+  async suggestLinkedInReply(companyId: string, clientId: string, body: LinkedInAiSuggestBody) {
+    return apiClient.request<LinkedInAiSuggestion>({ method: "POST", path: "/integrations/linkedin/ai/suggest", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body });
+  },
+  async reviewLinkedInComments(companyId: string, clientId: string, body: { pageName: string; comments: Array<{ urn: string; author: string; headline?: string; text: string; postText: string; pageReplied: boolean }> }) {
+    return apiClient.request<LinkedInAiReview>({ method: "POST", path: "/integrations/linkedin/ai/review", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body });
+  },
+  async getLinkedInActivity(companyId: string, clientId: string, signal?: AbortSignal) {
+    return apiClient.request<LinkedInActivity>({ method: "GET", path: "/integrations/linkedin/activity", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), signal });
+  },
+  async linkedInLeadFromComment(companyId: string, clientId: string, body: { postUrn: string; commentUrn: string; threadUrn?: string }) {
+    return apiClient.request<LinkedInLeadResult>({ method: "POST", path: "/integrations/linkedin/leads/from-comment", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body });
+  },
+  async linkedInLeadFromFan(companyId: string, clientId: string, body: { actorUrn: string; history: string }) {
+    return apiClient.request<LinkedInLeadResult>({ method: "POST", path: "/integrations/linkedin/leads/from-fan", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body });
+  },
+  async updateLinkedInPost(companyId: string, clientId: string, postUrn: string, text: string) {
+    return apiClient.request<{ updated: boolean }>({ method: "POST", path: "/integrations/linkedin/posts/update", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: { postUrn, text, confirm: true } });
+  },
+  async deleteLinkedInPost(companyId: string, clientId: string, postUrn: string) {
+    return apiClient.request<{ deleted: boolean }>({ method: "POST", path: "/integrations/linkedin/posts/delete", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: { postUrn, confirm: true } });
+  },
+  async setLinkedInComments(companyId: string, clientId: string, postUrn: string, open: boolean) {
+    return apiClient.request<{ commentsOpen: boolean }>({ method: "POST", path: "/integrations/linkedin/posts/comments", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: { postUrn, open, confirm: true } });
+  },
+  async getLinkedInPostInsights(companyId: string, clientId: string) {
+    return apiClient.request<LinkedInPostInsights>({ method: "POST", path: "/integrations/linkedin/ai/post-insights", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: {} });
+  },
+  async getLinkedInMember(companyId: string, clientId: string, signal?: AbortSignal) {
+    return apiClient.request<LinkedInMember>({ method: "GET", path: "/integrations/linkedin/member", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), signal });
+  },
+  /** POST /integrations/linkedin/member/posts — text post on the connected member's own profile. */
+  async postLinkedInMember(companyId: string, clientId: string, text: string) {
+    return apiClient.request<{ id: string; url: string }>({ method: "POST", path: "/integrations/linkedin/member/posts", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: { text, confirm: true } });
+  },
+  async getLinkedInEvents(companyId: string, clientId: string, signal?: AbortSignal) {
+    return apiClient.request<LinkedInEventsResponse>({ method: "GET", path: "/integrations/linkedin/events", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), signal });
+  },
+  async getLinkedInAudiences(companyId: string, clientId: string, signal?: AbortSignal) {
+    return apiClient.request<LinkedInAudiencesResponse>({ method: "GET", path: "/integrations/linkedin/audiences", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), signal });
+  },
+  async createLinkedInAudience(companyId: string, clientId: string, body: { accountId: string; name: string; description?: string }) {
+    return apiClient.request<{ id: string | null; name: string; accountId: string }>({ method: "POST", path: "/integrations/linkedin/audiences", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: { ...body, confirm: true } });
+  },
+  async addLinkedInAudienceMembers(companyId: string, clientId: string, segmentId: string, body: { accountId: string; source: "leads" | "contacts" | "all" }) {
+    return apiClient.request<{ segmentId: string; sent: number; crmRecords: number; invalidOrDuplicate: number }>({ method: "POST", path: `/integrations/linkedin/audiences/${encodeURIComponent(segmentId)}/members`, headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: { ...body, confirm: true } });
+  },
+  async getLinkedInConversions(companyId: string, clientId: string, signal?: AbortSignal) {
+    return apiClient.request<LinkedInConversionsResponse>({ method: "GET", path: "/integrations/linkedin/conversions", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), signal });
+  },
+  async createLinkedInConversionRule(companyId: string, clientId: string, body: { accountId: string; name: string; type: LinkedInConversionType }) {
+    return apiClient.request<{ id: string | null; name: string }>({ method: "POST", path: "/integrations/linkedin/conversions", headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: { ...body, confirm: true } });
+  },
+  async sendLinkedInConversion(companyId: string, clientId: string, ruleId: string, body: { accountId: string; email?: string; crmEntityId?: string; happenedAt?: string; amount?: number }) {
+    return apiClient.request<{ ruleId: string; eventId: string; sentAt: string }>({ method: "POST", path: `/integrations/linkedin/conversions/${encodeURIComponent(ruleId)}/events`, headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }), body: { ...body, confirm: true } });
+  },
+
   async getLinkedInDashboard(
     companyId: string,
     clientId: string,
@@ -317,7 +522,7 @@ export const integrationsApi = {
     return apiClient.request<LinkedInDashboardResponse>({
       method: "GET",
       path: "/integrations/linkedin/dashboard",
-      headers: companyScopeHeaders(companyId, { "x-client-id": clientId }),
+      headers: companyScopeHeaders(companyId, { "x-client-id": clientId, ...linkedInPageHeader(companyId, clientId) }),
       signal,
     });
   },

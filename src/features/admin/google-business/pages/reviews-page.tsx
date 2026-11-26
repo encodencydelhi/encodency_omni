@@ -45,6 +45,8 @@ import { ALL_LOCATIONS, filterReviews, isAnswered, reviewSummary, type ReviewTab
 import { gbRoutes } from "../lib/constants";
 import { date as fmtDate, dateTime, relative } from "../lib/format";
 import { useGbp } from "../store/gbp-store";
+import { gbpRepository } from "../data/repository";
+import { GbpReviewInsights } from "../components/gbp-ai";
 import type { Review } from "../types";
 
 const DEFAULTS = { tab: "all", location: ALL_LOCATIONS, rating: "all", date: "all", q: "", sort: "newest", page: "1", review: "" };
@@ -137,8 +139,12 @@ export function ReviewsWorkspace({ lockedLocationId }: { lockedLocationId?: stri
     );
   }
 
+  // AI insights read one location; with "All locations" the first one is used (and named).
+  const insightsLocation = locationFilter !== ALL_LOCATIONS ? locationFilter : locations[0]?.locationId ?? null;
+
   return (
     <div className="space-y-1">
+      {gbpRepository.mode === "live" && insightsLocation && <GbpReviewInsights key={insightsLocation} locationId={insightsLocation} onReply={(reviewId) => setReplyTo(reviewId)} />}
       <Card className="grid grid-cols-1 overflow-hidden divide-y divide-[#F3F4F6] md:grid-cols-2 md:divide-x xl:grid-cols-4 xl:divide-y-0">
         <div className="relative p-4 sm:p-5 bg-[#FFFAED]">
           <div className="flex items-center gap-2.5">

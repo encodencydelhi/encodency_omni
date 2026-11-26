@@ -28,6 +28,14 @@ import { useGuardedNavigate, useUnsavedChanges } from "../hooks/use-unsaved-chan
 import { CTA_LABEL, LIMITS, POST_TYPE_LABEL, gbRoutes } from "../lib/constants";
 import { useGbp } from "../store/gbp-store";
 import type { CtaType, PostState, PostType } from "../types";
+import { toast } from "sonner";
+import { gbpRepository } from "../data/repository";
+import { GbpAiPostAssist } from "../components/gbp-ai";
+import { GbpLivePhotoPicker } from "../components/gbp-live-photo";
+import { getGbpScope } from "../live/google-business-api";
+import { useTenancyContext } from "@/lib/api/tenancy-context";
+import { draftsApi } from "@/features/admin/content/live/drafts-api";
+import { schedulingApi, describeScheduleError } from "@/features/admin/content/live/scheduling-api";
 import {
   Badge,
   Button,
@@ -64,6 +72,9 @@ interface Draft {
 }
 
 const CTA_OPTIONS: CtaType[] = ["BOOK", "ORDER", "SHOP", "LEARN_MORE", "SIGN_UP", "CALL"];
+const AI_TYPE: Record<PostType, "STANDARD" | "OFFER" | "EVENT"> = { update: "STANDARD", cta: "STANDARD", offer: "OFFER", event: "EVENT" };
+const FROM_AI_TYPE = { STANDARD: "update", OFFER: "offer", EVENT: "event" } as const;
+
 
 export function PostCreatePage() {
   const { status, locations, settings, can, posts } = useGbp();
@@ -119,6 +130,58 @@ export function PostCreatePage() {
   const [showErrors, setShowErrors] = useState(false);
   const [submitting, setSubmitting] = useState<PostState | null>(null);
   const [done, setDone] = useState(false);
+  /** Media library asset id of each live photo url, so a scheduled post can attach the same file. */
+  const [assetIds, setAssetIds] = useState<Record<string, string>>({});
+  const { companyId, clientId } = useTenancyContext();
+
+  /**
+   * Live "Schedule" and "Keep as draft": Google cannot hold either, so Media360 keeps the post as a content draft and
+   * (for Schedule) its publishing queue sends it to each chosen location at the time set: updates, button posts, offers
+   * and events (with their title, dates, coupon, link and terms) and one photo.
+   */
+  const scheduleLive = async (state: "scheduled" | "draft") => {
+    if (!companyId || !clientId) return false;
+    // Offers and events keep their title, dates (and coupon, link, terms) with the draft; Media360 sends them at the time set.
+    const gbpPost = draft.type === "offer" || draft.type === "event" ? {
+      topicType: draft.type === "offer" ? "OFFER" : "EVENT", title: draft.eventTitle.trim(), startDate: draft.eventStart, endDate: draft.eventEnd,
+      ...(draft.type === "offer" && draft.couponCode.trim() ? { couponCode: draft.couponCode.trim() } : {}),
+      ...(draft.type === "offer" && draft.redeemUrl.trim() ? { redeemOnlineUrl: draft.redeemUrl.trim() } : {}),
+      ...(draft.type === "offer" && draft.terms.trim() ? { termsConditions: draft.terms.trim() } : {}),
+    } : null;
+    const assetId = draft.media[0] ? assetIds[draft.media[0]] : undefined;
+    if (draft.media[0] && !assetId) { toast.error("Pick the photo again from your media library so it can be scheduled."); return false; }
+    const button = draft.ctaEnabled ? (draft.ctaType === "CALL" ? { actionType: "CALL" } : { actionType: draft.ctaType, url: draft.ctaUrl.trim() }) : null;
+    setSubmitting(state);
+    try {
+      const created = await draftsApi.create(companyId, clientId, {
+        title: `Google post: ${draft.summary.trim().slice(0, 60)}`,
+        content: draft.summary.trim(),
+        variants: { GOOGLE_BUSINESS_LOCATION: { content: draft.summary.trim(), ...(button || gbpPost ? { options: { ...(button ? { button } : {}), ...(gbpPost ? { gbpPost } : {}) } } : {}) } },
+        assetIds: assetId ? [assetId] : [],
+      });
+      if (state === "draft") { toast.success("Saved as a draft", { description: "Find it in Content Studio → Drafts. Nothing was sent to Google." }); setDone(true); navigate(gbRoutes.posts, { force: true }); return true; }
+      const variant = created.variants.find((item) => item.channel === "GOOGLE_BUSINESS_LOCATION");
+      if (!variant || !scheduleAt) throw new Error("The draft could not be prepared for scheduling.");
+      const scope = await getGbpScope();
+      const targets = await schedulingApi.targets(companyId, clientId, created.id, variant.id);
+      let scheduled = 0;
+      for (const locationId of draft.locationIds) {
+        const mappingId = scope.locations.find((location) => location.externalResourceId === locationId)?.mappingId;
+        const target = targets.items.find((item) => item.resourceMappingId === mappingId);
+        if (!target?.publishable) { toast.error(`${locations.find((location) => location.locationId === locationId)?.profile.title ?? "A location"} cannot be scheduled right now.`); continue; }
+        await schedulingApi.schedule(companyId, clientId, created.id, variant.id, { resourceMappingId: target.resourceMappingId, scheduledFor: scheduleAt.toISOString(), expectedDraftRevision: created.revision });
+        scheduled++;
+      }
+      if (!scheduled) return false;
+      toast.success(`Post scheduled for ${format(scheduleAt, "d MMM, h:mm a")}`, { description: `${scheduled} location${scheduled === 1 ? "" : "s"}. Media360 publishes it then and notifies you. See Content → Calendar.` });
+      setDone(true);
+      navigate(gbRoutes.posts, { force: true });
+      return true;
+    } catch (cause) {
+      toast.error("The post was not scheduled", { description: describeScheduleError(cause) });
+      return false;
+    } finally { setSubmitting(null); }
+  };
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((prev) => ({ ...prev, [key]: value }));
   const dirty = !done && JSON.stringify(draft) !== JSON.stringify(initial);
@@ -172,6 +235,7 @@ export function PostCreatePage() {
           : draft.publishMode === "schedule"
             ? "scheduled"
             : "published";
+    if (gbpRepository.mode === "live" && !isEdit && (state === "scheduled" || state === "draft")) return scheduleLive(state);
     setSubmitting(state);
     const payload = {
       locationIds: draft.locationIds,
@@ -362,6 +426,20 @@ export function PostCreatePage() {
                     </div>
                   </>
                 )}
+                {gbpRepository.mode === "live" && (draft.locationIds[0] ?? locations[0]?.locationId) && <GbpAiPostAssist
+                  locationId={(draft.locationIds[0] ?? locations[0]?.locationId)!}
+                  defaultType={AI_TYPE[draft.type]}
+                  onUse={(choice) => {
+                    setDraft((current) => ({
+                      ...current,
+                      type: current.type === "cta" && choice.topicType === "STANDARD" ? "cta" : FROM_AI_TYPE[choice.topicType],
+                      summary: choice.text,
+                      eventTitle: choice.title || current.eventTitle,
+                      ...(choice.button && CTA_OPTIONS.includes(choice.button as CtaType) ? { ctaEnabled: true, ctaType: choice.button as CtaType, ctaUrl: choice.button === "CALL" ? current.ctaUrl : current.ctaUrl || choice.website || "" } : {}),
+                    }));
+                    toast.success("AI text added. Review it before publishing.");
+                  }}
+                />}
                 <FormField
                   label="Post text"
                   required
@@ -389,7 +467,14 @@ export function PostCreatePage() {
               </>
             )}
 
-            {step === "Media" && (
+            {step === "Media" && gbpRepository.mode === "live" && (
+              <GbpLivePhotoPicker
+                value={draft.media[0] ?? null}
+                onPick={(asset) => { set("media", [asset.url]); setAssetIds((current) => ({ ...current, [asset.url]: asset.id })); }}
+                onRemove={() => set("media", [])}
+              />
+            )}
+            {step === "Media" && gbpRepository.mode !== "live" && (
               <>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <button type="button" onClick={() => fileInput.current?.click()} className={cn("flex aspect-[4/3] flex-col items-center justify-center gap-1 rounded-md border border-dashed border-[#DADCE0] bg-[#F8F9FA] text-[12px] font-medium text-[#3C4043] hover:border-[#9AA0A6]", gb.focus)}>

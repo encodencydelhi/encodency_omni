@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { EnCodencyLogo } from "@/components/layout/brand-mark";
 import { AuthBrandPanel } from "@/features/auth/components/auth-brand-panel";
+import Link from "next/link";
+import { APP } from "@/config/app";
 
 /**
  * Two-column authentication shell: the brand story on the left, the task on
@@ -28,6 +30,17 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             </div>
 
             {children}
+
+            <footer className="mt-6 text-center text-[0.6875rem] leading-relaxed text-muted-foreground">
+              <p>
+                {APP.name} is operated by {APP.legalName}, {APP.registeredAddress}.
+              </p>
+              <p className="mt-1 space-x-3">
+                <Link href="/privacy-policy" className="hover:text-foreground">Privacy Policy</Link>
+                <Link href="/terms" className="hover:text-foreground">Terms</Link>
+                <Link href="/data-deletion" className="hover:text-foreground">Data Deletion</Link>
+              </p>
+            </footer>
           </div>
         </section>
       </div>

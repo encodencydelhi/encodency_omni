@@ -63,7 +63,7 @@ const Context = createContext<AdsDataContextValue | null>(null);
 
 export const LIVE = env.dataSource === "api";
 
-const RANGE_TO_PERIOD: Record<string, ApiPeriod> = { "Last 7 days": "7d", "Last 30 days": "30d", "Last 90 days": "90d" };
+const RANGE_TO_PERIOD: Record<string, ApiPeriod> = { "Last 7 days": "7d", "Last 30 days": "30d", "Last 90 days": "90d", "Last 365 days": "365d", Lifetime: "max" };
 
 const EMPTY: AdsData = { campaigns: [], adSets: [], ads: [], instantForms: [], leads: [], audiences: [], creatives: [], issues: [], activityLog: [], connectedAssets: [], trendSeries: [] };
 

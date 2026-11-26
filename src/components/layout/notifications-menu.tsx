@@ -184,6 +184,7 @@ export function NotificationsMenu() {
                     {notification.href ? (
                       <Link
                         href={notification.href}
+                        {...(/^https?:\/\//.test(notification.href) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                         onClick={() => {
                           if (!notification.isRead) markRead.mutate(notification.id);
                         }}

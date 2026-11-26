@@ -1,5 +1,6 @@
 "use client";
 
+import { SetupChecklistCard } from "@/features/admin/onboarding/setup-guide";
 import Image from "next/image";
 import {
   Area,
@@ -227,6 +228,7 @@ function MockAdminDashboard() {
   return (
     <div className="space-y-1">
       <Header />
+      <SetupChecklistCard />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8 gap-1">
         {topStats.map((stat) => (
           <Stat key={stat.label} {...stat} />

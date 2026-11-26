@@ -107,7 +107,10 @@ export function CredentialsStep({ onChallenge }: CredentialsStepProps) {
           />
         </AuthField>
 
-        <div className="mt-4 flex items-center justify-end gap-4">
+        <div className="mt-4 flex items-center justify-between gap-4">
+          <Link href={ROUTES.signup} className="text-sm font-medium text-muted-foreground transition hover:text-foreground">
+            New here? Create a workspace
+          </Link>
           <Link
             href={ROUTES.forgotPassword}
             className="text-sm font-medium text-primary transition hover:text-primary-hover"

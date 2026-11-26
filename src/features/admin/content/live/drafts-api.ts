@@ -7,7 +7,7 @@ import { ApiError } from "@/types/api";
  * Business is publishable but has no draft-variant channel yet — sending it
  * is rejected with `variants.<channel> is not a supported channel`.
  */
-export type DraftChannel = "FACEBOOK_PAGE" | "INSTAGRAM_ACCOUNT" | "LINKEDIN_ORGANIZATION";
+export type DraftChannel = "FACEBOOK_PAGE" | "INSTAGRAM_ACCOUNT" | "LINKEDIN_ORGANIZATION" | "GOOGLE_BUSINESS_LOCATION";
 
 export const SUPPORTED_DRAFT_CHANNELS: readonly DraftChannel[] = [
   "FACEBOOK_PAGE",
@@ -20,6 +20,8 @@ export interface DraftVariantRecord {
   channel: DraftChannel;
   content: string | null;
   effectiveContent: string;
+  /** Channel post settings, e.g. { altTexts: { assetId: text } } (null when none). */
+  options?: { altTexts?: Record<string, string> } & Record<string, unknown> | null;
   updatedAt: string;
 }
 
@@ -77,7 +79,7 @@ export interface CreateDraftPayload {
   title?: string | null;
   campaignId?: string | null;
   content: string;
-  variants: Record<string, { content?: string | null }>;
+  variants: Record<string, { content?: string | null; options?: Record<string, unknown> | null }>;
   assetIds?: string[];
 }
 
@@ -87,7 +89,7 @@ export interface UpdateDraftPayload {
   title?: string | null;
   campaignId?: string | null;
   content?: string;
-  variants?: Record<string, { content?: string | null }>;
+  variants?: Record<string, { content?: string | null; options?: Record<string, unknown> | null }>;
 }
 
 export interface ListDraftsQuery {

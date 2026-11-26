@@ -278,6 +278,32 @@ export async function linkGoogleLocations(integrationId: string, locationIds: st
   resetGbpScopeCache();
 }
 
+export type GbpAiLanguage = "auto" | "English" | "Hindi" | "Hinglish";
+export interface GbpAiOptions { options: Array<{ text: string; why: string; title?: string; button?: string | null }>; language: string | null; tokensConsumed: number }
+export interface GbpAiReply extends GbpAiOptions { insight: { sentiment: string | null; about: string; approach: string } | null }
+export interface GbpAiPost extends GbpAiOptions { website: string | null }
+export interface GbpAiDescription extends GbpAiOptions { current: string | null }
+export interface GbpAiReviewInsights {
+  stats: { total: number; average: number | null; ratings: Record<string, number>; replied: number; unanswered: number; replyRate: number; last90Days: number };
+  insights: { summary: string; praise: string[]; complaints: string[]; actions: string[]; keywords: string[] } | null;
+  unanswered: Array<{ id: string; name: string | null; stars: number | null; text: string; date: string | null }>;
+  tokensConsumed: number;
+}
+
+/** AI routes run on the server: Google's data is read there and only suggestions come back (nothing is published). */
+async function aiCall<T>(externalResourceId: string, task: string, body: Record<string, unknown> = {}): Promise<T> {
+  const scope = await getGbpScope();
+  const mapping = await requireMapping(scope, externalResourceId);
+  return apiClient.request<T>({ method: "POST", path: `${locationBase(mapping)}/ai/${task}`, headers: headers(scope), body });
+}
+
+export const gbpAiApi = {
+  reviewReply: (locationId: string, body: { reviewId: string; tone?: string; language?: GbpAiLanguage; instruction?: string }) => aiCall<GbpAiReply>(locationId, "review-reply", body),
+  reviewInsights: (locationId: string) => aiCall<GbpAiReviewInsights>(locationId, "review-insights"),
+  post: (locationId: string, body: { brief: string; topicType: "STANDARD" | "OFFER" | "EVENT"; tone?: string; language?: GbpAiLanguage }) => aiCall<GbpAiPost>(locationId, "post", body),
+  description: (locationId: string, body: { instruction?: string; language?: GbpAiLanguage }) => aiCall<GbpAiDescription>(locationId, "description", body),
+};
+
 export const googleBusinessApi = {
   /** GET /integrations/google-business/locations/:resourceId/profile */
   async getProfile(
@@ -373,6 +399,13 @@ export const googleBusinessApi = {
     const scope = await getGbpScope();
     const mapping = await requireMapping(scope, externalResourceId);
     return apiClient.request<{ post: BackendPost }>({ method: "POST", path: `${locationBase(mapping)}/posts`, headers: headers(scope), body: input, signal });
+  },
+
+  /** PATCH .../posts/:postId — edit a published post in place (Google re-reviews it). */
+  async updatePost(externalResourceId: string, postId: string, input: GbpCreatePostInput, signal?: AbortSignal): Promise<{ post: BackendPost }> {
+    const scope = await getGbpScope();
+    const mapping = await requireMapping(scope, externalResourceId);
+    return apiClient.request<{ post: BackendPost }>({ method: "PATCH", path: `${locationBase(mapping)}/posts/${encodeURIComponent(postId)}`, headers: headers(scope), body: input, signal });
   },
 
   /** DELETE .../posts/:postId */

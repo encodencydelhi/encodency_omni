@@ -26,6 +26,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils/cn";
 import { searchEntities, ALL_LOCATIONS } from "../data/selectors";
+import { gbpRepository } from "../data/repository";
 import { useLocationScope, usePeriod, useQueryState } from "../data/hooks";
 import { useDebounced } from "../hooks/use-now";
 import { UnsavedChangesDialog } from "../hooks/use-unsaved-changes";
@@ -113,9 +114,10 @@ function WorkspaceHeader({ tabLabel }: { tabLabel: string }) {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="text-[20px] font-medium leading-6 tracking-[-0.015em] text-[#202124]">Google Business</h1>
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-                Reviews · Insights · Profile — Preview Mode
-              </span>
+              {/* Only the sample data is a preview; with Google connected the data is live and the badge would mislead. */}
+              {gbpRepository.mode !== "live" && <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                Sample data — Preview Mode
+              </span>}
             </div>
             <p className="truncate text-[12.5px] text-[#5F6368]">Manage locations, reviews, posts, insights and local visibility.</p>
           </div>

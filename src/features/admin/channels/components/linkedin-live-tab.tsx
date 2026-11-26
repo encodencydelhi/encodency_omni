@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   AlertTriangle, ArrowUpRight, BarChart3, Building2, CheckCircle2, ExternalLink, Eye,
-  FileText, Loader2, MessageSquare, RefreshCcw, ShieldCheck, TrendingUp, Users,
+  Loader2, MessageSquare, RefreshCcw, ShieldCheck, TrendingUp, Users,
   X,
 } from "lucide-react";
 import {
@@ -14,8 +14,13 @@ import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { integrationsApi, type LinkedInDashboardResponse, type LinkedInDataset } from "../../integrations/live/integrations-api";
 import { useScrollLock } from "@/lib/utils/scroll-lock";
 import { LinkedInRemoteImage } from "./linkedin-remote-image";
+import { LinkedInCampaignsPanel, LinkedInLeadsPanel } from "./linkedin-ads-leads";
+import { LinkedInPostsTable } from "./linkedin-posts";
+import { LinkedInConversationsPanel } from "./linkedin-conversations";
+import { LinkedInRangeAnalytics, type LinkedInRange } from "./linkedin-range-analytics";
+import { LinkedInAudiencesPanel, LinkedInConversionsPanel, LinkedInEventsPanel, LinkedInProfilePost } from "./linkedin-extras";
 
-type LinkedInTab = "Overview" | "Posts" | "Analytics" | "Audience" | "Campaigns" | "Leads" | "Inbox" | "Settings";
+type LinkedInTab = "Overview" | "Posts" | "Analytics" | "Audience" | "Campaigns" | "Leads" | "Events" | "Matched Audiences" | "Conversions" | "Inbox" | "Settings";
 type Metric = { key: string; label: string; value: number };
 type SummaryMetric = { key: string; label: string; value: number | null };
 
@@ -126,14 +131,6 @@ function Overview({ dashboard }: { dashboard: LinkedInDashboardResponse }) {
   </>;
 }
 
-function Posts({ dataset, social }: { dataset: LinkedInDashboardResponse["posts"]; social: LinkedInDashboardResponse["social"] }) {
-  if (dataset.state !== "live") return <div className="p-5"><DatasetNotice dataset={dataset} /></div>;
-  const socialByPost = new Map(social.data.map((item) => [toText(item.postId), item]));
-  return <div className="overflow-x-auto bg-white"><table className="w-full min-w-210 text-left"><thead><tr className="border-y border-[#DDE4ED] bg-[#F7F9FC] text-[10px] font-semibold uppercase text-[#6C7B97]"><th className="w-[48%] px-5 py-3">Post</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Published</th><th className="px-4 py-3 text-right">Likes</th><th className="px-4 py-3 text-right">Comments</th><th className="px-4 py-3"></th></tr></thead>
-    <tbody className="divide-y divide-[#E8EDF3]">{dataset.data.map((post, index) => { const id = toText(post.id) || `post-${index}`; const commentary = toText(post.commentary) || toText(asRecord(post.content).title) || "LinkedIn post"; const activity = asRecord(socialByPost.get(id)?.summary); const likes = Number(asRecord(activity.likesSummary).totalLikes || 0); const comments = Number(asRecord(activity.commentsSummary).totalFirstLevelComments || 0); return <tr key={id} className="hover:bg-[#FAFCFE]"><td className="px-5 py-4"><div className="flex gap-3"><div className="grid size-9 shrink-0 place-items-center bg-[#EAF3FB] text-[#0A66C2]"><FileText className="size-4" /></div><div className="min-w-0"><p className="line-clamp-2 text-[12px] font-semibold leading-5 text-[#172044]">{commentary}</p><p className="mt-1 truncate text-[9.5px] text-[#8A97AF]">{id}</p></div></div></td><td className="px-4 py-4"><span className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold text-emerald-700"><span className="size-1.5 bg-emerald-500" />{title(toText(post.lifecycleState) || "Published")}</span></td><td className="whitespace-nowrap px-4 py-4 text-[11px] text-[#52617D]">{post.publishedAt ? new Date(Number(post.publishedAt)).toLocaleString() : "-"}</td><td className="px-4 py-4 text-right text-[12px] font-semibold text-[#253352]">{likes.toLocaleString()}</td><td className="px-4 py-4 text-right text-[12px] font-semibold text-[#253352]">{comments.toLocaleString()}</td><td className="px-4 py-4 text-right"><a href={`https://www.linkedin.com/feed/update/${id}`} target="_blank" rel="noreferrer" title="Open post on LinkedIn" className="inline-grid size-8 place-items-center border border-[#DDE4ED] text-[#0A66C2] hover:bg-[#F2F8FD]"><ArrowUpRight className="size-3.5" /></a></td></tr>; })}</tbody>
-  </table></div>;
-}
-
 function Analytics({ dashboard }: { dashboard: LinkedInDashboardResponse }) {
   const metrics = flattenMetrics([...dashboard.shareStatistics.data, ...dashboard.pageStatistics.data]);
   const summary = dashboardMetrics(dashboard);
@@ -168,15 +165,18 @@ function audienceMetrics(data: Record<string, unknown>[]) {
       const counts = asRecord(row.followerCounts);
       const value = Number(counts.organicFollowerCount || 0) + Number(counts.paidFollowerCount || 0);
       if (value <= 0) return [];
-      const dimension = Object.entries(row).find(([field]) => field !== "followerCounts")?.[1];
+      // `name` is added by the backend (country, region, industry, job function, seniority, company size names).
+      const dimension = Object.entries(row).find(([field]) => field !== "followerCounts" && field !== "name")?.[1];
       const dimensionRecord = asRecord(dimension);
       const raw = toText(dimension) || toText(dimensionRecord.localizedName) || toText(dimensionRecord.name);
       const identifier = raw ? decodeURIComponent(raw.split(":").at(-1) || raw) : "Unknown";
-      const readable = category === "Seniority"
+      const named = toText(row.name);
+      const readable = named || (category === "Seniority"
         ? seniorityLabels[identifier] || `Seniority level ${identifier}`
-        : identifier.replace(/^SIZE_/, "").replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
-      const needsTaxonomyLabel = /^(Industry|Function|Geo|Geo Country)\s/i.test(category) && /^\d+$/.test(identifier);
-      return [{ key: `${key}/${identifier}`, label: needsTaxonomyLabel ? `${category} audience` : readable, value, category }];
+        : identifier.replace(/^SIZE_/, "").replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()));
+      // Without a name LinkedIn only gave an id: say so instead of showing a bare number.
+      const unnamed = !named && /^\d+$/.test(identifier);
+      return [{ key: `${key}/${identifier}`, label: unnamed ? `${category} #${identifier} (name not available)` : readable, value, category }];
     });
   }));
   const combined = new Map<string, Metric & { category: string }>();
@@ -215,14 +215,6 @@ function RestrictedDataset({ dataset, heading, description, icon: Icon }: { data
   return <div className="bg-white"><div className="flex min-h-72 flex-col items-center justify-center px-6 py-10 text-center"><div className="grid size-12 place-items-center border border-[#C8DDF0] bg-[#F1F7FC] text-[#0A66C2]"><Icon className="size-5" /></div><h3 className="mt-4 text-[15px] font-bold text-[#172044]">{heading}</h3><p className="mt-2 max-w-xl text-[11px] leading-5 text-[#687797]">{description}</p><div className="mt-5 w-full max-w-2xl text-left"><DatasetNotice dataset={dataset} /></div></div></div>;
 }
 
-function Inbox({ dataset }: { dataset: LinkedInDashboardResponse["inbox"] }) {
-  if (dataset.state !== "live") return <RestrictedDataset dataset={dataset} heading="LinkedIn page activity" description="LinkedIn does not expose a general private-message inbox. This area shows comments and reactions on company-page posts when Community Management feed permissions are approved." icon={MessageSquare} />;
-  const comments: Array<Record<string, unknown> & { postId: string | null }> = dataset.data.flatMap((item) =>
-    Array.isArray(item.comments) ? item.comments.map((comment) => ({ ...asRecord(comment), postId: toText(item.postId) })) : [],
-  );
-  return <div className="bg-white"><div className="border-b border-[#DDE4ED] px-5 py-4"><h3 className="text-[13px] font-bold text-[#172044]">Page conversations</h3><p className="mt-1 text-[10.5px] text-[#7B89A4]">Comments received on your recent LinkedIn posts</p></div>{comments.length === 0 ? <div className="px-5 py-12 text-center"><MessageSquare className="mx-auto size-6 text-[#A8B4C7]" /><p className="mt-3 text-[12px] font-semibold text-[#52617D]">No comments returned</p><p className="mt-1 text-[10.5px] text-[#8A97AF]">New company-page comments will appear here after the next sync.</p></div> : <div className="divide-y divide-[#E8EDF3]">{comments.map((comment, index) => <div key={toText(comment.id) || index} className="flex gap-3 px-5 py-4"><div className="grid size-8 shrink-0 place-items-center bg-[#EAF3FB] text-[#0A66C2]"><MessageSquare className="size-3.5" /></div><div className="min-w-0"><p className="text-[11.5px] leading-5 text-[#253352]">{toText(asRecord(comment.message).text) || "LinkedIn comment"}</p><p className="mt-1 truncate text-[9.5px] text-[#8A97AF]">Post: {comment.postId || "Unknown"}</p></div></div>)}</div>}</div>;
-}
-
 function Settings({ dashboard }: { dashboard: LinkedInDashboardResponse }) {
   const org = dashboard.organization.data;
   const rows = [["Organization name", toText(org.localizedName)], ["Vanity name", toText(org.vanityName)], ["Organization URN", dashboard.organizationUrn], ["Mapping ID", dashboard.mappingId], ["Last synced", new Date(dashboard.syncedAt).toLocaleString()]];
@@ -233,13 +225,18 @@ function Settings({ dashboard }: { dashboard: LinkedInDashboardResponse }) {
     ["Page analytics", dashboard.pageStatistics.state, "r_organization_admin / rw_organization_admin"],
     ["Follower insights", dashboard.followers.state, "rw_organization_admin"],
     ["Comments & reactions", dashboard.social.state, "r_organization_social_feed"],
-    ["Campaign management", dashboard.campaigns.state, "r_ads + r_ads_reporting; implementation required"],
-    ["Lead Sync", dashboard.leads.state, "r_marketing_leadgen_automation; implementation required"],
+    ["Campaign reporting", dashboard.campaigns.state === "permission_required" ? "permission_required" : "live", "r_ads + r_ads_reporting"],
+    ["Lead Sync", dashboard.leads.state === "permission_required" ? "permission_required" : "live", "r_marketing_leadgen_automation"],
+    ["Campaign start/pause & budget", grantedScopes.includes("rw_ads") ? "live" : "permission_required", "rw_ads"],
+    ["Post on personal profile", grantedScopes.includes("w_member_social") ? "live" : "permission_required", "w_member_social"],
+    ["Events", grantedScopes.includes("r_events") ? "live" : "permission_required", "r_events"],
+    ["Matched Audiences", grantedScopes.includes("rw_dmp_segments") ? "live" : "permission_required", "rw_dmp_segments"],
+    ["Conversions", grantedScopes.includes("rw_conversions") ? "live" : "permission_required", "rw_conversions"],
   ] as const;
   return <div className="bg-white"><div className="border-b border-[#DDE4ED] px-5 py-4"><div className="flex items-center gap-2"><ShieldCheck className="size-4 text-[#0A66C2]" /><h3 className="text-[13px] font-bold text-[#172044]">Mapped page configuration</h3></div><p className="mt-1 text-[10.5px] text-[#7B89A4]">Verified LinkedIn resource, OAuth permissions and feature readiness</p></div><dl className="divide-y divide-[#EDF1F5]">{rows.map(([label, value]) => <div key={label} className="grid gap-1 px-5 py-3 sm:grid-cols-[190px_1fr]"><dt className="text-[10.5px] font-semibold text-[#7B89A4]">{label}</dt><dd className="break-all text-[11.5px] font-medium text-[#253352]">{value || "Not returned"}</dd></div>)}</dl><div className="border-t border-[#DDE4ED] px-5 py-4"><h4 className="text-[12px] font-bold text-[#172044]">Granted OAuth permissions</h4><p className="mt-1 text-[10px] text-[#7B89A4]">Permissions recorded when the current access token was issued</p><div className="mt-3 flex flex-wrap gap-2">{grantedScopes.length > 0 ? grantedScopes.map((scope) => <span key={scope} className="border border-[#C8DDF0] bg-[#F1F7FC] px-2 py-1 text-[9.5px] font-semibold text-[#0A66C2]">{scope}</span>) : <span className="text-[10.5px] font-medium text-amber-700">This token predates scope tracking. Reconnect LinkedIn to request and record the current permissions.</span>}</div></div><div className="overflow-x-auto border-t border-[#DDE4ED]"><table className="w-full min-w-180 text-left"><thead><tr className="bg-[#F8FAFC] text-[10px] uppercase text-[#7B89A4]"><th className="px-5 py-3">Feature</th><th className="px-4 py-3">Status</th><th className="px-5 py-3">Required access</th></tr></thead><tbody className="divide-y divide-[#EDF1F5]">{checks.map(([label, state, required]) => <tr key={label}><td className="px-5 py-3 text-[11px] font-semibold text-[#253352]">{label}</td><td className={`px-4 py-3 text-[10.5px] font-semibold ${state === "live" ? "text-emerald-700" : state === "permission_required" ? "text-amber-700" : "text-[#64748B]"}`}>{title(state)}</td><td className="px-5 py-3 text-[10.5px] text-[#687797]">{required}</td></tr>)}</tbody></table></div></div>;
 }
 
-export function LinkedInLiveTab({ tab }: { tab: LinkedInTab }) {
+export function LinkedInLiveTab({ tab, range }: { tab: LinkedInTab; range?: LinkedInRange }) {
   const { companyId, clientId } = useTenancyContext();
   const [dashboard, setDashboard] = useState<LinkedInDashboardResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -280,19 +277,24 @@ export function LinkedInLiveTab({ tab }: { tab: LinkedInTab }) {
   const copy: Record<LinkedInTab, [string, string]> = {
     Overview: ["LinkedIn page overview", "Live company-page health, reach and data coverage"], Posts: ["Posts & content", "Published content retrieved directly from LinkedIn"],
     Analytics: ["Page analytics", "Views, clicks, impressions and content performance"], Audience: ["Audience", "Follower totals and professional demographics"],
-    Campaigns: ["LinkedIn campaigns", "Advertising accounts and campaign performance"], Leads: ["Lead forms", "LinkedIn Lead Gen form responses"],
+    Campaigns: ["LinkedIn campaigns", "Campaign performance, start/pause and daily budgets"], Leads: ["Lead forms", "LinkedIn Lead Gen form responses"],
+    Events: ["LinkedIn events", "Events organised by the company page"], "Matched Audiences": ["Matched Audiences", "Ad audiences built from this Client's CRM"],
+    Conversions: ["Conversions", "Conversion rules and CRM results sent to LinkedIn"],
     Inbox: ["Page activity", "Comments and reactions across company-page posts"], Settings: ["LinkedIn settings", "Page mapping and live API configuration"],
   };
 
   return <section className="overflow-hidden border border-[#DDE4ED] bg-white shadow-[0_1px_3px_rgb(31_50_81/0.05)]">
     <PageToolbar title={copy[tab][0]} subtitle={copy[tab][1]} syncedAt={dashboard.syncedAt} onSync={() => void load()} syncing={loading} />
-    {tab === "Overview" && <Overview dashboard={dashboard} />}
-    {tab === "Posts" && <Posts dataset={dashboard.posts} social={dashboard.social} />}
-    {tab === "Analytics" && <Analytics dashboard={dashboard} />}
+    {tab === "Overview" && <>{range && <LinkedInRangeAnalytics range={range} />}<Overview dashboard={dashboard} /></>}
+    {tab === "Posts" && <><LinkedInProfilePost /><LinkedInPostsTable /></>}
+    {tab === "Events" && <LinkedInEventsPanel />}
+    {tab === "Matched Audiences" && <LinkedInAudiencesPanel />}
+    {tab === "Conversions" && <LinkedInConversionsPanel />}
+    {tab === "Analytics" && <>{range && <LinkedInRangeAnalytics range={range} />}<Analytics dashboard={dashboard} /></>}
     {tab === "Audience" && <Audience dataset={dashboard.followers} networkSize={dashboard.networkSize} />}
-    {tab === "Campaigns" && <RestrictedDataset dataset={dashboard.campaigns} heading="Advertising API access required" description="Campaign data is separate from company-page data. Once LinkedIn approves r_ads and r_ads_reporting for this app, ad accounts and campaign performance can be shown here." icon={BarChart3} />}
-    {tab === "Leads" && <RestrictedDataset dataset={dashboard.leads} heading="Lead Sync access required" description="Lead form responses require LinkedIn Lead Sync approval and the r_marketing_leadgen_automation permission. This is independent of page and advertising access." icon={Users} />}
-    {tab === "Inbox" && <Inbox dataset={dashboard.inbox} />}
+    {tab === "Campaigns" && (dashboard.campaigns.state === "permission_required" ? <RestrictedDataset dataset={dashboard.campaigns} heading="Advertising access required" description="Reconnect LinkedIn and allow advertising access so ad accounts and campaign performance can be shown here." icon={BarChart3} /> : <LinkedInCampaignsPanel />)}
+    {tab === "Leads" && (dashboard.leads.state === "permission_required" ? <RestrictedDataset dataset={dashboard.leads} heading="Lead access required" description="Reconnect LinkedIn and allow lead access (r_marketing_leadgen_automation) so Lead Gen form responses can be shown and copied into the CRM." icon={Users} /> : <LinkedInLeadsPanel />)}
+    {tab === "Inbox" && <LinkedInConversationsPanel />}
     {tab === "Settings" && <Settings dashboard={dashboard} />}
   </section>;
 }

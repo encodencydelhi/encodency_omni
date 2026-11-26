@@ -10,10 +10,13 @@ const root = "/integrations/whatsapp/v2";
 const modeByScope = new Map<string, "MOCK" | "META">();
 /** The real mode of a workspace once its snapshot has loaded (so screens never call a live account "simulated"). */
 export const nativeModeFor = (scope: string) => modeByScope.get(scope);
-function assertMockScope(scope: string) { if (modeByScope.get(scope) !== "MOCK") throw new Error("Live Meta operations are not enabled in this frontend phase. Select a simulated workspace."); }
+/** Writes need the workspace loaded first (so its mode is known). Live Meta writes are allowed: the backend enforces roles, consent, limits and confirmations. */
+function assertMockScope(scope: string) { if (!modeByScope.has(scope)) throw new Error("The WhatsApp workspace is still loading. Try again in a moment."); }
 export interface NativeConnection {
   configured: boolean; status: string; mode: "MOCK" | "META"; origin: "SIMULATED" | "META";
   revision: number; readiness: Record<string, boolean | string>; displayPhone?: string; hasAccessToken?: boolean;
+  /** Quality reported by Meta (GREEN, YELLOW, RED, FLAGGED) and the messaging-limit tier from Meta's quality webhook. */
+  quality?: string; settings?: { messagingLimit?: string; qualityEvent?: string; qualityEventAt?: string };
 }
 export interface NativeEnvelope {
   mode: "MOCK" | "META"; origin: "SIMULATED" | "META"; revision: number;
@@ -25,8 +28,10 @@ export interface NativeChange { entity: string; action: "SAVE" | "DELETE"; id?: 
 export function nativeScopeHeaders(scope: string): Record<string, string> {
   const parsed: unknown = JSON.parse(scope);
   if (!Array.isArray(parsed) || parsed[0] !== "whatsapp" || !parsed[1] || !parsed[2]) throw new Error("Select an authorized company and client first.");
-  return { "x-company-id": String(parsed[1]), "x-client-id": String(parsed[2]) };
+  // parsed[4]: the chosen WhatsApp number of this Client (absent = primary number).
+  return { "x-company-id": String(parsed[1]), "x-client-id": String(parsed[2]), ...(typeof parsed[4] === "string" && parsed[4] ? { "x-whatsapp-connection-id": parsed[4] } : {}) };
 }
+export interface NativeNumber { id: string; label: string | null; isPrimary: boolean; displayPhone: string; phoneNumberId: string; wabaId: string; status: string; quality: string; createdAt: string }
 function request<T>(scope: string, method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH", path: string, body?: unknown, signal?: AbortSignal, query?: Record<string, string | undefined>) {
   return transport.request<T>({ method, path: root + path, body, signal, headers: nativeScopeHeaders(scope), query });
 }
@@ -39,6 +44,12 @@ export const nativeWhatsAppApi = {
   command: <T = unknown>(scope: string, path: string, body: unknown = {}) => { assertMockScope(scope); return request<T>(scope, "POST", path, body); },
   remove: (scope: string, path: string) => { assertMockScope(scope); return request<unknown>(scope, "DELETE", path); },
   action: (scope: string, path: string, body: unknown = {}) => { assertMockScope(scope); return request<unknown>(scope, "POST", path, body); },
+  /** Save this Client's own Meta WhatsApp sender (WABA ID, phone number ID, access token). The token is encrypted on the server. */
+  configure: (scope: string, input: { wabaId: string; phoneNumberId: string; accessToken: string; newNumber?: boolean; label?: string }) => request<NativeConnection & { id?: string }>(scope, "PUT", "/connection", input),
+  /** Every WhatsApp number of this Client, primary first. */
+  numbers: (scope: string, signal?: AbortSignal) => request<{ items: NativeNumber[] }>(scope, "GET", "/numbers", undefined, signal).then(response => Array.isArray(response?.items) ? response.items : []),
+  /** Rename a number or make it the Client's primary number. */
+  updateNumber: (scope: string, id: string, input: { label?: string; primary?: boolean }) => request<{ items: NativeNumber[] }>(scope, "PATCH", `/numbers/${encodeURIComponent(id)}`, input).then(response => Array.isArray(response?.items) ? response.items : []),
   analytics: (scope: string, query: WhatsAppAnalyticsQuery = {}, signal?: AbortSignal) => request<WhatsAppOverviewAnalytics>(scope, "GET", "/analytics/overview", undefined, signal, query as Record<string, string | undefined>),
   // Webhook endpoint management is configuration, not a provider operation, so it is available in every mode.
   webhookEndpoints: (scope: string) => request<{ items: NativeWebhookEndpoint[]; events: string[] }>(scope, "GET", "/webhook-endpoints"),

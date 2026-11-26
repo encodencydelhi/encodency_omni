@@ -41,7 +41,7 @@ export function testWorkflow(workflow: Workflow, input: string): string[] {
     const matches = current.operator === "Equals" ? input.toLowerCase() === current.value.toLowerCase() : current.operator === "Does Not Contain" ? !input.toLowerCase().includes(current.value.toLowerCase()) : input.toLowerCase().includes(current.value.toLowerCase());
     trace.push(current.kind === "Condition" ? `${current.label}: ${matches ? "Match" : "Fallback"}` : `${current.kind}: ${current.value}`);
     if (current.kind === "Trigger" && !matches) { trace.push("Trigger Did Not Match. No Action Taken."); break; }
-    if (current.kind === "Handoff") { trace.push("Demo Human Handoff Prepared. No Real Assignment Was Sent."); break; }
+    if (current.kind === "Handoff") { trace.push("Test Run: Human Handoff Prepared. No Real Assignment Was Sent."); break; }
     const target = current.kind === "Condition" ? matches ? current.matchId : current.fallbackId : current.nextId || workflow.nodes[workflow.nodes.indexOf(current) + 1]?.id;
     node = workflow.nodes.find(candidate => candidate.id === target);
   }

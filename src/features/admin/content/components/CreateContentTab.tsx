@@ -38,6 +38,7 @@ import {
 import { clientsApi } from "@/features/clients/data/clients-api";
 import { ContentPreviewPanel } from "./ContentPreview";
 import { htmlToPlainText, plainTextToHtml } from "../lib/rich-text";
+import { aiApi } from "../live/ai-api";
 import { ContentChecklist } from "./ContentChecklist";
 import { MasterContentEditor } from "./MasterContentEditor";
 import { ContentTypeSelectorInline } from "./ContentTypeSelector";
@@ -73,8 +74,15 @@ export interface CreateSeed {
   caption: string;
   hashtags: string[];
   cta?: string;
+  /** Post title / hook. */
+  headline?: string;
   media?: MediaAsset[];
   draft?: DraftRecord;
+  /**
+   * caption, hashtags, cta and headline are the separate parts (AI Studio). Without it, a saved draft's combined text
+   * (caption + CTA + hashtags) fills the caption, as when reopening a draft.
+   */
+  separated?: boolean;
 }
 
 export function CreateContentTab({ seed, initialPlatforms = ["instagram", "facebook"], onAiAction }: { seed?: CreateSeed; initialPlatforms?: Platform[]; onAiAction?: (action: string, caption: string) => void } = {}) {
@@ -108,8 +116,8 @@ export function CreateContentTab({ seed, initialPlatforms = ["instagram", "faceb
     return initial;
   });
   const [masterContent, setMasterContent] = useState<MasterContent>({
-    caption: seed?.draft ? (/<(p|div|br|strong|em)\b/i.test(seed.draft.content) ? seed.draft.content : plainTextToHtml(seed.draft.content)) : (seed?.caption ? plainTextToHtml(seed.caption) : ""),
-    headline: seed?.draft?.title ?? "",
+    caption: seed?.draft && !seed.separated ? (/<(p|div|br|strong|em)\b/i.test(seed.draft.content) ? seed.draft.content : plainTextToHtml(seed.draft.content)) : (seed?.caption ? plainTextToHtml(seed.caption) : ""),
+    headline: seed?.headline ?? seed?.draft?.title ?? "",
     description: "",
     cta: seed?.cta ?? "",
     ctaUrl: "",
@@ -118,7 +126,7 @@ export function CreateContentTab({ seed, initialPlatforms = ["instagram", "faceb
     media: seed?.media ?? seed?.draft?.media.map(({ asset }) => ({ id: asset.id, url: asset.url, type: asset.kind === "VIDEO" ? "video" as const : "image" as const, name: asset.id, width: asset.width ?? undefined, height: asset.height ?? undefined })) ?? [],
     link: "",
     location: "",
-    altText: "",
+    altText: Object.values(seed?.draft?.variants.find((variant) => variant.options?.altTexts)?.options?.altTexts ?? {})[0] ?? "",
     firstComment: "",
     language: "English",
     tone: "Positive",
@@ -278,14 +286,18 @@ export function CreateContentTab({ seed, initialPlatforms = ["instagram", "faceb
     }
 
     // Map supported channels (FACEBOOK_PAGE, INSTAGRAM_ACCOUNT, LINKEDIN_ORGANIZATION)
-    const variants: Record<string, { content?: string | null }> = {};
+    const variants: Record<string, { content?: string | null; options?: Record<string, unknown> | null }> = {};
+    // Alt text describes every attached picture (screen readers; Facebook, Instagram and LinkedIn take it per image).
+    const imageIds = masterContent.media.filter((item) => item.type === "image").map((item) => item.id);
     for (const platform of ["facebook", "instagram", "linkedin"] as const) {
       if (!channels.includes(platform)) continue;
       let content: string;
       try { content = deliveryCaption(masterContent, platformOverrides[platform], platformUtms[platform] ?? globalUtm); }
       catch { toast.error("Enter a valid HTTP or HTTPS link before saving tracking settings."); return null; }
       const key = platform === "facebook" ? "FACEBOOK_PAGE" : platform === "instagram" ? "INSTAGRAM_ACCOUNT" : "LINKEDIN_ORGANIZATION";
-      variants[key] = { content };
+      const override = platformOverrides[platform];
+      const altText = ((override?.enabled ? override.altText : undefined) ?? masterContent.altText ?? "").trim().slice(0, 1000);
+      variants[key] = { content, options: altText && imageIds.length ? { altTexts: Object.fromEntries(imageIds.map((id) => [id, altText])) } : null };
     }
     if (!Object.keys(variants).length) {toast.error("Select at least one channel before saving a draft.");return null;}
     // NOTE: Google Business has no draft-variant support in the backend yet
@@ -581,15 +593,20 @@ export function CreateContentTab({ seed, initialPlatforms = ["instagram", "faceb
                       : "No publishable accounts are mapped to this Client. Connect and map an account in Integrations."}
                   </div>
                 ) : draftingPlatforms.map((p) => {
+                  const meta = PLATFORM_META[p];
                   const backendProvider = overviewProviderForPlatform(p);
                   const providerOverview = backendProvider
                     ? overviewQuery.data?.providers.find((item) => item.provider === backendProvider)
                     : undefined;
+                  // The accounts of THIS channel only (Facebook pages and Instagram accounts share the Meta connection), by name.
+                  const resourceType = ({ facebook: "FACEBOOK_PAGE", instagram: "INSTAGRAM_ACCOUNT", linkedin: "LINKEDIN_ORGANIZATION" } as Partial<Record<Platform, string>>)[p];
+                  const accountNames = (providerOverview?.resources ?? [])
+                    .filter((resource) => resource.resourceType === resourceType)
+                    .map((resource) => resource.resourceName || `${meta.label} ${resource.externalResourceId.split(":").pop()}`);
                   const conn = env.dataSource === "api"
-                    ? { status: connectedPlatforms.includes(p) ? "connected" as const : "disconnected" as const, account: connectedPlatforms.includes(p) ? providerOverview?.resources[0]?.externalResourceId ?? "Mapped account" : "Drafts available" }
+                    ? { status: connectedPlatforms.includes(p) ? "connected" as const : "disconnected" as const, account: connectedPlatforms.includes(p) ? (accountNames.join(", ") || "Mapped account") : "Not linked to this client" }
                     : MOCK_CONNECTIONS[p];
                   const on = channels.includes(p);
-                  const meta = PLATFORM_META[p];
 
                   return (
                     <div key={p}>
@@ -606,9 +623,9 @@ export function CreateContentTab({ seed, initialPlatforms = ["instagram", "faceb
                         </span>
                         <PlatformBadge platform={p} size="sm" />
                         <span className="flex-1 text-[11.5px] font-semibold text-[#33445F]">{meta.label}</span>
-                        <span className="max-w-[120px] truncate text-[9.5px] text-[#7A87A0]">{conn.account}</span>
                         {conn.status === "connected" && <span className="rounded bg-emerald-50 px-1 py-0.5 text-[9px] font-semibold text-emerald-600">Connected</span>}
                         {conn.status === "disconnected" && <span className="rounded bg-red-50 px-1 py-0.5 text-[9px] font-semibold text-red-500">Link to publish</span>}
+                        <span className="basis-full truncate pl-6 text-[10px] text-[#7A87A0]" title={conn.account}>{conn.account}</span>
                       </button>
                     </div>
                   );
@@ -763,6 +780,25 @@ export function CreateContentTab({ seed, initialPlatforms = ["instagram", "faceb
           onPlacementChange={(p, pl) => setSelectedPlacement(prev => ({ ...prev, [p]: pl }))}
           selectedRatio={platformRatios}
           onRatioChange={(p, r) => setPlatformRatios(prev => ({ ...prev, [p]: r }))}
+          onAiRewrite={async (platform) => {
+            if (!companyId) throw new Error("Select a company first.");
+            const label = PLATFORM_META[platform].label;
+            const style = platform === "instagram"
+              ? "Instagram: a punchy first line, short lines with emojis, the call to action, then hashtags. Under 120 words."
+              : platform === "facebook"
+                ? "Facebook: friendly and conversational, 2-3 short paragraphs, a clear call to action, at most 3-5 hashtags."
+                : "LinkedIn: professional and informative, short paragraphs, no slang, at most 3-5 hashtags.";
+            const response = await aiApi.generate(companyId, {
+              promptType: "Social Post",
+              context: {
+                topic: `Rewrite this post for ${label}, keeping its facts and offer:\n${htmlToPlainText(masterContent.caption).slice(0, 900)}`,
+                refinements: [style, "Keep the same language mix as the original (e.g. Hinglish stays Hinglish).", "Do not invent prices, discounts or claims that are not in the original."],
+              },
+            });
+            const caption = response.generatedContent.caption?.trim();
+            if (!caption) throw new Error("The AI returned no caption. Try again.");
+            return { caption, hashtags: response.generatedContent.hashtags ?? [] };
+          }}
         />
 
         {/* UTM Builder */}

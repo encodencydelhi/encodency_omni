@@ -27,8 +27,8 @@ export function DraftRecovery({ scope, children, editing=false }: { scope: strin
   if (nativeWhatsAppEnabled) {
     if(workspace.isLoading) return <p role="status" className="p-4 text-xs text-slate-500">Loading WhatsApp Workspace...</p>;
     if(workspace.error) return <div role="alert" className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm"><p>{workspace.error instanceof Error?workspace.error.message:"The WhatsApp workspace could not be loaded."}</p><Button size="sm" variant="outline" onClick={()=>void workspace.refresh()}>Retry</Button></div>;
-    if(editing&&workspace.envelope&&(!workspace.envelope.access.canManage||workspace.envelope.mode!=="MOCK"))return <p role="alert" className="p-4 text-sm">Template And Campaign Editing Is Available For Authorized Simulated Workspaces. Live Meta Operations Require A Separate Activation Phase.</p>;
-    return <WorkspaceAccess value={{...access,...workspace.envelope?.access,...(workspace.envelope?.mode==="META"?{canEdit:false,canManage:false,canSend:false,canConfigure:false,canBill:false}:{})}}>{children}</WorkspaceAccess>;
+    if(editing&&workspace.envelope&&!workspace.envelope.access.canManage)return <p role="alert" className="p-4 text-sm">You Do Not Have Permission To Create Or Edit Templates And Campaigns For This Client. Ask A Company Owner Or Admin.</p>;
+    return <WorkspaceAccess value={{...access,...workspace.envelope?.access}}>{children}</WorkspaceAccess>;
   }
   return restored === scope ? children : <p role="status" className="p-4 text-xs text-slate-500">Loading Workspace Drafts...</p>;
 }

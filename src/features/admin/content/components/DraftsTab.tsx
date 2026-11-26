@@ -19,7 +19,7 @@ import { REVIEW_BADGE, REVIEW_LABEL, REVIEW_STATUSES, REVIEW_TONE } from "../liv
 import { htmlToPlainText } from "../lib/rich-text";
 import { ReviewStatRow } from "./ReviewStatRow";
 
-const CHANNEL_NAME: Record<DraftChannel, string> = { FACEBOOK_PAGE: "Facebook", INSTAGRAM_ACCOUNT: "Instagram", LINKEDIN_ORGANIZATION: "LinkedIn" };
+const CHANNEL_NAME: Record<DraftChannel, string> = { FACEBOOK_PAGE: "Facebook", INSTAGRAM_ACCOUNT: "Instagram", LINKEDIN_ORGANIZATION: "LinkedIn", GOOGLE_BUSINESS_LOCATION: "Google Business" };
 const shortDate = (value: string) => new Date(value).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
 export function DraftsTab({ onEdit, onCreate }: { onEdit?: (draft: DraftRecord) => void; onCreate?: () => void }) {

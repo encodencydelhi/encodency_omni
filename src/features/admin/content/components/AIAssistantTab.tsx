@@ -23,6 +23,7 @@ import { aiApi, type GeneratedAiResult } from "../live/ai-api";
 import { draftsApi, type DraftRecord } from "../live/drafts-api";
 import { mediaApi } from "../live/media-api";
 import {
+  editAiVisual,
   fetchDynamicAiVisual,
   generatedImageFile,
   type ImageGenerationOptions,
@@ -43,6 +44,8 @@ import type { CreateSeed } from "./CreateContentTab";
 import type { MediaAsset } from "../types/content.types";
 import { Card } from "./ui-card";
 import { cn } from "@/lib/utils/cn";
+import { LogoOverlay } from "./logo-overlay";
+import { LibraryImagePicker } from "./library-picker";
 
 const input =
   "mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100";
@@ -109,6 +112,7 @@ export function AIAssistantTab({
   const [imageText, setImageText] = useState("");
   const [avoid, setAvoid] = useState("");
   const [imageChange, setImageChange] = useState("");
+  const [editText, setEditText] = useState("");
   const [canvasId, setCanvasId] = useState(DEFAULT_CANVAS_ID);
   const canvas = canvasPreset(canvasId);
   const [quality, setQuality] =
@@ -276,6 +280,34 @@ export function AIAssistantTab({
       if (mounted.current) setImageBusy(false);
     }
   }
+  /** Edits the selected visual (only the described change); the result becomes a new version in the history. */
+  async function editVisual() {
+    if (imageRequest.current || !canWrite || !companyId || !visual) return;
+    const controller = new AbortController();
+    imageRequest.current = controller;
+    setImageBusy(true);
+    setImageError(null);
+    try {
+      const image = await editAiVisual(visual.url, editText, companyId, {
+        size: canvas.request,
+        canvas: { width: canvas.width, height: canvas.height, ratio: canvas.ratio },
+        quality,
+        signal: controller.signal,
+      });
+      if (controller.signal.aborted) return;
+      const next: Visual = { id: crypto.randomUUID(), url: image.url, prompt: `${visual.prompt}\nEdit: ${editText.trim()}`, ratio: image.aspectRatio };
+      setVisual(next);
+      setVisualHistory((previous) => [next, ...previous].slice(0, 4));
+      setEditText("");
+      toast.success("Image updated", { description: "Only the described change was requested. Review it before using it." });
+    } catch (error) {
+      if (!controller.signal.aborted)
+        setImageError(error instanceof Error ? error.message : "The image could not be edited. Your previous image was kept.");
+    } finally {
+      if (imageRequest.current === controller) imageRequest.current = null;
+      if (mounted.current) setImageBusy(false);
+    }
+  }
   async function ensureAsset(): Promise<MediaAsset | null> {
     if (!visual) return null;
     if (!companyId || !clientId)
@@ -416,10 +448,13 @@ export function AIAssistantTab({
       const record =
         saved && result.caption.trim() ? await persist(asset) : undefined;
       if (!mounted.current) return;
+      // Each part goes to its own composer field (caption, title, CTA, hashtags), also when a saved draft is attached.
       onUsePost?.({
         caption: result.caption,
-        hashtags: record ? [] : result.hashtags,
+        hashtags: result.hashtags,
         cta: result.callToAction,
+        headline: result.headline || undefined,
+        separated: true,
         media: asset ? [asset] : [],
         ...(record ? { draft: record } : {}),
       });
@@ -1028,6 +1063,21 @@ export function AIAssistantTab({
                     <Upload size={13} />
                     Upload image
                   </button>
+                  {companyId && clientId && (
+                    <LibraryImagePicker
+                      companyId={companyId}
+                      clientId={clientId}
+                      className={button}
+                      disabled={busy || !canWrite}
+                      onPick={(record) => {
+                        const asset: MediaAsset = { id: record.id, url: record.url, type: "image", name: "Library image", width: record.width ?? undefined, height: record.height ?? undefined };
+                        const next: Visual = { id: crypto.randomUUID(), url: record.url, prompt: "Image from the media library", ratio: "original", asset };
+                        savedAssets.current.set(record.url, asset);
+                        setVisual(next);
+                        setVisualHistory((previous) => [next, ...previous].slice(0, 4));
+                      }}
+                    />
+                  )}
                   <button
                     className={button}
                     disabled={!visual || imageBusy}
@@ -1047,6 +1097,20 @@ export function AIAssistantTab({
                     </button>
                   )}
                 </div>
+                {visual && (
+                  <LogoOverlay
+                    key={clientId ?? "none"}
+                    imageUrl={visual.url}
+                    clientId={clientId}
+                    disabled={busy || !canWrite}
+                    onApply={(url) => {
+                      // A new version (not yet saved); the one without the logo stays in the history.
+                      const next: Visual = { id: crypto.randomUUID(), url, prompt: visual.prompt, ratio: visual.ratio };
+                      setVisual(next);
+                      setVisualHistory((previous) => [next, ...previous].slice(0, 4));
+                    }}
+                  />
+                )}
                 {visualHistory.length > 0 && (
                   <div className="grid grid-cols-4 gap-2">
                     {visualHistory.map((version, index) => (
@@ -1069,6 +1133,33 @@ export function AIAssistantTab({
                         />
                       </button>
                     ))}
+                  </div>
+                )}
+                {visual && (
+                  <div className="space-y-2 rounded-lg border border-violet-200 bg-violet-50/40 p-3">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Edit this image (keeps everything else)
+                      <textarea
+                        aria-label="Image edit instructions"
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        maxLength={1000}
+                        rows={2}
+                        className={cn(input, "mt-1 h-auto py-1.5")}
+                        placeholder="For example: remove the driver's cap, make the cab red, add more space at the bottom, change the background to a Jaipur street"
+                      />
+                    </label>
+                    <button
+                      className={button}
+                      disabled={!editText.trim() || busy || !canWrite}
+                      onClick={() => void editVisual()}
+                    >
+                      <Sparkles size={13} />
+                      {imageBusy ? "Editing…" : "Apply change"}
+                    </button>
+                    <p className="text-[10px] leading-4 text-slate-500">
+                      Changes only what you describe on the selected image. The earlier version stays in the history above.
+                    </p>
                   </div>
                 )}
                 {visual && (

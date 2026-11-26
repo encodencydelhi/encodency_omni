@@ -39,6 +39,36 @@ export async function fetchDynamicAiVisual(topic: string, style = "Realistic", v
   return { url, prompt, style, category: "ai-generated", aspectRatio: options.canvas?.ratio ?? (options.size === "1536x1024" ? "3:2" : options.size === "1024x1536" ? "2:3" : "1:1"), id: `ai-${Date.now()}-${variationIndex}` };
 }
 
+/**
+ * Edits the current visual: only the described change is made, the rest of the image stays. The image is sent as a file
+ * (multipart), then fitted back to the exact canvas like a generated image.
+ */
+export async function editAiVisual(imageUrl: string, change: string, companyId: string | undefined, options: ImageGenerationOptions = {}): Promise<AiGeneratedVisual> {
+  const prompt = change.trim();
+  if (!prompt) throw new Error("Describe what should change in the image.");
+  if (prompt.length > 4000) throw new Error("The change description can contain at most 4,000 characters.");
+  const source = await (await fetch(imageUrl)).blob();
+  if (!/^image\/(jpeg|png|webp)$/.test(source.type)) throw new Error("This image cannot be edited. Use a JPEG, PNG or WebP image.");
+  const form = new FormData();
+  form.append("image", source, `current.${source.type === "image/png" ? "png" : source.type === "image/webp" ? "webp" : "jpg"}`);
+  form.append("prompt", prompt);
+  form.append("size", options.size ?? "1024x1024");
+  form.append("quality", options.quality ?? "medium");
+  let data: { success: boolean; image: { url: string } };
+  try {
+    data = await apiClient.request<typeof data>({ method: "POST", path: "/ai/edit-image", headers: companyScopeHeaders(companyId), body: form, signal: options.signal });
+  } catch (error) {
+    if (ApiError.isApiError(error) && (error.status === 0 || error.status === 502 || error.status === 504)) {
+      throw new Error("Cannot reach the platform image service. Check that the backend is running and reachable, then try again. No automatic retry was sent.");
+    }
+    throw error;
+  }
+  if (!data?.success || !data.image?.url) throw new Error("No edited image was returned. Describe the change more specifically.");
+  let url = data.image.url;
+  if (options.canvas && typeof document !== "undefined") url = await fitToCanvas(url, options.canvas);
+  return { url, prompt, style: "Edit", category: "ai-generated", aspectRatio: options.canvas?.ratio ?? "1:1", id: `ai-edit-${Date.now()}` };
+}
+
 /** Generated data is uploaded through the normal, tenant-scoped media validation path. */
 export async function generatedImageFile(url: string): Promise<File> {
   if (!/^data:image\/(jpeg|png|webp);base64,/.test(url)) throw new Error("This generated image cannot be saved. Generate a new image.");

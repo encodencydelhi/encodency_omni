@@ -52,6 +52,7 @@ import { ALL_LOCATIONS, filterPosts, postCounts, type PostTab } from "../data/se
 import { CTA_LABEL, POST_STATE_LABEL, POST_TYPE_LABEL, gbRoutes } from "../lib/constants";
 import { compact, date as fmtDate, dateTime, relative } from "../lib/format";
 import { useGbp } from "../store/gbp-store";
+import { gbpRepository } from "../data/repository";
 import type { Post, PostState } from "../types";
 
 const DEFAULTS = { status: "all", location: ALL_LOCATIONS, type: "all", q: "", post: "" };
@@ -113,7 +114,7 @@ export function PostsWorkspace({ lockedLocationId }: { lockedLocationId?: string
 
   const menuFor = (post: Post): (MenuItem | "separator")[] => [
     { label: "View details", icon: Eye, onSelect: () => setDetail(post.id) },
-    { label: "Edit", icon: Pencil, href: `${gbRoutes.postCreate}?edit=${post.id}`, hidden: post.state === "published", gate: can.canCreatePosts },
+    { label: "Edit", icon: Pencil, href: `${gbRoutes.postCreate}?edit=${post.id}`, hidden: post.state === "published" && gbpRepository.mode !== "live", gate: can.canCreatePosts },
     { label: "Duplicate", icon: Copy, href: `${gbRoutes.postCreate}?duplicate=${post.id}`, gate: can.canCreatePosts },
     "separator",
     {
@@ -551,9 +552,12 @@ function PostDetailDrawer({
           </div>
           <div className="flex gap-2">
             {post.state === "published" ? (
-              <Button size="sm" variant="secondary" icon={ExternalLink} href={post.searchUrl ?? gbRoutes.businessProfileManager} external>
-                View on Google
-              </Button>
+              <>
+                {gbpRepository.mode === "live" && <Button size="sm" variant="secondary" icon={Pencil} href={`${gbRoutes.postCreate}?edit=${post.id}`} gate={can.canCreatePosts}>Edit</Button>}
+                <Button size="sm" variant="secondary" icon={ExternalLink} href={post.searchUrl ?? gbRoutes.businessProfileManager} external>
+                  View on Google
+                </Button>
+              </>
             ) : (
               <>
                 <Button size="sm" variant="secondary" icon={Pencil} href={`${gbRoutes.postCreate}?edit=${post.id}`} gate={can.canCreatePosts}>

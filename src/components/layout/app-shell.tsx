@@ -15,6 +15,7 @@ import { Topbar } from "./topbar";
 import { useKeepCaseForEmailsAndUrls } from "./keep-case";
 import { HealthProvider } from "@/features/system-health/context/health-provider";
 import { MaintenanceBannerHost } from "@/features/global-settings/components/maintenance-banner-host";
+import { PlatformAssistant } from "@/features/assistant/platform-assistant";
 
 function ShellFrame({ children }: { children: ReactNode }) {
   const { isCollapsed } = useSidebar();
@@ -63,7 +64,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     <RouteGuard returnTo={pathname}>
       <SidebarProvider>
         <HealthProvider>
-          <ShellFrame>{children}</ShellFrame>
+          <PlatformAssistant>
+            <ShellFrame>{children}</ShellFrame>
+          </PlatformAssistant>
         </HealthProvider>
       </SidebarProvider>
     </RouteGuard>

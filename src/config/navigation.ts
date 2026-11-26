@@ -1,5 +1,6 @@
 import {
   ActivityIcon,
+  MessageCircleIcon,
   BellIcon,
   Building2Icon,
   FlagIcon,
@@ -158,6 +159,15 @@ export const SUPER_ADMIN_NAV: NavGroup[] = [
         animatedIcon: "integrations",
         permission: "platform:read",
         matchPrefixes: [ROUTES.superAdmin.integrations],
+      },
+      {
+        label: "WhatsApp",
+        description: "Every company's WhatsApp numbers, health, usage, pause switch and plan limits.",
+        href: ROUTES.superAdmin.whatsapp,
+        icon: MessageCircleIcon,
+        animatedIcon: "support",
+        permission: "platform:read",
+        matchPrefixes: [ROUTES.superAdmin.whatsapp],
       },
       {
         label: "System Health",
