@@ -11,6 +11,8 @@ import { usePagination } from "@/features/admin/meta-ads/use-filters";
 import { useMeta } from "../connection-context";
 import { MapResourceDialog } from "../components/connection-dialogs";
 import { ScheduledPostsTable } from "../components/scheduled-posts";
+import { CommentsInbox } from "../components/comments-inbox";
+import { MessagesSquare } from "lucide-react";
 import { messageOf, needsMetaLogin, useInstagramMedia, useInstagramProfile, useSocialOverview } from "../live/meta-hooks";
 import type { InstagramMedia, SocialPage } from "../live/meta-social-api";
 import { Avatar, AssetSwitcher, ConnectionGate, CursorPager, DetailDialog, InlineNotice, KeyValue, META_ROOT, MetaShell, Pill, Section, Stat, Thumb, useCursorPager } from "../ui";
@@ -27,9 +29,10 @@ function kindOf(media: InstagramMedia): string {
   return "Post";
 }
 
-type TabId = "media" | "scheduled" | "about";
+type TabId = "media" | "comments" | "scheduled" | "about";
 const TABS: { id: TabId; label: string; icon: typeof Images }[] = [
   { id: "media", label: "Posts & Reels", icon: Images },
+  { id: "comments", label: "Comments", icon: MessagesSquare },
   { id: "scheduled", label: "Scheduled", icon: CalendarClock },
   { id: "about", label: "About", icon: UserRound },
 ];
@@ -233,6 +236,7 @@ function AccountDetail({ account, tab, linked, onTab, onLink }: { account: Socia
       </div>
 
       {tab === "media" && <MediaTab instagramId={account.instagram.id} username={name} />}
+      {tab === "comments" && <CommentsInbox platform="instagram" accountId={account.instagram.id} />}
       {tab === "scheduled" && <ScheduledPostsTable channel="INSTAGRAM_ACCOUNT" targetId={account.instagram.id} />}
       {tab === "about" && (
         <div className="p-4">
