@@ -79,7 +79,9 @@ export function LocationDetailPage() {
 
   if (status !== "ready") return null;
 
-  const location = locations.find((item) => item.locationId === params?.locationId) ?? null;
+  // The id arrives URL-encoded ("locations%2F123"); compare it decoded with the location's own id.
+  const wanted = (() => { try { return decodeURIComponent(params?.locationId ?? ""); } catch { return params?.locationId ?? ""; } })();
+  const location = locations.find((item) => item.locationId === wanted) ?? null;
 
   if (!location) {
     return (

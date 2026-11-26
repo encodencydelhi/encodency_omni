@@ -203,4 +203,4 @@ export const PLATFORM_HASHTAG_LIMITS: Partial<Record<Platform, number>> = {
 };
 
 /** Channels the backend accepts media on; every other channel is text-only. */
-export const MEDIA_CAPABLE_PLATFORMS: readonly Platform[] = ["facebook", "instagram"];
+export const MEDIA_CAPABLE_PLATFORMS: readonly Platform[] = ["facebook", "instagram", "linkedin"];

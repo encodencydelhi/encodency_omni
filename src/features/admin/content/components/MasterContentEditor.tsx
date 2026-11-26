@@ -72,7 +72,7 @@ export function MasterContentEditor({ content, onChange, onAiAction }: Props) {
         <div className="p-3.5">
           {/* Tabs */}
           <div className="mb-2 flex flex-wrap gap-1">
-            {TABS.filter(t => ["Caption","Headline","CTA","Hashtags","Link","AI"].includes(t.id)).map((t) => (
+            {TABS.filter(t => ["Caption","Headline","CTA","Hashtags","Link","Alt Text","AI"].includes(t.id)).map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
@@ -273,7 +273,7 @@ export function MasterContentEditor({ content, onChange, onAiAction }: Props) {
                   value={content.altText}
                   onChangeValue={(val) => update("altText", val)}
                   rows={2}
-                  placeholder="Describe the image for accessibility..."
+                  placeholder="Describe the picture for people who use screen readers, e.g. A driver opens the rear door of a white Vruum cab for a smiling passenger."
                   className="w-full bg-transparent outline-none"
                 />
               </div>

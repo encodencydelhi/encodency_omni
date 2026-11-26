@@ -11,6 +11,8 @@ import { usePagination } from "@/features/admin/meta-ads/use-filters";
 import { useMeta } from "../connection-context";
 import { MapResourceDialog } from "../components/connection-dialogs";
 import { ScheduledPostsTable } from "../components/scheduled-posts";
+import { CommentsInbox } from "../components/comments-inbox";
+import { MessagesSquare } from "lucide-react";
 import { messageOf, needsMetaLogin, usePagePosts, useSocialOverview } from "../live/meta-hooks";
 import type { SocialPage, SocialPost } from "../live/meta-social-api";
 import { Avatar, AssetSwitcher, ConnectionGate, CursorPager, DetailDialog, InlineNotice, KeyValue, META_ROOT, MetaShell, Pill, Section, Stat, Thumb, useCursorPager } from "../ui";
@@ -28,9 +30,10 @@ const TASK_LABEL: Record<string, string> = {
   MODERATE: "Moderate comments",
 };
 
-type TabId = "posts" | "scheduled" | "about";
+type TabId = "posts" | "comments" | "scheduled" | "about";
 const TABS: { id: TabId; label: string; icon: typeof Newspaper }[] = [
   { id: "posts", label: "Posts", icon: Newspaper },
+  { id: "comments", label: "Comments", icon: MessagesSquare },
   { id: "scheduled", label: "Scheduled", icon: CalendarClock },
   { id: "about", label: "About", icon: UserRound },
 ];
@@ -265,6 +268,7 @@ function PageDetail({ page, tab, linked, onTab, onLink }: { page: SocialPage; ta
       </div>
 
       {tab === "posts" && <PostsTab page={page} />}
+      {tab === "comments" && <CommentsInbox platform="facebook" accountId={page.id} />}
       {tab === "scheduled" && <ScheduledPostsTable channel="FACEBOOK_PAGE" targetId={page.id} />}
       {tab === "about" && <AboutTab page={page} linked={linked} />}
     </section>

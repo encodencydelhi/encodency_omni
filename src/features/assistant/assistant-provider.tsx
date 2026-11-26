@@ -17,7 +17,7 @@ interface AssistantContextValue {
   close: () => void;
 }
 
-const AssistantContext = createContext<AssistantContextValue | null>(null);
+export const AssistantContext = createContext<AssistantContextValue | null>(null);
 
 export function useAssistant(): AssistantContextValue {
   const context = useContext(AssistantContext);

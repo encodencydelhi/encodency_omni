@@ -53,6 +53,8 @@ function toAdminNotification(item: BackendNotificationItem): AdminNotification {
       : "info";
 
   let href: string | null = supportHref(item);
+  // A published post opens the live post on the channel (LinkedIn/Facebook link sent by the backend).
+  if (!href && item.type === "publishing.succeeded" && typeof item.data?.link === "string" && /^https:\/\//.test(item.data.link)) href = item.data.link;
   if (!href) {
     if (typeof item.data?.scheduledPostId === "string") {
       href = `/admin/content?post=${encodeURIComponent(item.data.scheduledPostId)}`;

@@ -196,7 +196,7 @@ export interface ApiFreshness {
 
 export interface ApiSnapshot {
   freshness?: ApiFreshness;
-  period: "7d" | "30d" | "90d";
+  period: "7d" | "30d" | "90d" | "365d" | "max";
   syncedAt: string;
   account: ApiAdAccount;
   totals: ApiMetrics;
@@ -249,7 +249,7 @@ export interface ApiAdsOverview {
   };
 }
 
-export type ApiPeriod = "7d" | "30d" | "90d";
+export type ApiPeriod = "7d" | "30d" | "90d" | "365d" | "max";
 export type MetaAdsEntityKind = "campaign" | "adset" | "ad";
 export type MetaAdsWriteResult = { id: string; status?: "PAUSED" | "ACTIVE"; deduplicated?: boolean; updated?: boolean };
 

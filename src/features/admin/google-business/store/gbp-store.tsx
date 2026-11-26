@@ -649,7 +649,15 @@ export function GoogleBusinessProvider({ children }: { children: ReactNode }) {
     async (id, patch, summary = "Post updated") => {
       const post = live.current.snapshot?.posts.find((p) => p.id === id);
       if (!post) return false;
-      if (gbpRepository.mode === "live") return notLive("Editing a published post");
+      if (gbpRepository.mode === "live") {
+        // Google edits the same post in place (text, button, event/offer, a new https photo); it re-reviews it after.
+        const payload = toLivePost({ ...post, ...patch } as NewPostInput);
+        return perform({ pending: "Saving the post on Google...", success: summary }, async () => {
+          const updated: Post[] = [];
+          for (const locationId of post.locationIds) updated.push(toPost((await googleBusinessApi.updatePost(locationId, id, payload)).post, locationId));
+          patchSnapshot((prev) => ({ ...prev, posts: prev.posts.map((p) => (p.id === id ? { ...p, ...patch, ...(updated[0] ?? {}) } : p)) }));
+        });
+      }
       return perform({ pending: "Saving post...", success: summary }, () => {
         patchSnapshot((prev) => ({ ...prev, posts: prev.posts.map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
         log({ action: "post_create", summary, entity: { type: "post", id, label: post.event?.title ?? post.summary.slice(0, 60) }, locationId: null });

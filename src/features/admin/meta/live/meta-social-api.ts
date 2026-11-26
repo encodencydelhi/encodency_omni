@@ -102,6 +102,53 @@ export interface Feed<T> {
 
 const BASE = "/integrations/meta-social";
 
+/* ----------------------------- comments inbox ----------------------------- */
+
+export type SocialPlatform = "facebook" | "instagram";
+export interface SocialComment {
+  id: string; platform: SocialPlatform; postId: string; parentId: string | null;
+  authorId: string | null; authorName: string | null; byAccount: boolean;
+  text: string; createdAt: string | null; likes: number; replies: number;
+  hidden: boolean; canHide: boolean; canDelete: boolean; canLike: boolean; likedByAccount: boolean;
+}
+export interface SocialThreads {
+  platform: SocialPlatform; accountId: string; accountName: string; syncedAt: string;
+  permissions: { canRead: boolean; canWrite: boolean; missing: string[] };
+  posts: Array<{ postId: string; platform: SocialPlatform; text: string; publishedAt: string | null; permalink: string | null; imageUrl: string | null; commentCount: number; comments: SocialComment[] }>;
+  /** Commenter id / @username -> CRM lead id. */
+  leads: Record<string, string>;
+}
+export interface SocialAiSuggestion {
+  options: Array<{ text: string; why: string }>; language: string | null;
+  insight: { who: string; wants: string; approach: string } | null; tokensConsumed: number;
+}
+
+const commentsBase = (platform: SocialPlatform, accountId: string) => `${BASE}/${platform}/${encodeURIComponent(accountId)}/comments`;
+
+export const metaCommentsApi = {
+  threads(companyId: string, platform: SocialPlatform, accountId: string, signal?: AbortSignal): Promise<SocialThreads> {
+    return apiClient.request<SocialThreads>({ method: "GET", path: commentsBase(platform, accountId), headers: metaScopeHeaders(companyId), signal });
+  },
+  reply(companyId: string, platform: SocialPlatform, accountId: string, body: { targetId: string; targetType: "post" | "comment"; text: string }) {
+    return apiClient.request<{ id: string | null }>({ method: "POST", path: `${commentsBase(platform, accountId)}/reply`, headers: metaScopeHeaders(companyId), body });
+  },
+  hide(companyId: string, platform: SocialPlatform, accountId: string, commentId: string, hidden: boolean) {
+    return apiClient.request<{ hidden: boolean }>({ method: "POST", path: `${commentsBase(platform, accountId)}/hide`, headers: metaScopeHeaders(companyId), body: { commentId, hidden } });
+  },
+  remove(companyId: string, platform: SocialPlatform, accountId: string, commentId: string) {
+    return apiClient.request<{ deleted: boolean }>({ method: "POST", path: `${commentsBase(platform, accountId)}/delete`, headers: metaScopeHeaders(companyId), body: { commentId } });
+  },
+  like(companyId: string, accountId: string, targetId: string, liked: boolean) {
+    return apiClient.request<{ liked: boolean }>({ method: "POST", path: `${commentsBase("facebook", accountId)}/like`, headers: metaScopeHeaders(companyId), body: { targetId, liked } });
+  },
+  suggest(companyId: string, platform: SocialPlatform, accountId: string, body: { task: "reply" | "comment" | "improve"; postId: string; commentId?: string; draft?: string; mode?: string; tone?: string; language?: string; instruction?: string }) {
+    return apiClient.request<SocialAiSuggestion>({ method: "POST", path: `${commentsBase(platform, accountId)}/ai`, headers: metaScopeHeaders(companyId), body });
+  },
+  lead(companyId: string, platform: SocialPlatform, accountId: string, postId: string, commentId: string) {
+    return apiClient.request<{ leadId: string; name: string; created: boolean; insight: { interest: string; score: number; nextStep: string } | null }>({ method: "POST", path: `${commentsBase(platform, accountId)}/lead`, headers: metaScopeHeaders(companyId), body: { postId, commentId } });
+  },
+};
+
 export const metaSocialApi = {
   profile(companyId: string, signal?: AbortSignal, refresh = false): Promise<MetaProfile> {
     return apiClient.request<MetaProfile>({ method: "GET", path: `${BASE}/me`, query: refresh ? { refresh: "true" } : undefined, headers: metaScopeHeaders(companyId), signal });

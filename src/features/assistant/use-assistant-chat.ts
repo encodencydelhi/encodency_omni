@@ -15,13 +15,17 @@ interface Options {
   pageTitle: string | undefined;
   /** Opens a page for the person (also closes the assistant). */
   go: (path: string) => void;
+  /** Which server endpoints to use; the Company assistant by default. Must be a stable (module-level) object. */
+  api?: AssistantChatApi;
 }
+
+export type AssistantChatApi = Pick<typeof assistantApi, "chat" | "conversations" | "conversation" | "feedback" | "linkTicket">;
 
 /**
  * The conversation lives in this tab only (sessionStorage, keyed by person and Company) so it survives closing the
  * modal and page changes, never leaks to another person on the same tab, and is not stored on the server.
  */
-export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }: Options) {
+export function useAssistantChat({ userId, companyId, pathname, pageTitle, go, api = assistantApi }: Options) {
   const key = storageKey(userId, companyId);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
@@ -62,12 +66,12 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
   useEffect(() => {
     if (!companyId || messages.length > 0 || conversationId || pending) return;
     const controller = new AbortController();
-    void assistantApi
+    void api
       .conversations(companyId, controller.signal)
       .then(async (list) => {
         const latest = list.items[0];
         if (!latest || controller.signal.aborted) return;
-        const detail = await assistantApi.conversation(companyId, latest.id, controller.signal);
+        const detail = await api.conversation(companyId, latest.id, controller.signal);
         if (controller.signal.aborted) return;
         const restored: ChatMessage[] = detail.messages.map((message) => ({
           id: message.id,
@@ -84,12 +88,12 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
       })
       .catch(() => undefined);
     return () => controller.abort();
-  }, [companyId, conversationId, messages.length, pending]);
+  }, [api, companyId, conversationId, messages.length, pending]);
 
   useEffect(() => {
     if (!companyId || !key || !conversationId) return;
     const controller = new AbortController();
-    void assistantApi.conversation(companyId, conversationId, controller.signal).catch(() => {
+    void api.conversation(companyId, conversationId, controller.signal).catch(() => {
       if (controller.signal.aborted) return;
       cid.current = null;
       ref.current = [];
@@ -103,7 +107,7 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
       }
     });
     return () => controller.abort();
-  }, [companyId, conversationId, key]);
+  }, [api, companyId, conversationId, key]);
 
 
   useEffect(() => () => abort.current?.abort(), []);
@@ -124,9 +128,9 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
   const ticketSent = useCallback(
     (messageId: string, index: number, ticketNumber: number) => {
       patchState(messageId, index, { ticketNumber });
-      if (companyId && cid.current) void assistantApi.linkTicket(companyId, { conversationId: cid.current, ticketNumber }).catch(() => undefined);
+      if (companyId && cid.current) void api.linkTicket(companyId, { conversationId: cid.current, ticketNumber }).catch(() => undefined);
     },
-    [companyId, patchState],
+    [api, companyId, patchState],
   );
 
   /** Thumbs up/down on an answer. Shown at once; undone if the server could not save it. */
@@ -136,11 +140,11 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
       if (!companyId || !target?.serverId) return;
       const before = target.feedback;
       commit((current) => current.map((message) => (message.id === messageId ? { ...message, feedback: rating } : message)));
-      void assistantApi.feedback(companyId, { messageId: target.serverId, rating }).catch(() => {
+      void api.feedback(companyId, { messageId: target.serverId, rating }).catch(() => {
         commit((current) => current.map((message) => (message.id === messageId ? { ...message, feedback: before } : message)));
       });
     },
-    [commit, companyId],
+    [api, commit, companyId],
   );
 
   const open = useCallback(
@@ -160,7 +164,7 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
       abort.current = controller;
       setPending(true);
       try {
-        const reply = await assistantApi.chat(companyId, { path: pathname, locale: typeof navigator !== "undefined" ? navigator.language : undefined, ...(cid.current ? { conversationId: cid.current } : {}), messages: historyForServer(ref.current) }, controller.signal);
+        const reply = await api.chat(companyId, { path: pathname, locale: typeof navigator !== "undefined" ? navigator.language : undefined, ...(cid.current ? { conversationId: cid.current } : {}), messages: historyForServer(ref.current) }, controller.signal);
         if (reply.conversationId) {
           cid.current = reply.conversationId;
           setConversationId(reply.conversationId);
@@ -193,7 +197,7 @@ export function useAssistantChat({ userId, companyId, pathname, pageTitle, go }:
         }
       }
     },
-    [commit, companyId, open, pathname],
+    [api, commit, companyId, open, pathname],
   );
 
   /** A blank ticket the person fills in (seeded with their last message), for when they would rather talk to people. */

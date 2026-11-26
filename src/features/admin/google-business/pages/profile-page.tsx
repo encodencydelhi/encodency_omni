@@ -44,6 +44,9 @@ import { date as fmtDate, timeLabel } from "../lib/format";
 import { useGbp } from "../store/gbp-store";
 import type { AttributeDefinition, AttributeValue, Location, LocationProfile, SpecialHour, TimePeriod } from "../types";
 import { sanitizePhone } from "@/lib/utils/phone";
+import { gbpRepository } from "../data/repository";
+import { GbpAiDescriptionAssist } from "../components/gbp-ai";
+import { toast } from "sonner";
 
 const SECTIONS: { id: string; label: string; icon: ComponentType<{ className?: string }> }[] = [
   { id: "basic", label: "Basic information", icon: Store },
@@ -239,6 +242,7 @@ export function ProfileEditor({ location }: { location: Location }) {
               >
                 <textarea id="profile-description" rows={5} className={gb.textarea} value={draft.description} onChange={(event) => set("description", event.target.value)} />
               </FormField>
+              {gbpRepository.mode === "live" && editable && <GbpAiDescriptionAssist locationId={location.locationId} onUse={(text) => { set("description", text); toast.success("AI description added. Press Save to send it to Google."); }} />}
               <FormField label="Opening date" htmlFor="profile-opening" hint="The date this location opened. Google shows it on new profiles.">
                 <input
                   id="profile-opening"

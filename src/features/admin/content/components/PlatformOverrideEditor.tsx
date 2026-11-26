@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
-import { Check, ChevronDown, ChevronRight, Copy, Sparkles } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Copy, Loader2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { plainTextToHtml } from "../lib/rich-text";
 import { cn } from "@/lib/utils/cn";
 import { SelectField, TextField, TextareaField, Toggle } from "./ui-fields";
 import { PlatformBadge } from "./ui-platform";
@@ -19,6 +21,8 @@ type Props = {
   onPlacementChange: (platform: Platform, placement: string) => void;
   selectedRatio: Partial<Record<Platform, string>>;
   onRatioChange: (platform: Platform, ratio: string) => void;
+  /** Rewrites the master caption for one platform with AI; returns the new caption (plain text) and hashtags. */
+  onAiRewrite?: (platform: Platform) => Promise<{ caption: string; hashtags: string[] }>;
 };
 
 export function PlatformOverrideEditor({
@@ -32,7 +36,9 @@ export function PlatformOverrideEditor({
   onPlacementChange,
   selectedRatio,
   onRatioChange,
+  onAiRewrite,
 }: Props) {
+  const [rewriting, setRewriting] = useState<Platform | null>(null);
   const [sectionOpen, setSectionOpen] = useState(false);
   const [expanded, setExpanded] = useState<Platform | null>(null);
 
@@ -46,6 +52,20 @@ export function PlatformOverrideEditor({
 
   const updateOverride = (p: Platform, fields: Partial<PlatformOverride>) => {
     onOverrideChange(p, { ...getOverride(p), ...fields });
+  };
+
+  const aiRewrite = async (p: Platform) => {
+    if (!onAiRewrite || rewriting) return;
+    setRewriting(p);
+    try {
+      const result = await onAiRewrite(p);
+      updateOverride(p, { enabled: true, caption: plainTextToHtml(result.caption), hashtags: result.hashtags });
+      toast.success(`Caption rewritten for ${PLATFORM_META[p].label}. Review it before publishing.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The AI rewrite failed. Your caption was kept.");
+    } finally {
+      setRewriting(null);
+    }
   };
 
   const copyFromMaster = (p: Platform) => {
@@ -201,8 +221,14 @@ export function PlatformOverrideEditor({
                         >
                           <Copy className="size-2.5" /> Copy from Master
                         </button>
-                        <button className="flex items-center gap-1 rounded-sm border border-purple-200 bg-purple-50 px-2 py-1 text-[10px] font-semibold text-purple-700 hover:bg-purple-100">
-                          <Sparkles className="size-2.5" /> AI Rewrite for {meta.short}
+                        <button
+                          type="button"
+                          onClick={() => void aiRewrite(p)}
+                          disabled={!onAiRewrite || rewriting !== null || !masterContent.caption.trim()}
+                          title={masterContent.caption.trim() ? `Rewrite the caption for ${meta.label} with AI` : "Write a master caption first"}
+                          className="flex items-center gap-1 rounded-sm border border-purple-200 bg-purple-50 px-2 py-1 text-[10px] font-semibold text-purple-700 hover:bg-purple-100 disabled:opacity-50"
+                        >
+                          {rewriting === p ? <Loader2 className="size-2.5 animate-spin" /> : <Sparkles className="size-2.5" />} {rewriting === p ? "Rewriting…" : `AI Rewrite for ${meta.short}`}
                         </button>
                       </div>
                     </div>

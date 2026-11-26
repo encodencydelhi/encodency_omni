@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Building2, ExternalLink, Link as LinkIcon, RefreshCcw } from "lucide-react";
 import { useTenancyContext } from "@/lib/api/tenancy-context";
 import { useLinkedInOverview, linkedinProvider } from "../live/linkedin-hooks";
 import { integrationsApi } from "@/features/admin/integrations/live/integrations-api";
 import { LinkedInLiveTab } from "./linkedin-live-tab";
+import { LinkedInDateRangePicker, presetRange, type LinkedInRange } from "./linkedin-range-analytics";
+import { selectLinkedInPage, useSelectedLinkedInPage } from "../live/linkedin-page-selection";
 import { ChannelHeader } from "./channel-header";
 import { cn } from "@/lib/utils/cn";
 import { LinkedInRemoteImage } from "./linkedin-remote-image";
@@ -18,6 +20,9 @@ const tabs = [
   "Audience",
   "Campaigns",
   "Leads",
+  "Events",
+  "Matched Audiences",
+  "Conversions",
   "Inbox",
   "Settings",
 ] as const;
@@ -26,7 +31,13 @@ type TabType = (typeof tabs)[number];
 
 export function LinkedInChannelPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>("Overview");
+  // A notification can open a tab directly, e.g. /admin/linkedin?tab=Inbox for a new comment; a click wins after that.
+  const params = useSearchParams();
+  const [chosenTab, setActiveTab] = useState<TabType | null>(null);
+  const activeTab: TabType = chosenTab ?? tabs.find((name) => name === params.get("tab")) ?? "Overview";
+  // The header date range drives the date-based analytics (Overview and Analytics tabs).
+  const [range, setRange] = useState<LinkedInRange>(() => presetRange(30));
+  const datedTab = activeTab === "Overview" || activeTab === "Analytics";
   
   const { companyId, clientId, isReady } = useTenancyContext();
   const enabled = isReady && Boolean(companyId) && Boolean(clientId);
@@ -35,6 +46,22 @@ export function LinkedInChannelPage() {
   const isConnected = linkedinStatus?.status === "CONNECTED" || linkedinStatus?.status === "MAPPED" || linkedinStatus?.state === "connected";
   const hasMappedPage = Boolean(linkedinStatus?.mappedResourceCount);
   const showLiveConnectionState = isConnected;
+  // One mapped page at a time: the switcher choice is sent with every LinkedIn call; default is the most recently mapped page.
+  const pages = (linkedinStatus?.resources ?? []).filter((resource) => resource.resourceType === "LINKEDIN_ORGANIZATION");
+  const storedPage = useSelectedLinkedInPage(companyId ?? "", clientId ?? "");
+  const currentPage = pages.find((page) => page.mappingId === storedPage);
+  useEffect(() => {
+    if (companyId && clientId && pages.length && !pages.some((page) => page.mappingId === storedPage)) selectLinkedInPage(companyId, clientId, pages[pages.length - 1]!.mappingId);
+  }, [companyId, clientId, pages, storedPage]);
+  const pageName = (page: (typeof pages)[number]) => page.resourceName || `LinkedIn page ${page.externalResourceId.split(":").pop()}`;
+  const pageSwitcher = pages.length > 1 && currentPage ? (
+    <label className="flex h-[36px] items-center gap-2 rounded-sm border border-slate-200 bg-white px-2 shadow-xs">
+      <span className="text-[10.5px] font-semibold text-slate-500">Page</span>
+      <select aria-label="LinkedIn page" value={currentPage.mappingId} onChange={(event) => companyId && clientId && selectLinkedInPage(companyId, clientId, event.target.value)} className="max-w-56 bg-transparent text-xs font-bold text-slate-800 outline-none">
+        {pages.map((page) => <option key={page.mappingId} value={page.mappingId}>{pageName(page)}</option>)}
+      </select>
+    </label>
+  ) : null;
 
   return (
     <div className="pb-8">
@@ -51,6 +78,10 @@ export function LinkedInChannelPage() {
           }
           onSync={() => overviewQuery.refetch()}
           onPrimaryAction={() => router.push("/admin/linkedin/create-post")}
+          hideDateRange
+          hideExport
+          customAccountHandle={currentPage ? pageName(currentPage) : undefined}
+          extraActions={<>{pageSwitcher}{datedTab && hasMappedPage && <LinkedInDateRangePicker value={range} onChange={setRange} />}</>}
         />
         <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
@@ -60,10 +91,10 @@ export function LinkedInChannelPage() {
           activeTab === "Overview" || activeTab === "Settings" ? (
             <div className="space-y-1.5">
               <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} compact={activeTab === "Overview"} />
-              {hasMappedPage && <LinkedInLiveTab tab={activeTab} />}
+              {hasMappedPage && currentPage && <LinkedInLiveTab key={currentPage.mappingId} tab={activeTab} range={range} />}
             </div>
           ) : hasMappedPage ? (
-            <LinkedInLiveTab tab={activeTab} />
+            currentPage ? <LinkedInLiveTab key={currentPage.mappingId} tab={activeTab} range={range} /> : null
           ) : (
             <LinkedInPersonalOnlyState status={linkedinStatus} onRefetch={() => overviewQuery.refetch()} />
           )
@@ -378,7 +409,7 @@ function LinkedInPersonalOnlyState({
           </div>
         </div>
         {profileRows.length > 0 && <div className="grid border-b border-[#E4EAF2] bg-[#F8FAFC] sm:grid-cols-2 lg:grid-cols-4">{profileRows.slice(0, 4).map(([label, value], index) => <div key={label} className={`px-5 py-3 ${index ? "border-t border-[#E4EAF2] sm:border-l sm:border-t-0" : ""}`}><p className="text-[9px] font-semibold uppercase text-[#8A97AF]">{label}</p><p className="mt-1 truncate text-[11px] font-semibold text-[#172044]" title={value}>{value}</p></div>)}</div>}
-        {mappedResources.length > 0 && <div className="px-5 py-4"><div className="mb-3 flex items-center justify-between"><div><h3 className="text-[12px] font-bold text-[#172044]">Mapped company pages</h3><p className="mt-0.5 text-[10px] text-[#7B89A4]">LinkedIn organizations assigned to this client</p></div><span className="text-[10px] font-semibold text-[#0A66C2]">{mappedResources.length} connected</span></div><div className="grid gap-2 md:grid-cols-2">{mappedResources.map((resource: any, index: number) => { const organizationId = String(resource.externalResourceId || "").split(":").at(-1); return <div key={resource.mappingId} className="flex min-w-0 items-center gap-3 border border-[#DDE4ED] bg-white px-3 py-3"><div className="grid size-9 shrink-0 place-items-center bg-[#EAF3FB] text-[11px] font-bold text-[#0A66C2]">in</div><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><p className="truncate text-[11px] font-semibold text-[#172044]">Company page {index + 1}</p><span className="size-1.5 shrink-0 rounded-full bg-emerald-500" /></div><p className="mt-0.5 truncate text-[9.5px] text-[#7B89A4]">Organization ID: {organizationId}</p></div><a href={`https://www.linkedin.com/company/${organizationId}`} target="_blank" rel="noreferrer" title="Open on LinkedIn" className="grid size-8 shrink-0 place-items-center border border-[#DDE4ED] text-[#0A66C2] hover:bg-[#F2F8FD]"><ExternalLink className="size-3.5" /></a></div>; })}</div></div>}
+        {mappedResources.length > 0 && <div className="px-5 py-4"><div className="mb-3 flex items-center justify-between"><div><h3 className="text-[12px] font-bold text-[#172044]">Mapped company pages</h3><p className="mt-0.5 text-[10px] text-[#7B89A4]">LinkedIn organizations assigned to this client</p></div><span className="text-[10px] font-semibold text-[#0A66C2]">{mappedResources.length} connected</span></div><div className="grid gap-2 md:grid-cols-2">{mappedResources.map((resource: any, index: number) => { const organizationId = String(resource.externalResourceId || "").split(":").at(-1); return <div key={resource.mappingId} className="flex min-w-0 items-center gap-3 border border-[#DDE4ED] bg-white px-3 py-3"><div className="grid size-9 shrink-0 place-items-center bg-[#EAF3FB] text-[11px] font-bold text-[#0A66C2]">in</div><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><p className="truncate text-[11px] font-semibold text-[#172044]">{resource.resourceName || `Company page ${index + 1}`}</p><span className="size-1.5 shrink-0 rounded-full bg-emerald-500" /></div><p className="mt-0.5 truncate text-[9.5px] text-[#7B89A4]">Organization ID: {organizationId}</p></div><a href={`https://www.linkedin.com/company/${organizationId}`} target="_blank" rel="noreferrer" title="Open on LinkedIn" className="grid size-8 shrink-0 place-items-center border border-[#DDE4ED] text-[#0A66C2] hover:bg-[#F2F8FD]"><ExternalLink className="size-3.5" /></a></div>; })}</div></div>}
       </section>
 
       <LinkedInCommunityCard connection={communityConnection} resources={mappedResources} onRefetch={onRefetch} />

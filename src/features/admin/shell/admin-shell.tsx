@@ -16,6 +16,7 @@ import { AdminTopbar } from "./admin-topbar";
 import { AdminBreadcrumb } from "./admin-breadcrumb";
 import { PublicAnnouncementBanner } from "@/features/global-settings/components/public-announcement-banner";
 import { AiAssistantFloatingBot } from "@/features/assistant/ai-assistant-floating-bot";
+import { SetupGuide } from "@/features/admin/onboarding/setup-guide";
 
 /**
  * Routes that take over the whole viewport: no admin sidebar, topbar or footer.
@@ -60,6 +61,7 @@ function Shell({ children }: { children: ReactNode }) {
         <AdminFooter />
       </div>
       <AiAssistantFloatingBot />
+      <SetupGuide />
     </div>
   );
 }

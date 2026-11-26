@@ -43,6 +43,8 @@ import {
 } from "../lib/constants";
 import { date as fmtDate, dateTime, fileSize, relative, timeLabel } from "../lib/format";
 import { useGbp } from "../store/gbp-store";
+import { gbpRepository } from "../data/repository";
+import { GbpAiReplyAssist } from "./gbp-ai";
 import type { AttentionIssue, AttributeValue, IssueSeverity, MediaCategory, MediaItem, PostType, RegularHours, Review, SpecialHour } from "../types";
 import {
   Avatar,
@@ -156,13 +158,15 @@ function ReviewReplyBody({ review, onClose }: { review: Review; onClose: () => v
               </div>
             </div>
 
+            {gbpRepository.mode === "live" && can.canReplyReviews.allowed && <GbpAiReplyAssist locationId={review.locationId} reviewId={review.reviewId} onUse={(value) => { setText(value); setSuggested(true); }} />}
+
             <FormField
               label="Your reply"
               htmlFor="reply-text"
               counter={{ value: text.length, max: 4096 }}
               error={tooLong ? "Google limits replies to 4,096 characters." : undefined}
               hint="Replying within 24 hours has the biggest effect on how customers read a negative review."
-              aside={
+              aside={gbpRepository.mode === "live" ? undefined :
                 <Button
                   size="xs"
                   variant="ghost"

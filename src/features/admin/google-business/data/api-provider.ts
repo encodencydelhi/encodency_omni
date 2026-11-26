@@ -59,11 +59,15 @@ const settled = <T>(result: PromiseSettledResult<T>): T | null => (result.status
 
 async function fetchLocation(scope: Awaited<ReturnType<typeof getGbpScope>>, mapped: { externalResourceId: string }, range: { startDate: string; endDate: string }, months: { current: string; previous: string }): Promise<LiveLocationData> {
   const id = mapped.externalResourceId;
-  const [profile, reviews, summary] = await Promise.all([
+  // Only the profile is required. Reviews and the rating summary come from a different Google API (My Business v4); if
+  // Google refuses it (e.g. the API is off in the Cloud project), the page still shows the profile and performance.
+  const [profile, reviewsResult, summaryResult] = await Promise.all([
     googleBusinessApi.getProfile(scope, id),
-    googleBusinessApi.getReviews(scope, id, { pageSize: 100 }),
-    googleBusinessApi.getSummary(scope, id),
+    googleBusinessApi.getReviews(scope, id, { pageSize: 100 }).then((value) => ({ status: "fulfilled" as const, value }), (reason: unknown) => ({ status: "rejected" as const, reason })),
+    googleBusinessApi.getSummary(scope, id).then((value) => ({ status: "fulfilled" as const, value }), (reason: unknown) => ({ status: "rejected" as const, reason })),
   ]);
+  const reviews = settled(reviewsResult) ?? { items: [] };
+  const summary = settled(summaryResult) ?? { averageRating: null, recentReviewCount: 0 };
   const [posts, media, performance, keywordsNow, keywordsBefore] = await Promise.allSettled([
     googleBusinessApi.getPosts(scope, id, { pageSize: 100 }),
     googleBusinessApi.getMedia(scope, id, { pageSize: 100 }),

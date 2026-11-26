@@ -3,7 +3,7 @@ import { companyScopeHeaders } from "@/lib/api/company-scope";
 import { ApiError } from "@/types/api";
 import type { DraftRecord } from "./drafts-api";
 
-export type MediaKind = "IMAGE" | "VIDEO";
+export type MediaKind = "IMAGE" | "VIDEO" | "DOCUMENT" | "DESIGN" | "OTHER";
 
 export interface MediaUsage {
   drafts: number;
