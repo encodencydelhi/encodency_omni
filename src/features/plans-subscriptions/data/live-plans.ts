@@ -97,19 +97,17 @@ export interface LiveSubscription extends BackendSubscription {
   openInvoiceId?: string | null;
 }
 
-const fixed = (value: number): LimitRule => ({ kind: "fixed", value });
 const UNLIMITED: LimitRule = { kind: "unlimited", value: null };
+export const UNLIMITED_CAP = 1_000_000_000;
+const fixed = (value: number): LimitRule => (value >= UNLIMITED_CAP ? UNLIMITED : { kind: "fixed", value });
 
-/** The features a plan switches on: everything except what the one real flag (automation) governs. */
 function featuresOf(plan: Pick<BackendPlan, "features">): Record<string, boolean> {
   const out: Record<string, boolean> = {};
   for (const feature of FEATURES) out[feature.key] = feature.key === "automation_engine" ? plan.features.automationEnabled === true : true;
-  // A feature cannot be on while something it depends on is off.
   for (let pass = 0; pass < 3; pass++) for (const feature of FEATURES) if (feature.dependencies.some((dep) => out[dep] === false)) out[feature.key] = false;
   return out;
 }
 
-/** Only the client cap and the AI-token cap exist on the backend; any other resource is not capped. */
 function limitsOf(plan: Pick<BackendPlan, "maxClients" | "maxAiTokens">): Record<string, LimitRule> {
   const out: Record<string, LimitRule> = {};
   for (const resource of RESOURCES) {
@@ -124,7 +122,6 @@ export function versionOf(plan: BackendPlan): PlanVersion {
     planId: plan.id,
     version: 1,
     status: "published",
-    // The backend stores prices in paise, which is exactly the page's minor unit. An annual price of 0 means annual billing is not offered.
     price: { currency: "INR", monthlyMinor: plan.monthlyPrice, annualMinor: plan.annualPrice ?? 0, setupFeeMinor: 0, trialDays: 0, notes: "" },
     features: featuresOf(plan),
     limits: limitsOf(plan),
@@ -424,14 +421,15 @@ export const NO_POLICY: SubscriptionPolicy = {
   overLimit: { users: "block_new_creation", clients: "block_new_creation", connectedAccounts: "block_new_creation", aiCredits: "block_new_creation", automationRuns: "block_new_creation" },
 };
 
-/** The backend takes whole numbers for its two caps, so an unlimited, "none" or empty cap cannot be saved. */
+/** The backend takes whole numbers for its two caps: a fixed or custom number is saved as is, Unlimited as UNLIMITED_CAP; "none" or empty cannot be saved. */
 export function backendLimitsOf(input: PlanDraftInput): { maxClients: number; maxAiTokens: number } | PlanIssue[] {
   const issues: PlanIssue[] = [];
   const read = (key: string, field: string, label: string): number => {
     const rule = (input.limits as Record<string, LimitRule | undefined>)[key];
-    const value = rule && rule.kind === "fixed" ? rule.value : null;
-    if (value === null || !Number.isInteger(value) || value < 1) {
-      issues.push({ severity: "error", field, message: `${label} must be a whole number of at least 1. Unlimited or custom limits can't be saved yet.` });
+    if (rule?.kind === "unlimited") return UNLIMITED_CAP;
+    const value = rule && (rule.kind === "fixed" || rule.kind === "custom") ? rule.value : null;
+    if (value === null || !Number.isInteger(value) || value < 1 || value >= UNLIMITED_CAP) {
+      issues.push({ severity: "error", field, message: `${label} must be a whole number from 1 to 999,999,999, or Unlimited. "Not available" can't be saved for this cap.` });
       return 0;
     }
     return value;

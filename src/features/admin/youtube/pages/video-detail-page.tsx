@@ -71,6 +71,7 @@ import { useYouTube } from "../store/youtube-store";
 import { youtubeApi } from "../live/youtube-api";
 import { CommentInbox } from "./comments-page";
 import type { MetricKey, Video } from "../types";
+import { YtAiShortsPanel } from "../components/youtube-ai";
 
 type DetailTab = "overview" | "analytics" | "comments" | "captions" | "seo" | "details";
 
@@ -579,6 +580,7 @@ function SeoTab({ video, onEdit, onThumb }: { video: Video; onEdit: () => void; 
 
   return (
     <div className="grid gap-1 xl:grid-cols-12">
+      <div className="xl:col-span-12"><YtAiShortsPanel videoId={video.id} /></div>
       <Card className="h-fit p-4 xl:col-span-4">
         <div className="flex items-center gap-2"><h3 className="text-[13.5px] font-semibold text-[#0F1B3D]">Optimization score</h3><InternalBadge label="Media360 Optimization" /></div>
         <div className="mt-4 flex items-center gap-4">

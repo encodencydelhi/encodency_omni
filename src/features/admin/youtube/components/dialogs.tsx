@@ -39,6 +39,7 @@ import {
   Thumb,
   yt,
 } from "./ui";
+import { YtAiMetadataPanel } from "./youtube-ai";
 
 /* ------------------------------------------------------------------ */
 /* Create playlist                                                     */
@@ -577,6 +578,7 @@ function EditMetadataBody({ open, onOpenChange, video }: VideoDialogProps & { vi
           </SheetHeader>
           <SheetBody className="space-y-4">
             {!can.canEditVideo.allowed && <Notice tone="amber" title="Editing Unavailable">{can.canEditVideo.reason}</Notice>}
+            {can.canEditVideo.allowed && <YtAiMetadataPanel videoId={video.id} brief={draft.title} onApply={(patch) => { if (patch.title !== undefined) set("title", patch.title); if (patch.description !== undefined) set("description", patch.description); if (patch.tags !== undefined) set("tags", patch.tags); }} />}
             <FormField label="Title" required htmlFor="em-title" counter={{ value: draft.title.length, max: TITLE_MAX }} error={errors.title}>
               <input id="em-title" className={yt.input} value={draft.title} onChange={(e) => set("title", e.target.value)} />
             </FormField>

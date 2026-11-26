@@ -24,6 +24,25 @@ import { HealthDialog } from "../debugger/health-dialog";
 
 type GraphSnapshot = { nodes: AutomationNode[]; edges: AutomationEdge[] };
 
+/** AI nodes start with a result name and sensible settings. */
+const AI_DEFAULTS: Record<string, Record<string, unknown>> = {
+  ai_classify: { saveAs: "kind", categories: "lead, question, complaint, spam", input: "" },
+  ai_extract: { saveAs: "info", fields: "name, phone:phone, email:email, city, budget:number", input: "" },
+  ai_write: { saveAs: "draft", kind: "social_post", length: "medium", tone: "Friendly", language: "auto", brief: "" },
+  ai_transform: { saveAs: "text", mode: "summarize", length: "medium", input: "" },
+  ai_image: { saveAs: "image", size: "square", style: "Realistic", quality: "medium", prompt: "" },
+  ai_agent: { saveAs: "agent", goal: "", tools: ["lookup_resource", "create_task", "notify_user"], maxSteps: 4 },
+};
+
+/** Social steps start wired to a "New comment / review" trigger: ids come from {{trigger.*}}. */
+function socialDefaults(id: string): Record<string, unknown> {
+  const target = { platform: "{{trigger.platform}}", accountId: "{{trigger.accountId}}", postId: "{{trigger.postId}}", commentId: "{{trigger.commentId}}", threadId: "{{trigger.threadId}}" };
+  if (id === "social_ai_reply") return { ...target, saveAs: "aiReply", language: "auto", tone: "Friendly", continueOnError: false };
+  if (id === "social_reply") return { ...target, text: "{{variables.aiReply.text}}" };
+  if (id === "social_lead") return { ...target, saveAs: "lead" };
+  if (id === "social_hide") return { ...target };
+  return { platform: "facebook", text: "", delayMinutes: 0 };
+}
 export function isUnsaved(workflow: AutomationWorkflow) { return workflow.id.startsWith("draft_"); }
 
 function normalizedEdges(workflow: Pick<AutomationWorkflow, "nodes" | "edges">) { return workflow.edges?.length ? workflow.edges : linearEdges(workflow.nodes ?? []); }
@@ -82,7 +101,7 @@ export function WorkflowBuilder({ workflow: initial, clientId, onBack }: { workf
 
   const addNode = (item: LibraryItem, position?: { x: number; y: number }) => {
     if (item.supported === false || inspecting) return;
-    const node: AutomationNode = { id: `node_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, type: item.type, actionId: item.id, label: item.label, description: item.description, status: "idle", position, config: item.id === "website_down" ? { websiteId: "*" } : item.id === "website_ssl_expiring" ? { websiteId: "*", daysBefore: 14 } : item.id === "schedule" ? { frequency: "daily", time: "09:00", timezone: "Asia/Kolkata", weekdays: ["monday"], dayOfMonth: 1, everyMinutes: 60 } : item.id === "http_request" ? { method: "POST", url: "", headers: {}, body: "", timeoutSeconds: 15, retrySafe: false } : item.id === "notify_user" ? { audience: "owner", title: "", message: "" } : item.id === "slack_message" ? { webhookUrl: "{{secret.slack_webhook}}", text: "" } : item.id === "ai_generate" ? { saveAs: "ai", format: "text", maxTokens: 300, prompt: "", continueOnError: true } : item.id === "task_overdue" ? { graceMinutes: 0 } : item.id === "lead_inactive" ? { inactiveDays: 3, excludeStages: ["won", "lost"] } : item.id === "send_email" ? { recipientMode: "custom", subject: "", body: "" } : item.id === "delay" ? { duration: 1, unit: "hours" } : item.id === "wait_until" ? { mode: "relative", duration: 1, unit: "hours" } : item.id === "approval" ? { approverUserIds: [], expiryMinutes: 1440, reminderMinutes: 60 } : item.id === "sub_workflow" ? { workflowId: "", waitForCompletion: true, timeoutSeconds: 3600, input: {} } : item.id === "send_whatsapp" ? { phone: "{{lead.phone}}", variables: {} } : item.id === "create_task" ? { dueInDays: 1, priority: "medium" } : item.id === "parallel" ? { branches: ["branch-a", "branch-b"], failurePolicy: "fail", timeoutSeconds: 300, cancelRemaining: true } : item.id === "merge" ? { mode: "all" } : item.id === "for_each" ? { arraySource: "trigger.items", itemVariable: "item", concurrency: 2, maxItems: 100, failurePolicy: "fail" } : item.id === "loop" ? { maxIterations: 10, maxDurationSeconds: 3600, stopCondition: { field: "variables.done", operator: "equals", value: "true", valueType: "boolean" } } : {} };
+    const node: AutomationNode = { id: `node_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, type: item.type, actionId: item.actionId ?? item.id, label: item.label, description: item.description, status: "idle", position, config: item.presetConfig ? { ...item.presetConfig } : item.id.startsWith("social_") ? socialDefaults(item.id) : AI_DEFAULTS[item.id] ? { ...AI_DEFAULTS[item.id] } : item.id === "website_down" ? { websiteId: "*" } : item.id === "website_ssl_expiring" ? { websiteId: "*", daysBefore: 14 } : item.id === "schedule" ? { frequency: "daily", time: "09:00", timezone: "Asia/Kolkata", weekdays: ["monday"], dayOfMonth: 1, everyMinutes: 60 } : item.id === "http_request" ? { method: "POST", url: "", headers: {}, body: "", timeoutSeconds: 15, retrySafe: false } : item.id === "notify_user" ? { audience: "owner", title: "", message: "" } : item.id === "slack_message" ? { webhookUrl: "{{secret.slack_webhook}}", text: "" } : item.id === "ai_generate" ? { saveAs: "ai", format: "text", maxTokens: 300, prompt: "", continueOnError: true } : item.id === "task_overdue" ? { graceMinutes: 0 } : item.id === "lead_inactive" ? { inactiveDays: 3, excludeStages: ["won", "lost"] } : item.id === "send_email" ? { recipientMode: "custom", subject: "", body: "" } : item.id === "delay" ? { duration: 1, unit: "hours" } : item.id === "wait_until" ? { mode: "relative", duration: 1, unit: "hours" } : item.id === "approval" ? { approverUserIds: [], expiryMinutes: 1440, reminderMinutes: 60 } : item.id === "sub_workflow" ? { workflowId: "", waitForCompletion: true, timeoutSeconds: 3600, input: {} } : item.id === "send_whatsapp" ? { phone: "{{lead.phone}}", variables: {} } : item.id === "create_task" ? { dueInDays: 1, priority: "medium" } : item.id === "parallel" ? { branches: ["branch-a", "branch-b"], failurePolicy: "fail", timeoutSeconds: 300, cancelRemaining: true } : item.id === "merge" ? { mode: "all" } : item.id === "for_each" ? { arraySource: "trigger.items", itemVariable: "item", concurrency: 2, maxItems: 100, failurePolicy: "fail" } : item.id === "loop" ? { maxIterations: 10, maxDurationSeconds: 3600, stopCondition: { field: "variables.done", operator: "equals", value: "true", valueType: "boolean" } } : {} };
     if (item.type === "trigger") {
       const existing = nodes.find((candidate) => candidate.type === "trigger"); const keep = existing && ["inbound_webhook", "form_submission"].includes(item.id) ? { webhookToken: existing.config?.webhookToken } : {};
       const nextNodes = [{ ...node, config: { ...node.config, ...(keep.webhookToken ? keep : {}) } }, ...nodes.filter((candidate) => candidate.type !== "trigger")];

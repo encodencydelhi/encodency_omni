@@ -9,6 +9,8 @@ import { automationApi, webhookEndpoint, webhookUrl } from "../../data/automatio
 import { getStoredClientId } from "@/lib/api/tenancy-storage";
 import { libraryItem } from "./node-library";
 import { nodeProblem } from "./node-problems";
+import { SocialStepFields } from "./social-step-fields";
+import { AiStepFields } from "./ai-step-fields";
 
 export { nodeProblem };
 
@@ -515,6 +517,9 @@ export function NodeConfigPanel({ node, workflowId, resources, onChange }: {
                 <p className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[10.5px] text-[#475569]">A 2xx answer succeeds; any other status fails the step (5xx and 429 are retried when safe). Later steps can read the answer as <code>{`{{variables.${node.id}Output.json.field}}`}</code>. Test runs and the simulator never call the URL.</p>
               </>
             ) : null}
+
+            {node.actionId && ["ai_classify", "ai_extract", "ai_write", "ai_transform", "ai_image", "ai_agent"].includes(node.actionId) ? <AiStepFields actionId={node.actionId} config={config} setConfig={setConfig} /> : null}
+            {node.actionId?.startsWith("social_") ? <SocialStepFields actionId={node.actionId} config={config} setConfig={setConfig} /> : null}
 
             {node.actionId === "ai_generate" ? (
               <>

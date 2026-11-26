@@ -112,8 +112,9 @@ export function mapPlans(catalog: BackendPlansResponse | null | undefined, summa
   const plans = ordered.map((plan, index): Plan => {
     // Limits the backend does not enforce are "no limit"; only clients and AI tokens are real caps.
     const limits = Object.fromEntries((["clients", "teamMembers", "channels", "aiCredits", "automations", "automationRuns", "scheduledPosts", "reports", "storageGb"] as LimitKey[]).map((key) => [key, null])) as PlanLimits;
-    limits.clients = plan.maxClients;
-    limits.aiCredits = plan.maxAiTokens;
+    // A plan saved as Unlimited stores a very large cap (see UNLIMITED_CAP in plans-subscriptions); show it as Unlimited.
+    limits.clients = plan.maxClients >= 1_000_000_000 ? null : plan.maxClients;
+    limits.aiCredits = plan.maxAiTokens >= 1_000_000_000 ? null : plan.maxAiTokens;
     return {
       id: plan.id,
       name: plan.name,

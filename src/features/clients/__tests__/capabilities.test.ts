@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { ROLE_PERMISSIONS, type InternalRole, type Permission } from "@/types/domain/team";
-import { deriveClientCapabilities, type ClientCapabilityKey } from "../data/capabilities";
+import { deriveClientCapabilities, deriveCompanyClientCapabilities, type ClientCapabilityKey } from "../data/capabilities";
 
 process.env.NEXT_PUBLIC_MOCK_LATENCY_MS = "0";
 
@@ -73,5 +73,20 @@ describe("unavailable provider", () => {
     ]) {
       await assert.rejects(call(), (error: unknown) => ApiError.isApiError(error) && error.code === "SERVICE_UNAVAILABLE");
     }
+  });
+});
+
+describe("Admin panel client capabilities (Company members)", () => {
+  it("a member with clients:write can edit, a read-only member cannot", () => {
+    const editor = deriveCompanyClientCapabilities(new Set(["clients:read", "clients:write"]));
+    assert.equal(editor.canEditClient, true);
+    assert.equal(editor.canManageClientSettings, true);
+    assert.equal(editor.canArchiveClient, false);
+    const reader = deriveCompanyClientCapabilities(new Set(["clients:read"]));
+    assert.equal(reader.canEditClient, false);
+    assert.equal(reader.canViewAllClients, true);
+  });
+  it("nothing is allowed until the server reports capabilities (fail closed)", () => {
+    assert.ok(Object.values(deriveCompanyClientCapabilities(new Set())).every((value) => value === false));
   });
 });

@@ -339,5 +339,24 @@ export const youtubeApi = {
   liveChat: (scope: YouTubeScope, broadcastId: string, params: { pageToken?: string | null; pageSize?: number } = {}, signal?: AbortSignal) =>
     get<YouTubeLiveChatResponse>(scope, `/live/broadcasts/${seg(broadcastId)}/chat/messages`, { pageToken: cleanPageToken(params.pageToken), pageSize: params.pageSize }, signal),
   sendLiveChatMessage: (scope: YouTubeScope, broadcastId: string, text: string) => send<YouTubeLiveChatMessageResponse>(scope, "POST", `/live/broadcasts/${seg(broadcastId)}/chat/messages`, { text }),
+
+  /* ---- AI (suggestions only; nothing is saved to YouTube by these) ---- */
+  aiMetadata: (scope: YouTubeScope, body: { videoId?: string; brief?: string; notes?: string; language?: YtAiLanguage; tone?: string }) => send<YtAiMetadata>(scope, "POST", "/ai/metadata", body),
+  aiCommentReply: (scope: YouTubeScope, body: { videoId: string; commentId: string; draft?: string; mode?: string; language?: YtAiLanguage; tone?: string; instruction?: string }) => send<YtAiReplies>(scope, "POST", "/ai/comment-reply", body),
+  aiCommentTriage: (scope: YouTubeScope, videoId: string) => send<YtAiTriage>(scope, "POST", "/ai/comment-triage", { videoId }),
+  aiInsights: (scope: YouTubeScope) => send<YtAiInsights>(scope, "POST", "/ai/insights", {}),
+  aiShorts: (scope: YouTubeScope, body: { videoId: string; notes?: string; language?: YtAiLanguage }) => send<YtAiShorts>(scope, "POST", "/ai/shorts", body),
+  aiThumbnailPrompt: (scope: YouTubeScope, body: { videoId?: string; brief?: string }) => send<{ prompt: string; overlayText: string; tokensConsumed: number }>(scope, "POST", "/ai/thumbnail-prompt", body),
 } as const;
+
+export type YtAiLanguage = "auto" | "English" | "Hindi" | "Hinglish";
+export interface YtAiMetadata { titles: string[]; description: string; chapters: string[]; tags: string[]; tagCharacters: number; hashtags: string[]; language: string | null; tokensConsumed: number }
+export interface YtAiReplies { options: Array<{ text: string; why: string }>; language: string | null; insight: { who: string; wants: string; approach: string } | null; tokensConsumed: number }
+export interface YtAiTriage { summary: string; items: Record<string, { intent: string; needsReply: boolean; priority: string; note: string }>; tokensConsumed: number }
+export interface YtAiInsights {
+  range: { startDate: string; endDate: string }; totals: Record<string, number | null>; reason: string | null; tokensConsumed: number;
+  topVideos: Array<{ title: string; views?: number | null; estimatedMinutesWatched?: number | null; averageViewDurationSeconds?: number | null; subscribersGained?: number | null }>;
+  insights: { summary: string; whatWorks: string[]; improve: string[]; ideas: Array<{ title: string; why: string }> } | null;
+}
+export interface YtAiShorts { ideas: Array<{ title: string; hook: string; script: string; fromVideo: string }>; language: string | null; tokensConsumed: number }
 

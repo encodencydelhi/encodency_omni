@@ -1,21 +1,15 @@
 "use client";
-
-/**
- * React access layer over the repository.
- *
- * Client queries share one key root, and every write also invalidates the
- * Companies cache: a paused client or a new assignment changes a company's
- * client list, counts and usage, so both modules refresh together. Client-scoped
- * queries carry the client id in their key, so opening client B can never show
- * client A's cached records.
- */
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { usePathname } from "next/navigation";
+import { isMockMode } from "@/config/env";
+import { getStoredCompanyId } from "@/lib/api/tenancy-storage";
+import { adminSearchApi } from "@/features/admin/shell/admin-search-api";
 import { companyKeys } from "@/features/companies/data/hooks";
 import { useCurrentStaff } from "@/features/companies/data/capability-provider";
 import { useAuth } from "@/features/auth/components/auth-provider";
 import { ApiError } from "@/types/api";
-import { deriveClientCapabilities, type ClientCapabilities } from "./capabilities";
+import { deriveClientCapabilities, deriveCompanyClientCapabilities, type ClientCapabilities } from "./capabilities";
 import { clientsRepository, type LifecycleAction } from "./repository";
 import type {
   ClientAccessLevel,
@@ -41,8 +35,21 @@ export const clientKeys = {
 };
 
 export function useClientCapabilities(): ClientCapabilities {
-  const { can } = useAuth();
-  return useMemo(() => deriveClientCapabilities(can), [can]);
+  const { can, user } = useAuth();
+  const pathname = usePathname() ?? "";
+  // Super Admin pages use staff permissions; the Admin panel uses the person's own Company capabilities from the server.
+  const companyRoute = !pathname.startsWith("/super-admin") && !isMockMode;
+  const companyId = getStoredCompanyId();
+  const access = useQuery({
+    queryKey: ["client-company-access", companyId, user?.id ?? ""],
+    queryFn: ({ signal }) => adminSearchApi.access(companyId, signal),
+    enabled: companyRoute && Boolean(companyId),
+    staleTime: 60_000,
+  });
+  return useMemo(
+    () => (companyRoute ? deriveCompanyClientCapabilities(new Set(access.data?.capabilities ?? [])) : deriveClientCapabilities(can)),
+    [companyRoute, access.data, can],
+  );
 }
 
 export function useClientsList(query: ClientListQuery) {

@@ -24,6 +24,26 @@ export type ClientCapabilities = Record<ClientCapabilityKey, boolean>;
 
 type Can = (permission: Permission) => boolean;
 
+
+export function deriveCompanyClientCapabilities(capabilities: ReadonlySet<string>): ClientCapabilities {
+  const read = capabilities.has("clients:read");
+  const write = read && capabilities.has("clients:write");
+  return {
+    canViewAllClients: read,
+    canCreateClient: write,
+    canEditClient: write,
+    canManageClientTeam: read && capabilities.has("team:manage"),
+    canViewClientConnections: read,
+    canViewClientWebsiteSeo: read,
+    canViewClientActivity: read,
+    canManageClientSettings: write,
+    canPauseClient: write,
+    canResumeClient: write,
+    canArchiveClient: write && capabilities.has("organization:write"),
+    canExportClientData: read,
+  };
+}
+
 export function deriveClientCapabilities(can: Can): ClientCapabilities {
   const read = can("Clients:read");
   const write = can("companies:write");

@@ -48,6 +48,7 @@ import { MODERATION_LABEL, ytRoutes } from "../lib/constants";
 import { dateTime, relative } from "../lib/format";
 import { useYouTube } from "../store/youtube-store";
 import type { CommentReply, CommentThread, ModerationStatus, Video } from "../types";
+import { YtAiCommentReply } from "../components/youtube-ai";
 
 type InboxTab = "all" | "unanswered" | "published" | "held" | "spam";
 
@@ -470,6 +471,7 @@ function ThreadDrawer({ thread, video, onClose, onRemove }: { thread: CommentThr
                 <Button size="sm" variant="ghost" icon={PauseCircle} gate={can.canModerateComments} onClick={() => void moderateComments(asItem, "heldForReview")} disabled={thread.moderationStatus === "heldForReview"}>Hold</Button>
                 <Button size="sm" variant="ghost" icon={Trash2} gate={can.canRemoveComments} onClick={() => onRemove(thread.id)} className="ml-auto text-[#C81E2B] hover:bg-[#FEF1F2] hover:text-[#C81E2B]">{thread.authoredByChannel ? "Delete" : "Remove"}</Button>
               </div>
+              {canReply && <YtAiCommentReply videoId={thread.videoId} commentId={thread.commentId} draft={text} onUse={setText} />}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();

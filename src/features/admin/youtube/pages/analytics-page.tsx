@@ -40,6 +40,7 @@ import { compact, duration, hours, percent, relative } from "../lib/format";
 import { periodRange } from "../lib/period";
 import { useYouTube } from "../store/youtube-store";
 import type { ContentType, MetricKey, SeriesPoint, Video } from "../types";
+import { YtAiInsightsCard } from "../components/youtube-ai";
 
 type AnalyticsTab = "overview" | "content" | "reach" | "engagement" | "audience" | "revenue";
 
@@ -105,6 +106,8 @@ function Analytics() {
           />
         }
       />
+
+      <YtAiInsightsCard />
 
       <Card>
         <div className="border-b border-[#EEF1F5] px-3 pt-1">

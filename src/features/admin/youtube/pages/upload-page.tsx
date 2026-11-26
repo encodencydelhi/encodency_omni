@@ -40,6 +40,7 @@ import { CATEGORIES, DESCRIPTION_MAX, LANGUAGES, TAGS_MAX_CHARS, TITLE_MAX, VISI
 import { duration, fileSize } from "../lib/format";
 import { useYouTube } from "../store/youtube-store";
 import type { ContentType, Visibility } from "../types";
+import { YtAiMetadataPanel, YtAiThumbnailButton } from "../components/youtube-ai";
 
 const STEPS = ["Upload", "Details", "Audience", "Visibility", "Playlists", "Advanced", "Review"] as const;
 type Step = (typeof STEPS)[number];
@@ -642,6 +643,7 @@ function DetailsStep({ draft, set, showErrors }: StepProps & { showErrors: boole
 
   return (
     <div className="space-y-4">
+      <YtAiMetadataPanel brief={draft.title} onApply={(patch) => { if (patch.title !== undefined) set("title", patch.title); if (patch.description !== undefined) set("description", patch.description); if (patch.tags !== undefined) set("tags", patch.tags); }} />
       <FormField label="Title" required htmlFor="up-title" counter={{ value: draft.title.length, max: TITLE_MAX }} error={showErrors && !draft.title.trim() ? "Add a title." : draft.title.length > TITLE_MAX ? `Keep the title under ${TITLE_MAX} characters.` : undefined} hint="Front-load the most important words — long titles get truncated.">
         <input id="up-title" autoFocus className={yt.input} value={draft.title} onChange={(e) => set("title", e.target.value)} placeholder="Add a title that describes your video" />
       </FormField>
@@ -657,6 +659,7 @@ function DetailsStep({ draft, set, showErrors }: StepProps & { showErrors: boole
             <ImagePlus className="size-4" />
             Upload custom
           </button>
+          <YtAiThumbnailButton brief={draft.title} onImage={(file, preview) => { setThumbError(null); set("thumbnail", { kind: "file", file, preview }); }} />
           {library.isPending && scope ? <Skeleton className="aspect-video w-full" /> : null}
           {suggestions.map((a) => {
             const chosen = draft.thumbnail?.kind === "asset" && draft.thumbnail.assetId === a.id;

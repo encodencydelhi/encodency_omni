@@ -39,6 +39,15 @@ export function nodeProblem(node: AutomationNode): string | null {
     case "http_request": return !String(c.url ?? "").trim() ? "Enter the request URL" : !/^(\{\{|https?:\/\/)/i.test(String(c.url).trim()) ? "The URL must start with http:// or https://" : null;
     case "notify_user": return !String(c.title ?? "").trim() ? "Add a notification title" : c.audience === "users" && !(Array.isArray(c.userIds) && c.userIds.length) ? "Select at least one team member" : null;
     case "send_whatsapp": return !c.templateId && !c.templateName ? "Choose a WhatsApp template" : c.phone !== undefined && !String(c.phone).trim() ? "Enter the recipient phone number" : null;
+    case "ai_classify": return !String(c.input ?? "").trim() ? "Map the text to classify" : String(c.categories ?? "").split(",").filter((x) => x.trim()).length < 2 ? "Give at least two categories" : null;
+    case "ai_extract": return !String(c.input ?? "").trim() ? "Map the text to read" : !String(c.fields ?? "").trim() ? "List the fields to extract" : null;
+    case "ai_write": return !String(c.brief ?? "").trim() ? "Say what to write" : null;
+    case "ai_transform": return !String(c.input ?? "").trim() ? "Map the text to change" : null;
+    case "ai_image": return !String(c.prompt ?? "").trim() ? "Describe the image" : null;
+    case "ai_agent": return !String(c.goal ?? "").trim() ? "Write the goal" : !Array.isArray(c.tools) || !c.tools.length ? "Tick at least one tool" : null;
+    case "social_publish": return !String(c.text ?? "").trim() ? "Write the post text (or use {{variables.ai.text}})" : null;
+    case "social_reply": return !String(c.text ?? "").trim() ? "Write the reply (or use {{variables.aiReply.text}})" : !String(c.commentId ?? "").trim() ? "Map the comment: {{trigger.commentId}}" : null;
+    case "social_ai_reply": case "social_lead": case "social_hide": return !String(c.commentId ?? "").trim() ? "Map the comment: {{trigger.commentId}}" : c.saveAs && !/^[a-z][a-zA-Z0-9_]{0,29}$/.test(String(c.saveAs)) ? "Result name: letters and digits, starting with a lower-case letter" : null;
     case "ai_generate": return !String(c.prompt ?? "").trim() ? "Write what the AI should do" : String(c.prompt).length > 4000 ? "The prompt is longer than 4000 characters" : c.saveAs && !/^[a-z][a-zA-Z0-9_]{0,29}$/.test(String(c.saveAs)) ? "Result name: letters and digits, starting with a lower-case letter" : null;
     case "send_email": return c.subject ? (c.recipientMode === "company_owner" && !c.ownerPolicy ? "Choose an owner policy" : null) : "Add a subject";
     case "assign_user": return c.userId ? null : "Choose a team member";

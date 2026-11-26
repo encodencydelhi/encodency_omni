@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Clock3, Users, Activity, FileText, UserPlus, Mail, CheckSquare, Filter, GitBranch, Database, Webhook, UserCheck, Hand, Split, Merge, Repeat2, BadgeCheck, Workflow,
   CalendarClock, ArrowRightLeft, ShieldAlert, Globe, Bell, MessageSquare, AlarmClock, UserX, CreditCard, Receipt, MessageSquareWarning, Handshake, TrendingUp, CheckCheck, Sparkles,
+  MessageCircle, Star, Reply, EyeOff, Send, Tags, ScanText, PenLine, Languages, ImagePlus, Bot,
 } from "lucide-react";
 import { FaFacebookF, FaWhatsapp } from "react-icons/fa";
 import type { AutomationNodeType } from "../../data/types";
@@ -14,7 +15,11 @@ export interface LibraryItem {
   label: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
-  category: "Triggers" | "Actions" | "Conditions" | "Delays" | "Orchestration" | "Human" | "Reuse";
+  category: "Triggers" | "Actions" | "AI" | "Social" | "Conditions" | "Delays" | "Orchestration" | "Human" | "Reuse";
+  /** The engine action when it differs from the library id (a preset of another node). */
+  actionId?: string;
+  /** Starting settings for a preset. */
+  presetConfig?: Record<string, unknown>;
   iconBg: string;
   hexColor: string;
   supported?: boolean;
@@ -41,6 +46,8 @@ export const LIBRARY: LibraryItem[] = [
   { id: "payment_failed", type: "trigger", label: "Payment Failed", description: "Runs when an online payment for your subscription invoice fails.", icon: CreditCard, category: "Triggers", iconBg: "bg-[#B91C1C]", hexColor: "#B91C1C" },
   { id: "invoice_paid", type: "trigger", label: "Invoice Paid", description: "Runs when an online payment settles a subscription invoice.", icon: Receipt, category: "Triggers", iconBg: "bg-[#15803D]", hexColor: "#15803D" },
   { id: "whatsapp_failed", type: "trigger", label: "WhatsApp Failed", description: "Runs when a WhatsApp message could not be delivered.", icon: MessageSquareWarning, category: "Triggers", iconBg: "bg-[#EA580C]", hexColor: "#EA580C" },
+  { id: "social_comment_trigger", actionId: "platform_event", presetConfig: { eventType: "social.comment.received" }, type: "trigger", label: "New Comment", description: "A new comment on LinkedIn, Facebook, Instagram or YouTube (checked every 10 minutes). Add a Filter on {{trigger.platform}} or {{trigger.intent}} to narrow it.", icon: MessageCircle, category: "Triggers", iconBg: "bg-[#0A66C2]", hexColor: "#0A66C2" },
+  { id: "social_review_trigger", actionId: "platform_event", presetConfig: { eventType: "social.review.received" }, type: "trigger", label: "New Google Review", description: "A new Google Business review. {{trigger.stars}} has the rating (1-5).", icon: Star, category: "Triggers", iconBg: "bg-[#F59E0B]", hexColor: "#F59E0B" },
   { id: "manual", type: "trigger", label: "Manual Trigger", description: "Runs only when someone presses “Run” / “Test”.", icon: Hand, category: "Triggers", iconBg: "bg-[#64748B]", hexColor: "#64748B" },
 
   { id: "send_whatsapp", type: "action", label: "Send WhatsApp", description: "Send an approved WhatsApp template via AiSensy.", icon: FaWhatsapp, category: "Actions", iconBg: "bg-[#25D366]", hexColor: "#16A34A" },
@@ -52,6 +59,19 @@ export const LIBRARY: LibraryItem[] = [
   { id: "slack_message", type: "action", label: "Slack Message", description: "Post a message to a Slack channel through an incoming webhook.", icon: MessageSquare, category: "Actions", iconBg: "bg-[#4A154B]", hexColor: "#4A154B" },
   { id: "notify_user", type: "action", label: "Notify Team", description: "Send an in-app notification to the owner, chosen members or the whole client team.", icon: Bell, category: "Actions", iconBg: "bg-[#DB2777]", hexColor: "#DB2777" },
   { id: "create_task", type: "action", label: "Create Task", description: "Create a CRM follow-up task.", icon: CheckSquare, category: "Actions", iconBg: "bg-[#0891B2]", hexColor: "#0891B2" },
+
+  { id: "ai_classify", type: "action", label: "AI Classify", description: "Sort a message into your categories (lead, question, complaint, spam...). Route with a Switch.", icon: Tags, category: "AI", iconBg: "bg-[#7C3AED]", hexColor: "#7C3AED" },
+  { id: "ai_extract", type: "action", label: "AI Extract", description: "Pull name, phone, city, budget or any fields out of a message.", icon: ScanText, category: "AI", iconBg: "bg-[#7C3AED]", hexColor: "#7C3AED" },
+  { id: "ai_write", type: "action", label: "AI Write", description: "Draft a post, email, WhatsApp, reply, SMS or note from a brief and facts.", icon: PenLine, category: "AI", iconBg: "bg-[#7C3AED]", hexColor: "#7C3AED" },
+  { id: "ai_transform", type: "action", label: "AI Translate / Summarize", description: "Translate, summarize, rewrite or detect sentiment.", icon: Languages, category: "AI", iconBg: "bg-[#7C3AED]", hexColor: "#7C3AED" },
+  { id: "ai_image", type: "action", label: "AI Image", description: "Create an image and save it to the media library for a post.", icon: ImagePlus, category: "AI", iconBg: "bg-[#7C3AED]", hexColor: "#7C3AED" },
+  { id: "ai_agent", type: "action", label: "AI Agent", description: "Give a goal and tools; the AI decides the steps (look up, lead, task, notify, draft). Never posts publicly.", icon: Bot, category: "AI", iconBg: "bg-[#4C1D95]", hexColor: "#4C1D95" },
+
+  { id: "social_ai_reply", type: "action", label: "AI Reply to Comment", description: "AI reads the post, thread and comment and writes a reply (nothing is posted yet).", icon: Sparkles, category: "Social", iconBg: "bg-[#6D28D9]", hexColor: "#6D28D9" },
+  { id: "social_reply", type: "action", label: "Reply to Comment / Review", description: "Post a reply as the page, channel or business (put an Approval before it).", icon: Reply, category: "Social", iconBg: "bg-[#0A66C2]", hexColor: "#0A66C2" },
+  { id: "social_lead", type: "action", label: "Comment → CRM Lead", description: "Save the commenter as a CRM lead with an AI score and next step.", icon: UserPlus, category: "Social", iconBg: "bg-[#15803D]", hexColor: "#15803D" },
+  { id: "social_hide", type: "action", label: "Hide Comment", description: "Hide a spam or abusive comment (Facebook, Instagram) or hold it for review (YouTube).", icon: EyeOff, category: "Social", iconBg: "bg-[#475569]", hexColor: "#475569" },
+  { id: "social_publish", type: "action", label: "Publish Social Post", description: "Post to Facebook, Instagram, LinkedIn or Google Business through the publishing queue.", icon: Send, category: "Social", iconBg: "bg-[#DB2777]", hexColor: "#DB2777" },
 
   { id: "filter_condition", type: "condition", label: "Filter Condition", description: "Stop the run unless the condition is true.", icon: Filter, category: "Conditions", iconBg: "bg-[#EF4444]", hexColor: "#EF4444" },
   { id: "if_else", type: "condition", label: "If / Else", description: "If true run the next step, otherwise skip it and continue.", icon: GitBranch, category: "Conditions", iconBg: "bg-[#E11D48]", hexColor: "#E11D48" },
@@ -89,7 +109,7 @@ export function NodeLibrary({ hasTrigger, onAddNode, readOnly = false }: { hasTr
         />
       </div>
       <div className="custom-scrollbar flex-1 space-y-5 overflow-y-auto p-4">
-        {(["Triggers", "Actions", "Conditions", "Delays", "Orchestration", "Human", "Reuse"] as const).map((category) => {
+        {(["Triggers", "Actions", "AI", "Social", "Conditions", "Delays", "Orchestration", "Human", "Reuse"] as const).map((category) => {
           const items = filtered.filter((i) => i.category === category);
           if (!items.length) return null;
           return (
